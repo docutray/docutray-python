@@ -1,0 +1,27 @@
+schema: spec-driven
+
+context: |
+  Tech stack: Python 3.10+, httpx, Pydantic v2
+  Build system: uv with uv_build backend
+  Package name: docutray (published on PyPI)
+  Source directory: src/docutray_python/
+
+  This is an API wrapper library following patterns from stripe-python and openai-python.
+  The SDK follows a 3-layer architecture: Client Layer → HTTP Layer → Exceptions Layer.
+
+  Conventions:
+  - All code, comments, and documentation must be in English
+  - Internal documentation in /docs may be in Spanish
+  - Use Google-style docstrings
+  - Full type hints compatible with mypy strict mode
+  - Private modules prefixed with underscore (_client.py, _http.py, etc.)
+
+  Domain: Document processing API (OCR, identification, extraction, knowledge bases, workflows)
+
+rules:
+  proposal:
+    - Reference the project architecture (3-layer pattern)
+    - Consider both sync and async implementations
+  tasks:
+    - Each task should be independently testable
+    - Include type hints in all code tasks
