@@ -81,9 +81,15 @@ class TestClientConfiguration:
         client.close()
 
     def test_default_timeout(self) -> None:
-        """Client uses default timeout when not specified."""
+        """Client uses default granular timeout when not specified."""
+        import httpx
+
         client = Client(api_key="sk_test")
-        assert client._timeout == 60.0
+        assert isinstance(client._timeout, httpx.Timeout)
+        assert client._timeout.connect == 5.0
+        assert client._timeout.read == 60.0
+        assert client._timeout.write == 60.0
+        assert client._timeout.pool == 10.0
         client.close()
 
     def test_custom_timeout(self) -> None:

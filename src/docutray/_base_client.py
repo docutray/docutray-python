@@ -4,8 +4,15 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from ._constants import DEFAULT_BASE_URL, DEFAULT_TIMEOUT
-from ._exceptions import AuthenticationError
+import httpx
+
+from ._constants import (
+    DEFAULT_BASE_URL,
+    DEFAULT_MAX_RETRIES,
+    DEFAULT_RETRY_CONFIG,
+    DEFAULT_TIMEOUT,
+)
+from ._exceptions import make_authentication_error
 from ._http import AsyncHTTPClient, SyncHTTPClient
 from ._utils import get_api_key_from_env, mask_api_key
 
@@ -18,7 +25,8 @@ class BaseClient(ABC):
         *,
         api_key: str | None = None,
         base_url: str | None = None,
-        timeout: float | None = None,
+        timeout: httpx.Timeout | float | None = None,
+        max_retries: int | None = None,
     ) -> None:
         """Initialize the client.
 
@@ -26,14 +34,17 @@ class BaseClient(ABC):
             api_key: The API key for authentication. If not provided,
                 reads from DOCUTRAY_API_KEY environment variable.
             base_url: The base URL for API requests.
-            timeout: Request timeout in seconds.
+            timeout: Request timeout configuration. Can be a single float
+                (seconds) or an httpx.Timeout for granular control.
+            max_retries: Maximum number of retry attempts for failed requests.
+                Defaults to 2.
 
         Raises:
             AuthenticationError: If no API key is provided or found.
         """
         resolved_api_key = api_key if api_key is not None else get_api_key_from_env()
         if resolved_api_key is None:
-            raise AuthenticationError(
+            raise make_authentication_error(
                 "No API key provided. Either pass api_key to the constructor "
                 "or set the DOCUTRAY_API_KEY environment variable."
             )
@@ -41,6 +52,12 @@ class BaseClient(ABC):
         self._api_key = resolved_api_key
         self._base_url = base_url if base_url is not None else DEFAULT_BASE_URL
         self._timeout = timeout if timeout is not None else DEFAULT_TIMEOUT
+        self._max_retries = max_retries if max_retries is not None else DEFAULT_MAX_RETRIES
+
+        if self._max_retries < 0:
+            raise ValueError("max_retries must be >= 0")
+
+        self._retry_config = DEFAULT_RETRY_CONFIG.with_max_retries(self._max_retries)
         self._http_client: SyncHTTPClient | None = None
 
     @property
@@ -51,6 +68,7 @@ class BaseClient(ABC):
                 api_key=self._api_key,
                 base_url=self._base_url,
                 timeout=self._timeout,
+                retry_config=self._retry_config,
             )
         return self._http_client
 
@@ -91,7 +109,8 @@ class BaseAsyncClient(ABC):
         *,
         api_key: str | None = None,
         base_url: str | None = None,
-        timeout: float | None = None,
+        timeout: httpx.Timeout | float | None = None,
+        max_retries: int | None = None,
     ) -> None:
         """Initialize the async client.
 
@@ -99,14 +118,17 @@ class BaseAsyncClient(ABC):
             api_key: The API key for authentication. If not provided,
                 reads from DOCUTRAY_API_KEY environment variable.
             base_url: The base URL for API requests.
-            timeout: Request timeout in seconds.
+            timeout: Request timeout configuration. Can be a single float
+                (seconds) or an httpx.Timeout for granular control.
+            max_retries: Maximum number of retry attempts for failed requests.
+                Defaults to 2.
 
         Raises:
             AuthenticationError: If no API key is provided or found.
         """
         resolved_api_key = api_key if api_key is not None else get_api_key_from_env()
         if resolved_api_key is None:
-            raise AuthenticationError(
+            raise make_authentication_error(
                 "No API key provided. Either pass api_key to the constructor "
                 "or set the DOCUTRAY_API_KEY environment variable."
             )
@@ -114,6 +136,12 @@ class BaseAsyncClient(ABC):
         self._api_key = resolved_api_key
         self._base_url = base_url if base_url is not None else DEFAULT_BASE_URL
         self._timeout = timeout if timeout is not None else DEFAULT_TIMEOUT
+        self._max_retries = max_retries if max_retries is not None else DEFAULT_MAX_RETRIES
+
+        if self._max_retries < 0:
+            raise ValueError("max_retries must be >= 0")
+
+        self._retry_config = DEFAULT_RETRY_CONFIG.with_max_retries(self._max_retries)
         self._http_client: AsyncHTTPClient | None = None
 
     @property
@@ -124,6 +152,7 @@ class BaseAsyncClient(ABC):
                 api_key=self._api_key,
                 base_url=self._base_url,
                 timeout=self._timeout,
+                retry_config=self._retry_config,
             )
         return self._http_client
 

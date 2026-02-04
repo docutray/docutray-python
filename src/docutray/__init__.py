@@ -8,18 +8,38 @@ extraction, knowledge bases, and workflows.
 from ._client import AsyncClient, Client
 from ._exceptions import (
     APIConnectionError,
+    APIError,
     APITimeoutError,
     AuthenticationError,
+    BadRequestError,
+    ConflictError,
     DocuTrayError,
+    InternalServerError,
+    NotFoundError,
+    PermissionDeniedError,
+    RateLimitError,
+    UnprocessableEntityError,
 )
 from ._version import __version__
 
 __all__ = [
+    # Version
     "__version__",
+    # Clients
     "Client",
     "AsyncClient",
+    # Base exceptions
     "DocuTrayError",
-    "AuthenticationError",
     "APIConnectionError",
     "APITimeoutError",
+    # API error hierarchy
+    "APIError",
+    "AuthenticationError",
+    "BadRequestError",
+    "ConflictError",
+    "InternalServerError",
+    "NotFoundError",
+    "PermissionDeniedError",
+    "RateLimitError",
+    "UnprocessableEntityError",
 ]
