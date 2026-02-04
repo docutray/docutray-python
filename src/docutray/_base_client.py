@@ -53,6 +53,10 @@ class BaseClient(ABC):
         self._base_url = base_url if base_url is not None else DEFAULT_BASE_URL
         self._timeout = timeout if timeout is not None else DEFAULT_TIMEOUT
         self._max_retries = max_retries if max_retries is not None else DEFAULT_MAX_RETRIES
+
+        if self._max_retries < 0:
+            raise ValueError("max_retries must be >= 0")
+
         self._retry_config = DEFAULT_RETRY_CONFIG.with_max_retries(self._max_retries)
         self._http_client: SyncHTTPClient | None = None
 
@@ -133,6 +137,10 @@ class BaseAsyncClient(ABC):
         self._base_url = base_url if base_url is not None else DEFAULT_BASE_URL
         self._timeout = timeout if timeout is not None else DEFAULT_TIMEOUT
         self._max_retries = max_retries if max_retries is not None else DEFAULT_MAX_RETRIES
+
+        if self._max_retries < 0:
+            raise ValueError("max_retries must be >= 0")
+
         self._retry_config = DEFAULT_RETRY_CONFIG.with_max_retries(self._max_retries)
         self._http_client: AsyncHTTPClient | None = None
 

@@ -19,9 +19,7 @@ from ._constants import (
 )
 from ._exceptions import (
     APIConnectionError,
-    APIError,
     APITimeoutError,
-    RateLimitError,
     raise_for_status,
 )
 from ._version import __version__
@@ -280,10 +278,6 @@ class SyncHTTPClient:
 
                 raise last_exception from e
 
-            except (APIError, RateLimitError):
-                # Re-raise API errors (they were already processed)
-                raise
-
         # Should not reach here, but just in case
         if last_exception is not None:
             raise last_exception
@@ -429,10 +423,6 @@ class AsyncHTTPClient:
                     continue
 
                 raise last_exception from e
-
-            except (APIError, RateLimitError):
-                # Re-raise API errors (they were already processed)
-                raise
 
         # Should not reach here, but just in case
         if last_exception is not None:

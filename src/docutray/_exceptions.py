@@ -66,7 +66,7 @@ class APIError(DocuTrayError):
         *,
         status_code: int,
         request_id: str | None = None,
-        body: dict[str, Any] | None = None,
+        body: Any | None = None,
         headers: dict[str, str] | None = None,
     ) -> None:
         """Initialize the API error.
@@ -75,7 +75,7 @@ class APIError(DocuTrayError):
             message: Human-readable error description.
             status_code: HTTP status code from the response.
             request_id: Request ID from X-Request-ID header for debugging.
-            body: Parsed JSON response body.
+            body: Parsed JSON response body (can be any JSON type).
             headers: Response headers.
         """
         super().__init__(message)
@@ -146,11 +146,21 @@ class RateLimitError(APIError):
         Returns:
             The number of seconds to wait before retrying, or None if not specified.
         """
-        retry_after = self.headers.get("retry-after") or self.headers.get("Retry-After")
-        if retry_after is None:
+        if not self.headers:
             return None
+
+        # Case-insensitive header lookup
+        retry_after_value: str | None = None
+        for key, value in self.headers.items():
+            if key.lower() == "retry-after":
+                retry_after_value = value
+                break
+
+        if retry_after_value is None:
+            return None
+
         try:
-            return float(retry_after)
+            return float(retry_after_value)
         except (ValueError, TypeError):
             return None
 
@@ -212,19 +222,24 @@ def raise_for_status(response: httpx.Response) -> None:
     headers = dict(response.headers)
 
     # Try to parse JSON body for error message
+    body: Any | None = None
+    message: str = response.text or f"HTTP {status_code}"
+
     try:
         body = response.json()
-        # Try common error message locations
-        message = (
-            body.get("error", {}).get("message")
-            or body.get("message")
-            or body.get("detail")
-            or response.text
-            or f"HTTP {status_code}"
-        )
-    except Exception:
-        body = None
-        message = response.text or f"HTTP {status_code}"
+    except (ValueError, TypeError):
+        # JSON parsing failed, use text response
+        pass
+    else:
+        # JSON parsed successfully, try to extract message if it's a dict
+        if isinstance(body, dict):
+            extracted_message = (
+                body.get("error", {}).get("message")
+                if isinstance(body.get("error"), dict)
+                else None
+            ) or body.get("message") or body.get("detail")
+            if extracted_message:
+                message = str(extracted_message)
 
     # Get the appropriate exception class
     exc_class = STATUS_CODE_TO_EXCEPTION.get(status_code)

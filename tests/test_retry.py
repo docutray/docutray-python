@@ -12,10 +12,10 @@ import respx
 from docutray import (
     APIConnectionError,
     APITimeoutError,
+    AsyncClient,
     BadRequestError,
     Client,
     InternalServerError,
-    RateLimitError,
 )
 from docutray._constants import (
     DEFAULT_RETRY_CONFIG,
@@ -216,6 +216,16 @@ class TestClientMaxRetries:
         assert client._max_retries == 0
         client.close()
 
+    def test_negative_max_retries_raises_error(self) -> None:
+        """Client raises ValueError for negative max_retries."""
+        with pytest.raises(ValueError, match="max_retries must be >= 0"):
+            Client(api_key="sk_test", max_retries=-1)
+
+    def test_async_client_negative_max_retries_raises_error(self) -> None:
+        """AsyncClient raises ValueError for negative max_retries."""
+        with pytest.raises(ValueError, match="max_retries must be >= 0"):
+            AsyncClient(api_key="sk_test", max_retries=-1)
+
 
 class TestRetryBehavior:
     """Integration tests for retry behavior."""
@@ -342,3 +352,77 @@ class TestRetryLogging:
                 client._client.request("GET", "/test")
                 mock_warning.assert_called()
                 client.close()
+
+
+class TestAsyncRetryBehavior:
+    """Integration tests for async retry behavior."""
+
+    @respx.mock
+    async def test_async_retries_on_500(self) -> None:
+        """AsyncClient retries on 500 errors."""
+        route = respx.get("https://api.docutray.com/test").mock(
+            side_effect=[
+                httpx.Response(500, text="Server Error"),
+                httpx.Response(500, text="Server Error"),
+                httpx.Response(200, json={"success": True}),
+            ]
+        )
+
+        async with AsyncClient(api_key="sk_test", max_retries=2) as client:
+            response = await client._client.request("GET", "/test")
+
+            assert response.status_code == 200
+            assert route.call_count == 3
+
+    @respx.mock
+    async def test_async_retries_on_429(self) -> None:
+        """AsyncClient retries on 429 with Retry-After."""
+        route = respx.get("https://api.docutray.com/test").mock(
+            side_effect=[
+                httpx.Response(429, headers={"Retry-After": "0.01"}),
+                httpx.Response(200, json={"success": True}),
+            ]
+        )
+
+        async with AsyncClient(api_key="sk_test", max_retries=2) as client:
+            response = await client._client.request("GET", "/test")
+
+            assert response.status_code == 200
+            assert route.call_count == 2
+
+    @respx.mock
+    async def test_async_no_retry_on_400(self) -> None:
+        """AsyncClient does not retry on 400 errors."""
+        route = respx.get("https://api.docutray.com/test").mock(
+            return_value=httpx.Response(400, json={"error": "Bad request"})
+        )
+
+        async with AsyncClient(api_key="sk_test", max_retries=2) as client:
+            with pytest.raises(BadRequestError):
+                await client._client.request("GET", "/test")
+
+            assert route.call_count == 1
+
+    @respx.mock
+    async def test_async_raises_after_max_retries(self) -> None:
+        """AsyncClient raises after exhausting retries."""
+        respx.get("https://api.docutray.com/test").mock(
+            return_value=httpx.Response(500, text="Server Error")
+        )
+
+        async with AsyncClient(api_key="sk_test", max_retries=2) as client:
+            with pytest.raises(InternalServerError):
+                await client._client.request("GET", "/test")
+
+    @respx.mock
+    async def test_async_zero_retries_no_retry(self) -> None:
+        """AsyncClient with max_retries=0 doesn't retry."""
+        route = respx.get("https://api.docutray.com/test").mock(
+            return_value=httpx.Response(500, text="Server Error")
+        )
+
+        async with AsyncClient(api_key="sk_test", max_retries=0) as client:
+            with pytest.raises(InternalServerError):
+                await client._client.request("GET", "/test")
+
+            assert route.call_count == 1
