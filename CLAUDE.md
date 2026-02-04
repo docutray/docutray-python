@@ -4,7 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-docutray-python is the official Python library for the DocuTray API, providing access to document processing capabilities including OCR, document identification, data extraction, knowledge bases, and workflows.
+docutray-python is the official Python SDK for the DocuTray API, providing access to document processing capabilities including OCR, document identification, data extraction, and knowledge bases. The library follows patterns from stripe-python and openai-python.
+
+## Language Policy
+
+All repository artifacts must be written in **English**, including:
+- Pull request titles and descriptions
+- Commit messages
+- Code comments and docstrings
+- GitHub issues
+- Documentation files
+
+This applies even when communicating with Claude Code in Spanish or any other language.
 
 ## Development Commands
 
@@ -12,11 +23,14 @@ docutray-python is the official Python library for the DocuTray API, providing a
 # Install dependencies
 uv sync
 
-# Run tests
+# Run all tests
 uv run pytest
 
 # Run a single test
 uv run pytest tests/test_file.py::test_name
+
+# Run tests with coverage
+uv run pytest --cov=src/docutray
 
 # Type checking
 uv run mypy src
@@ -30,12 +44,47 @@ uv run ruff format src
 
 ## Architecture
 
-This is an API wrapper library following patterns similar to stripe-python. The package is published as `docutray` on PyPI.
+The SDK follows a 3-layer architecture:
 
-- **Source code**: `src/docutray/`
-- **Package is typed**: includes `py.typed` marker
-- **Build system**: uv with uv_build backend
-- **Python support**: 3.10+
+```
+┌─────────────────────────────────────┐
+│         Client Layer                │  ← Public interface (Client, AsyncClient)
+│   (_client.py, _base_client.py)     │
+├─────────────────────────────────────┤
+│         HTTP Layer                  │  ← Transport with retry logic
+│   (_http.py, _constants.py)         │
+├─────────────────────────────────────┤
+│       Exceptions Layer              │  ← Error mapping (status code → exception)
+│   (_exceptions.py)                  │
+└─────────────────────────────────────┘
+```
+
+### Key Components
+
+- **`_client.py`**: Public `Client` and `AsyncClient` classes
+- **`_base_client.py`**: Abstract base classes with shared initialization logic
+- **`_http.py`**: HTTP transport with automatic retry, exponential backoff, and jitter
+- **`_exceptions.py`**: Exception hierarchy mapping HTTP status codes to specific errors
+- **`_constants.py`**: Configuration defaults including `RetryConfig` and `httpx.Timeout`
+- **`resources/`**: API resource classes (documents, extraction, etc.)
+- **`types/`**: Pydantic models for API responses
+
+### Exception Hierarchy
+
+```
+DocuTrayError (base)
+├── APIConnectionError (network errors)
+│   └── APITimeoutError
+└── APIError (HTTP errors with status_code, request_id, body, headers)
+    ├── BadRequestError (400)
+    ├── AuthenticationError (401)
+    ├── PermissionDeniedError (403)
+    ├── NotFoundError (404)
+    ├── ConflictError (409)
+    ├── UnprocessableEntityError (422)
+    ├── RateLimitError (429) - has retry_after property
+    └── InternalServerError (5xx)
+```
 
 ## API Reference
 
@@ -44,17 +93,20 @@ This is an API wrapper library following patterns similar to stripe-python. The 
 
 ## Internal Documentation
 
-The `/docs` directory contains internal design documents, research, and implementation roadmaps. These documents are in Spanish and serve as reference for architectural decisions and best practices. Consult them when planning new features or understanding design rationale.
+The `/docs` directory contains internal design documents and research in Spanish:
+- `ROADMAP.md` - Implementation phases and acceptance criteria
+- `best-practices-pip-api-wrapper.md` - SDK design patterns from stripe/openai analysis
+- `research-sdks-python.md` - Competitor SDK analysis
 
 ## OpenSpec Workflow
 
-This project uses OpenSpec for structured change management. Use the following commands:
+This project uses OpenSpec for structured change management:
 
 - `/opsx:new` - Start a new change with artifact workflow
 - `/opsx:continue` - Continue working on a change
 - `/opsx:apply` - Implement tasks from a change
 - `/opsx:verify` - Verify implementation before archiving
 
-**Naming convention**: Use descriptive kebab-case names for changes (e.g., `core-infrastructure`, `retry-logic`). Do NOT prefix with issue numbers like `issue-1-` or `issue-X-`.
+**Naming convention**: Use descriptive kebab-case names (e.g., `core-infrastructure`, `retry-logic`). Do NOT prefix with issue numbers.
 
-Configuration is in `openspec/config.yaml`.
+Configuration: `openspec/config.yaml`

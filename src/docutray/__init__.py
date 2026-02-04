@@ -2,7 +2,7 @@
 
 A Python library for the DocuTray API, providing access to document
 processing capabilities including OCR, document identification, data
-extraction, knowledge bases, and workflows.
+extraction, and knowledge bases.
 """
 
 from ._client import AsyncClient, Client

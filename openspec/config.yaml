@@ -16,7 +16,7 @@ context: |
   - Full type hints compatible with mypy strict mode
   - Private modules prefixed with underscore (_client.py, _http.py, etc.)
 
-  Domain: Document processing API (OCR, identification, extraction, knowledge bases, workflows)
+  Domain: Document processing API (OCR, identification, extraction, knowledge bases)
 
 rules:
   proposal:

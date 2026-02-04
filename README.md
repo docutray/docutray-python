@@ -25,7 +25,6 @@ pip install docutray
 - **Document Identification**: Automatically identify document types
 - **Data Extraction**: AI-powered extraction of structured data from documents
 - **Knowledge Bases**: Organize and search document collections
-- **Workflows**: Execute predefined extraction workflows
 - **Async Support**: Non-blocking operations for large documents
 
 ## Supported Document Types
