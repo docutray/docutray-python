@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import Any
 
 import httpx
 
@@ -61,7 +62,7 @@ class BaseClient(ABC):
         self._http_client: SyncHTTPClient | None = None
 
     @property
-    def _client(self) -> SyncHTTPClient:
+    def _http(self) -> SyncHTTPClient:
         """Get the HTTP client, creating it if necessary."""
         if self._http_client is None:
             self._http_client = SyncHTTPClient(
@@ -71,6 +72,45 @@ class BaseClient(ABC):
                 retry_config=self._retry_config,
             )
         return self._http_client
+
+    def _request(
+        self,
+        method: str,
+        path: str,
+        *,
+        json: dict[str, Any] | None = None,
+        files: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> httpx.Response:
+        """Make an HTTP request to the API.
+
+        Args:
+            method: HTTP method (GET, POST, PUT, DELETE, etc.).
+            path: API endpoint path.
+            json: JSON body for the request.
+            files: Files for multipart upload.
+            params: Query parameters.
+            data: Form data for multipart requests.
+
+        Returns:
+            The HTTP response.
+        """
+        kwargs: dict[str, Any] = {}
+
+        if params:
+            # Filter out None values
+            kwargs["params"] = {k: v for k, v in params.items() if v is not None}
+
+        if files:
+            # Multipart request - don't use json
+            kwargs["files"] = files
+            if data:
+                kwargs["data"] = data
+        elif json is not None:
+            kwargs["json"] = json
+
+        return self._http.request(method, path, **kwargs)
 
     def close(self) -> None:
         """Close the client and release resources."""
@@ -145,7 +185,7 @@ class BaseAsyncClient(ABC):
         self._http_client: AsyncHTTPClient | None = None
 
     @property
-    def _client(self) -> AsyncHTTPClient:
+    def _http(self) -> AsyncHTTPClient:
         """Get the async HTTP client, creating it if necessary."""
         if self._http_client is None:
             self._http_client = AsyncHTTPClient(
@@ -155,6 +195,45 @@ class BaseAsyncClient(ABC):
                 retry_config=self._retry_config,
             )
         return self._http_client
+
+    async def _request(
+        self,
+        method: str,
+        path: str,
+        *,
+        json: dict[str, Any] | None = None,
+        files: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> httpx.Response:
+        """Make an async HTTP request to the API.
+
+        Args:
+            method: HTTP method (GET, POST, PUT, DELETE, etc.).
+            path: API endpoint path.
+            json: JSON body for the request.
+            files: Files for multipart upload.
+            params: Query parameters.
+            data: Form data for multipart requests.
+
+        Returns:
+            The HTTP response.
+        """
+        kwargs: dict[str, Any] = {}
+
+        if params:
+            # Filter out None values
+            kwargs["params"] = {k: v for k, v in params.items() if v is not None}
+
+        if files:
+            # Multipart request - don't use json
+            kwargs["files"] = files
+            if data:
+                kwargs["data"] = data
+        elif json is not None:
+            kwargs["json"] = json
+
+        return await self._http.request(method, path, **kwargs)
 
     async def close(self) -> None:
         """Close the client and release resources."""

@@ -2,10 +2,16 @@
 
 from __future__ import annotations
 
+from functools import cached_property
+
 import httpx
 from typing_extensions import Self
 
 from ._base_client import BaseAsyncClient, BaseClient
+from .resources.convert import AsyncConvert, Convert
+from .resources.document_types import AsyncDocumentTypes, DocumentTypes
+from .resources.identify import AsyncIdentify, Identify
+from .resources.steps import AsyncSteps, Steps
 
 
 class Client(BaseClient):
@@ -13,12 +19,18 @@ class Client(BaseClient):
 
     Example:
         >>> client = Client(api_key="sk_test_123")
-        >>> # Use the client...
+        >>> # Convert a document
+        >>> result = client.convert.run(
+        ...     file=Path("invoice.pdf"),
+        ...     document_type_code="invoice"
+        ... )
+        >>> print(result.data)
         >>> client.close()
 
         Or using a context manager:
         >>> with Client(api_key="sk_test_123") as client:
-        ...     # Use the client...
+        ...     result = client.identify.run(file=Path("document.pdf"))
+        ...     print(f"Type: {result.document_type.name}")
 
     Args:
         api_key: The API key for authentication. If not provided,
@@ -49,6 +61,51 @@ class Client(BaseClient):
             max_retries=max_retries,
         )
 
+    @cached_property
+    def convert(self) -> Convert:
+        """Document conversion operations.
+
+        Example:
+            >>> result = client.convert.run(
+            ...     file=Path("invoice.pdf"),
+            ...     document_type_code="invoice"
+            ... )
+        """
+        return Convert(self)
+
+    @cached_property
+    def identify(self) -> Identify:
+        """Document identification operations.
+
+        Example:
+            >>> result = client.identify.run(file=Path("document.pdf"))
+            >>> print(f"Type: {result.document_type.name}")
+        """
+        return Identify(self)
+
+    @cached_property
+    def document_types(self) -> DocumentTypes:
+        """Document type catalog operations.
+
+        Example:
+            >>> types = client.document_types.list()
+            >>> for t in types.data:
+            ...     print(t.name)
+        """
+        return DocumentTypes(self)
+
+    @cached_property
+    def steps(self) -> Steps:
+        """Step execution operations.
+
+        Example:
+            >>> status = client.steps.run_async(
+            ...     step_id="step_123",
+            ...     file=Path("document.pdf")
+            ... )
+        """
+        return Steps(self)
+
     def __enter__(self) -> Self:
         """Enter the context manager.
 
@@ -71,13 +128,12 @@ class AsyncClient(BaseAsyncClient):
     """Asynchronous client for the DocuTray API.
 
     Example:
-        >>> client = AsyncClient(api_key="sk_test_123")
-        >>> # Use the client...
-        >>> await client.close()
-
-        Or using an async context manager:
         >>> async with AsyncClient(api_key="sk_test_123") as client:
-        ...     # Use the client...
+        ...     result = await client.convert.run(
+        ...         file=Path("invoice.pdf"),
+        ...         document_type_code="invoice"
+        ...     )
+        ...     print(result.data)
 
     Args:
         api_key: The API key for authentication. If not provided,
@@ -107,6 +163,51 @@ class AsyncClient(BaseAsyncClient):
             timeout=timeout,
             max_retries=max_retries,
         )
+
+    @cached_property
+    def convert(self) -> AsyncConvert:
+        """Document conversion operations (async).
+
+        Example:
+            >>> result = await client.convert.run(
+            ...     file=Path("invoice.pdf"),
+            ...     document_type_code="invoice"
+            ... )
+        """
+        return AsyncConvert(self)
+
+    @cached_property
+    def identify(self) -> AsyncIdentify:
+        """Document identification operations (async).
+
+        Example:
+            >>> result = await client.identify.run(file=Path("document.pdf"))
+            >>> print(f"Type: {result.document_type.name}")
+        """
+        return AsyncIdentify(self)
+
+    @cached_property
+    def document_types(self) -> AsyncDocumentTypes:
+        """Document type catalog operations (async).
+
+        Example:
+            >>> types = await client.document_types.list()
+            >>> for t in types.data:
+            ...     print(t.name)
+        """
+        return AsyncDocumentTypes(self)
+
+    @cached_property
+    def steps(self) -> AsyncSteps:
+        """Step execution operations (async).
+
+        Example:
+            >>> status = await client.steps.run_async(
+            ...     step_id="step_123",
+            ...     file=Path("document.pdf")
+            ... )
+        """
+        return AsyncSteps(self)
 
     async def __aenter__(self) -> Self:
         """Enter the async context manager.

@@ -243,7 +243,7 @@ class TestRetryBehavior:
         )
 
         client = Client(api_key="sk_test", max_retries=2)
-        response = client._client.request("GET", "/test")
+        response = client._http.request("GET", "/test")
 
         assert response.status_code == 200
         assert route.call_count == 3
@@ -260,7 +260,7 @@ class TestRetryBehavior:
         )
 
         client = Client(api_key="sk_test", max_retries=2)
-        response = client._client.request("GET", "/test")
+        response = client._http.request("GET", "/test")
 
         assert response.status_code == 200
         assert route.call_count == 2
@@ -275,7 +275,7 @@ class TestRetryBehavior:
 
         client = Client(api_key="sk_test", max_retries=2)
         with pytest.raises(BadRequestError):
-            client._client.request("GET", "/test")
+            client._http.request("GET", "/test")
 
         assert route.call_count == 1
         client.close()
@@ -289,7 +289,7 @@ class TestRetryBehavior:
 
         client = Client(api_key="sk_test", max_retries=2)
         with pytest.raises(InternalServerError):
-            client._client.request("GET", "/test")
+            client._http.request("GET", "/test")
 
         client.close()
 
@@ -302,7 +302,7 @@ class TestRetryBehavior:
 
         client = Client(api_key="sk_test", max_retries=0)
         with pytest.raises(InternalServerError):
-            client._client.request("GET", "/test")
+            client._http.request("GET", "/test")
 
         assert route.call_count == 1
         client.close()
@@ -327,7 +327,7 @@ class TestRetryLogging:
         logger = logging.getLogger("docutray")
         with mock.patch.object(logger, "warning") as mock_warning:
             client = Client(api_key="sk_test", max_retries=1)
-            client._client.request("GET", "/test")
+            client._http.request("GET", "/test")
             mock_warning.assert_not_called()
             client.close()
 
@@ -349,7 +349,7 @@ class TestRetryLogging:
         with mock.patch.dict(os.environ, {"DOCUTRAY_LOG": "1"}):
             with mock.patch.object(logger, "warning") as mock_warning:
                 client = Client(api_key="sk_test", max_retries=1)
-                client._client.request("GET", "/test")
+                client._http.request("GET", "/test")
                 mock_warning.assert_called()
                 client.close()
 
@@ -369,7 +369,7 @@ class TestAsyncRetryBehavior:
         )
 
         async with AsyncClient(api_key="sk_test", max_retries=2) as client:
-            response = await client._client.request("GET", "/test")
+            response = await client._http.request("GET", "/test")
 
             assert response.status_code == 200
             assert route.call_count == 3
@@ -385,7 +385,7 @@ class TestAsyncRetryBehavior:
         )
 
         async with AsyncClient(api_key="sk_test", max_retries=2) as client:
-            response = await client._client.request("GET", "/test")
+            response = await client._http.request("GET", "/test")
 
             assert response.status_code == 200
             assert route.call_count == 2
@@ -399,7 +399,7 @@ class TestAsyncRetryBehavior:
 
         async with AsyncClient(api_key="sk_test", max_retries=2) as client:
             with pytest.raises(BadRequestError):
-                await client._client.request("GET", "/test")
+                await client._http.request("GET", "/test")
 
             assert route.call_count == 1
 
@@ -412,7 +412,7 @@ class TestAsyncRetryBehavior:
 
         async with AsyncClient(api_key="sk_test", max_retries=2) as client:
             with pytest.raises(InternalServerError):
-                await client._client.request("GET", "/test")
+                await client._http.request("GET", "/test")
 
     @respx.mock
     async def test_async_zero_retries_no_retry(self) -> None:
@@ -423,6 +423,6 @@ class TestAsyncRetryBehavior:
 
         async with AsyncClient(api_key="sk_test", max_retries=0) as client:
             with pytest.raises(InternalServerError):
-                await client._client.request("GET", "/test")
+                await client._http.request("GET", "/test")
 
             assert route.call_count == 1

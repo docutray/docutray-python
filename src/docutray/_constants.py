@@ -79,3 +79,7 @@ class RetryConfig:
 
 # Default retry configuration
 DEFAULT_RETRY_CONFIG = RetryConfig()
+
+# Async Polling Configuration
+DEFAULT_POLL_INTERVAL = 2.0  # seconds between status checks
+DEFAULT_POLL_TIMEOUT = 300.0  # 5 minutes total timeout
