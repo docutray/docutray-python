@@ -32,7 +32,7 @@ uv run ruff format src
 
 This is an API wrapper library following patterns similar to stripe-python. The package is published as `docutray` on PyPI.
 
-- **Source code**: `src/docutray_python/`
+- **Source code**: `src/docutray/`
 - **Package is typed**: includes `py.typed` marker
 - **Build system**: uv with uv_build backend
 - **Python support**: 3.10+
@@ -54,5 +54,7 @@ This project uses OpenSpec for structured change management. Use the following c
 - `/opsx:continue` - Continue working on a change
 - `/opsx:apply` - Implement tasks from a change
 - `/opsx:verify` - Verify implementation before archiving
+
+**Naming convention**: Use descriptive kebab-case names for changes (e.g., `core-infrastructure`, `retry-logic`). Do NOT prefix with issue numbers like `issue-1-` or `issue-X-`.
 
 Configuration is in `openspec/config.yaml`.

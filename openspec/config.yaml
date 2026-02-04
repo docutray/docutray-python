@@ -4,7 +4,7 @@ context: |
   Tech stack: Python 3.10+, httpx, Pydantic v2
   Build system: uv with uv_build backend
   Package name: docutray (published on PyPI)
-  Source directory: src/docutray_python/
+  Source directory: src/docutray/
 
   This is an API wrapper library following patterns from stripe-python and openai-python.
   The SDK follows a 3-layer architecture: Client Layer → HTTP Layer → Exceptions Layer.
