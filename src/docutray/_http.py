@@ -7,6 +7,7 @@ from typing import Any
 import httpx
 
 from ._constants import DEFAULT_TIMEOUT
+from ._exceptions import APIConnectionError, APITimeoutError
 from ._version import __version__
 
 
@@ -84,9 +85,18 @@ class SyncHTTPClient:
 
         Returns:
             The HTTP response.
+
+        Raises:
+            APITimeoutError: If the request times out.
+            APIConnectionError: If a connection error occurs.
         """
         client = self._ensure_client()
-        return client.request(method, path, **kwargs)
+        try:
+            return client.request(method, path, **kwargs)
+        except httpx.TimeoutException as e:
+            raise APITimeoutError(str(e)) from e
+        except httpx.RequestError as e:
+            raise APIConnectionError(str(e)) from e
 
 
 class AsyncHTTPClient:
@@ -146,6 +156,15 @@ class AsyncHTTPClient:
 
         Returns:
             The HTTP response.
+
+        Raises:
+            APITimeoutError: If the request times out.
+            APIConnectionError: If a connection error occurs.
         """
         client = self._ensure_client()
-        return await client.request(method, path, **kwargs)
+        try:
+            return await client.request(method, path, **kwargs)
+        except httpx.TimeoutException as e:
+            raise APITimeoutError(str(e)) from e
+        except httpx.RequestError as e:
+            raise APIConnectionError(str(e)) from e

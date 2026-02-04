@@ -25,7 +25,7 @@ The SDK currently only contains a placeholder `hello()` function. To provide a f
 
 ## Impact
 
-- **Code**: All files in `src/docutray_python/` - new modules for client, HTTP, exceptions, types, utils
+- **Code**: All files in `src/docutray/` - new modules for client, HTTP, exceptions, types, utils
 - **Dependencies**: Add httpx, pydantic, typing-extensions to pyproject.toml
 - **Dev Tools**: Add pytest, mypy, ruff configuration
 - **API**: New public exports `Client`, `AsyncClient`, `DocuTrayError` from package root

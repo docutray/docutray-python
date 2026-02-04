@@ -70,7 +70,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["docutray_python"]
+known-first-party = ["docutray"]
 
 [tool.mypy]
 python_version = "3.10"
