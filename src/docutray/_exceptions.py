@@ -179,10 +179,12 @@ class RateLimitError(APIError):
         """Get the type of rate limit exceeded (minute, hour, day).
 
         Returns:
-            The limit type, or None if not specified.
+            The limit type as a string, or None if not specified or not a string.
         """
         if isinstance(self.body, dict):
-            return self.body.get("limitType")
+            limit_type_val = self.body.get("limitType")
+            if isinstance(limit_type_val, str):
+                return limit_type_val
         return None
 
     @property
