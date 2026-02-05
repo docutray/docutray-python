@@ -54,7 +54,9 @@ class KnowledgeBaseDocuments:
         data = response.json()
 
         pagination = Pagination.model_validate(data.get("pagination", {}))
-        items = [KnowledgeBaseDocument.model_validate(item) for item in data.get("data", [])]
+        items = [
+            KnowledgeBaseDocument.model_validate(item) for item in data.get("data", [])
+        ]
 
         return Page(
             data=items,
@@ -106,7 +108,9 @@ class KnowledgeBaseDocuments:
             "GET",
             f"/api/knowledge-bases/{self._knowledge_base_id}/documents/{document_id}",
         )
-        return KnowledgeBaseDocument.model_validate(response.json().get("data", response.json()))
+        return KnowledgeBaseDocument.model_validate(
+            response.json().get("data", response.json())
+        )
 
     def create(
         self,
@@ -134,7 +138,10 @@ class KnowledgeBaseDocuments:
             ... )
             >>> print(f"Created: {doc.id}")
         """
-        body: dict[str, Any] = {"content": content, "generateEmbedding": generate_embedding}
+        body: dict[str, Any] = {
+            "content": content,
+            "generateEmbedding": generate_embedding,
+        }
         if document_id is not None:
             body["documentId"] = document_id
         if metadata is not None:
@@ -145,7 +152,9 @@ class KnowledgeBaseDocuments:
             f"/api/knowledge-bases/{self._knowledge_base_id}/documents",
             json=body,
         )
-        return KnowledgeBaseDocument.model_validate(response.json().get("data", response.json()))
+        return KnowledgeBaseDocument.model_validate(
+            response.json().get("data", response.json())
+        )
 
     def update(
         self,
@@ -183,7 +192,9 @@ class KnowledgeBaseDocuments:
             f"/api/knowledge-bases/{self._knowledge_base_id}/documents/{document_id}",
             json=body,
         )
-        return KnowledgeBaseDocument.model_validate(response.json().get("data", response.json()))
+        return KnowledgeBaseDocument.model_validate(
+            response.json().get("data", response.json())
+        )
 
     def delete(self, document_id: str) -> None:
         """Delete a document from the knowledge base.
@@ -238,7 +249,9 @@ class AsyncKnowledgeBaseDocuments:
         data = response.json()
 
         pagination = Pagination.model_validate(data.get("pagination", {}))
-        items = [KnowledgeBaseDocument.model_validate(item) for item in data.get("data", [])]
+        items = [
+            KnowledgeBaseDocument.model_validate(item) for item in data.get("data", [])
+        ]
 
         return AsyncPage(
             data=items,
@@ -278,7 +291,9 @@ class AsyncKnowledgeBaseDocuments:
             "GET",
             f"/api/knowledge-bases/{self._knowledge_base_id}/documents/{document_id}",
         )
-        return KnowledgeBaseDocument.model_validate(response.json().get("data", response.json()))
+        return KnowledgeBaseDocument.model_validate(
+            response.json().get("data", response.json())
+        )
 
     async def create(
         self,
@@ -299,7 +314,10 @@ class AsyncKnowledgeBaseDocuments:
         Returns:
             The created document.
         """
-        body: dict[str, Any] = {"content": content, "generateEmbedding": generate_embedding}
+        body: dict[str, Any] = {
+            "content": content,
+            "generateEmbedding": generate_embedding,
+        }
         if document_id is not None:
             body["documentId"] = document_id
         if metadata is not None:
@@ -310,7 +328,9 @@ class AsyncKnowledgeBaseDocuments:
             f"/api/knowledge-bases/{self._knowledge_base_id}/documents",
             json=body,
         )
-        return KnowledgeBaseDocument.model_validate(response.json().get("data", response.json()))
+        return KnowledgeBaseDocument.model_validate(
+            response.json().get("data", response.json())
+        )
 
     async def update(
         self,
@@ -342,7 +362,9 @@ class AsyncKnowledgeBaseDocuments:
             f"/api/knowledge-bases/{self._knowledge_base_id}/documents/{document_id}",
             json=body,
         )
-        return KnowledgeBaseDocument.model_validate(response.json().get("data", response.json()))
+        return KnowledgeBaseDocument.model_validate(
+            response.json().get("data", response.json())
+        )
 
     async def delete(self, document_id: str) -> None:
         """Delete a document from the knowledge base.
@@ -405,7 +427,9 @@ class KnowledgeBases:
         return Page(
             data=items,
             pagination=pagination,
-            fetch_page=lambda p: self._fetch_page(p, limit=limit, search=search, is_active=is_active),
+            fetch_page=lambda p: self._fetch_page(
+                p, limit=limit, search=search, is_active=is_active
+            ),
         )
 
     def list(
@@ -431,7 +455,9 @@ class KnowledgeBases:
             >>> for kb in client.knowledge_bases.list().auto_paging_iter():
             ...     print(f"{kb.name}: {kb.documentCount} documents")
         """
-        return self._fetch_page(page or 1, limit=limit, search=search, is_active=is_active)
+        return self._fetch_page(
+            page or 1, limit=limit, search=search, is_active=is_active
+        )
 
     def get(self, knowledge_base_id: str) -> KnowledgeBase:
         """Get a specific knowledge base by ID.
@@ -449,8 +475,12 @@ class KnowledgeBases:
             >>> kb = client.knowledge_bases.get("kb_123")
             >>> print(f"{kb.name}: {kb.description}")
         """
-        response = self._client._request("GET", f"/api/knowledge-bases/{knowledge_base_id}")
-        return KnowledgeBase.model_validate(response.json().get("data", response.json()))
+        response = self._client._request(
+            "GET", f"/api/knowledge-bases/{knowledge_base_id}"
+        )
+        return KnowledgeBase.model_validate(
+            response.json().get("data", response.json())
+        )
 
     def create(
         self,
@@ -491,7 +521,9 @@ class KnowledgeBases:
             body["indexingPreferences"] = indexing_preferences
 
         response = self._client._request("POST", "/api/knowledge-bases", json=body)
-        return KnowledgeBase.model_validate(response.json().get("data", response.json()))
+        return KnowledgeBase.model_validate(
+            response.json().get("data", response.json())
+        )
 
     def update(
         self,
@@ -531,7 +563,9 @@ class KnowledgeBases:
             f"/api/knowledge-bases/{knowledge_base_id}",
             json=body,
         )
-        return KnowledgeBase.model_validate(response.json().get("data", response.json()))
+        return KnowledgeBase.model_validate(
+            response.json().get("data", response.json())
+        )
 
     def delete(self, knowledge_base_id: str) -> None:
         """Delete a knowledge base.
@@ -612,7 +646,11 @@ class KnowledgeBases:
         items = []
         for item_data in data.get("data", []):
             doc = KnowledgeBaseDocument.model_validate(item_data.get("document", {}))
-            items.append(SearchResultItem(document=doc, similarity=item_data.get("similarity", 0)))
+            items.append(
+                SearchResultItem(
+                    document=doc, similarity=item_data.get("similarity", 0)
+                )
+            )
 
         return SearchResult(
             data=items,
@@ -696,7 +734,9 @@ class AsyncKnowledgeBases:
         if is_active is not None:
             params["isActive"] = is_active
 
-        response = await self._client._request("GET", "/api/knowledge-bases", params=params)
+        response = await self._client._request(
+            "GET", "/api/knowledge-bases", params=params
+        )
         data = response.json()
 
         pagination = Pagination.model_validate(data.get("pagination", {}))
@@ -705,7 +745,9 @@ class AsyncKnowledgeBases:
         return AsyncPage(
             data=items,
             pagination=pagination,
-            fetch_page=lambda p: self._fetch_page(p, limit=limit, search=search, is_active=is_active),
+            fetch_page=lambda p: self._fetch_page(
+                p, limit=limit, search=search, is_active=is_active
+            ),
         )
 
     async def list(
@@ -727,7 +769,9 @@ class AsyncKnowledgeBases:
         Returns:
             An AsyncPage of knowledge bases with pagination support.
         """
-        return await self._fetch_page(page or 1, limit=limit, search=search, is_active=is_active)
+        return await self._fetch_page(
+            page or 1, limit=limit, search=search, is_active=is_active
+        )
 
     async def get(self, knowledge_base_id: str) -> KnowledgeBase:
         """Get a specific knowledge base by ID.
@@ -738,8 +782,12 @@ class AsyncKnowledgeBases:
         Returns:
             The knowledge base details.
         """
-        response = await self._client._request("GET", f"/api/knowledge-bases/{knowledge_base_id}")
-        return KnowledgeBase.model_validate(response.json().get("data", response.json()))
+        response = await self._client._request(
+            "GET", f"/api/knowledge-bases/{knowledge_base_id}"
+        )
+        return KnowledgeBase.model_validate(
+            response.json().get("data", response.json())
+        )
 
     async def create(
         self,
@@ -768,8 +816,12 @@ class AsyncKnowledgeBases:
         if indexing_preferences is not None:
             body["indexingPreferences"] = indexing_preferences
 
-        response = await self._client._request("POST", "/api/knowledge-bases", json=body)
-        return KnowledgeBase.model_validate(response.json().get("data", response.json()))
+        response = await self._client._request(
+            "POST", "/api/knowledge-bases", json=body
+        )
+        return KnowledgeBase.model_validate(
+            response.json().get("data", response.json())
+        )
 
     async def update(
         self,
@@ -803,7 +855,9 @@ class AsyncKnowledgeBases:
             f"/api/knowledge-bases/{knowledge_base_id}",
             json=body,
         )
-        return KnowledgeBase.model_validate(response.json().get("data", response.json()))
+        return KnowledgeBase.model_validate(
+            response.json().get("data", response.json())
+        )
 
     async def delete(self, knowledge_base_id: str) -> None:
         """Delete a knowledge base.
@@ -811,7 +865,9 @@ class AsyncKnowledgeBases:
         Args:
             knowledge_base_id: The knowledge base ID to delete.
         """
-        await self._client._request("DELETE", f"/api/knowledge-bases/{knowledge_base_id}")
+        await self._client._request(
+            "DELETE", f"/api/knowledge-bases/{knowledge_base_id}"
+        )
 
     def documents(self, knowledge_base_id: str) -> AsyncKnowledgeBaseDocuments:
         """Access document operations for a knowledge base.
@@ -864,7 +920,11 @@ class AsyncKnowledgeBases:
         items = []
         for item_data in data.get("data", []):
             doc = KnowledgeBaseDocument.model_validate(item_data.get("document", {}))
-            items.append(SearchResultItem(document=doc, similarity=item_data.get("similarity", 0)))
+            items.append(
+                SearchResultItem(
+                    document=doc, similarity=item_data.get("similarity", 0)
+                )
+            )
 
         return SearchResult(
             data=items,

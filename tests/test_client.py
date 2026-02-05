@@ -71,7 +71,7 @@ class TestClientConfiguration:
     def test_default_base_url(self) -> None:
         """Client uses default base URL when not specified."""
         client = Client(api_key="sk_test")
-        assert client._base_url == "https://api.docutray.com"
+        assert client._base_url == "https://app.docutray.com"
         client.close()
 
     def test_custom_base_url(self) -> None:

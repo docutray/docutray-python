@@ -87,7 +87,7 @@ class TestConvertRunAsync:
                 json={
                     "conversion_id": "conv_abc123",
                     "status": "ENQUEUED",
-                    "status_url": "https://api.docutray.com/api/convert-async/status/conv_abc123",
+                    "status_url": "https://app.docutray.com/api/convert-async/status/conv_abc123",
                 },
             )
         )
@@ -280,7 +280,7 @@ class TestAsyncConvertRunAsync:
                 json={
                     "conversion_id": "conv_abc123",
                     "status": "ENQUEUED",
-                    "status_url": "https://api.docutray.com/api/convert-async/status/conv_abc123",
+                    "status_url": "https://app.docutray.com/api/convert-async/status/conv_abc123",
                 },
             )
         )

@@ -234,7 +234,7 @@ class TestRetryBehavior:
     def test_retries_on_500(self) -> None:
         """Client retries on 500 errors."""
         # First two calls fail, third succeeds
-        route = respx.get("https://api.docutray.com/test").mock(
+        route = respx.get("https://app.docutray.com/test").mock(
             side_effect=[
                 httpx.Response(500, text="Server Error"),
                 httpx.Response(500, text="Server Error"),
@@ -252,7 +252,7 @@ class TestRetryBehavior:
     @respx.mock
     def test_retries_on_429(self) -> None:
         """Client retries on 429 with Retry-After."""
-        route = respx.get("https://api.docutray.com/test").mock(
+        route = respx.get("https://app.docutray.com/test").mock(
             side_effect=[
                 httpx.Response(429, headers={"Retry-After": "0.01"}),
                 httpx.Response(200, json={"success": True}),
@@ -269,7 +269,7 @@ class TestRetryBehavior:
     @respx.mock
     def test_no_retry_on_400(self) -> None:
         """Client does not retry on 400 errors."""
-        route = respx.get("https://api.docutray.com/test").mock(
+        route = respx.get("https://app.docutray.com/test").mock(
             return_value=httpx.Response(400, json={"error": "Bad request"})
         )
 
@@ -283,7 +283,7 @@ class TestRetryBehavior:
     @respx.mock
     def test_raises_after_max_retries(self) -> None:
         """Client raises after exhausting retries."""
-        respx.get("https://api.docutray.com/test").mock(
+        respx.get("https://app.docutray.com/test").mock(
             return_value=httpx.Response(500, text="Server Error")
         )
 
@@ -296,7 +296,7 @@ class TestRetryBehavior:
     @respx.mock
     def test_zero_retries_no_retry(self) -> None:
         """Client with max_retries=0 doesn't retry."""
-        route = respx.get("https://api.docutray.com/test").mock(
+        route = respx.get("https://app.docutray.com/test").mock(
             return_value=httpx.Response(500, text="Server Error")
         )
 
@@ -316,7 +316,7 @@ class TestRetryLogging:
         """Retry logging is disabled by default."""
         import logging
 
-        respx.get("https://api.docutray.com/test").mock(
+        respx.get("https://app.docutray.com/test").mock(
             side_effect=[
                 httpx.Response(500, text="Server Error"),
                 httpx.Response(200, json={"success": True}),
@@ -337,7 +337,7 @@ class TestRetryLogging:
         import logging
         import os
 
-        respx.get("https://api.docutray.com/test").mock(
+        respx.get("https://app.docutray.com/test").mock(
             side_effect=[
                 httpx.Response(500, text="Server Error"),
                 httpx.Response(200, json={"success": True}),
@@ -360,7 +360,7 @@ class TestTimeoutRetryBehavior:
     @respx.mock
     def test_retries_on_timeout(self) -> None:
         """Client retries on timeout errors."""
-        route = respx.get("https://api.docutray.com/test").mock(
+        route = respx.get("https://app.docutray.com/test").mock(
             side_effect=[
                 httpx.TimeoutException("Connection timed out"),
                 httpx.TimeoutException("Connection timed out"),
@@ -378,7 +378,7 @@ class TestTimeoutRetryBehavior:
     @respx.mock
     def test_raises_timeout_after_max_retries(self) -> None:
         """Client raises APITimeoutError after exhausting retries."""
-        respx.get("https://api.docutray.com/test").mock(
+        respx.get("https://app.docutray.com/test").mock(
             side_effect=httpx.TimeoutException("Connection timed out")
         )
 
@@ -391,7 +391,7 @@ class TestTimeoutRetryBehavior:
     @respx.mock
     def test_retries_on_connection_error(self) -> None:
         """Client retries on connection errors."""
-        route = respx.get("https://api.docutray.com/test").mock(
+        route = respx.get("https://app.docutray.com/test").mock(
             side_effect=[
                 httpx.ConnectError("Connection refused"),
                 httpx.ConnectError("Connection refused"),
@@ -409,7 +409,7 @@ class TestTimeoutRetryBehavior:
     @respx.mock
     def test_raises_connection_error_after_max_retries(self) -> None:
         """Client raises APIConnectionError after exhausting retries."""
-        respx.get("https://api.docutray.com/test").mock(
+        respx.get("https://app.docutray.com/test").mock(
             side_effect=httpx.ConnectError("Connection refused")
         )
 
@@ -426,7 +426,7 @@ class TestAsyncTimeoutRetryBehavior:
     @respx.mock
     async def test_async_retries_on_timeout(self) -> None:
         """AsyncClient retries on timeout errors."""
-        route = respx.get("https://api.docutray.com/test").mock(
+        route = respx.get("https://app.docutray.com/test").mock(
             side_effect=[
                 httpx.TimeoutException("Connection timed out"),
                 httpx.TimeoutException("Connection timed out"),
@@ -443,7 +443,7 @@ class TestAsyncTimeoutRetryBehavior:
     @respx.mock
     async def test_async_raises_timeout_after_max_retries(self) -> None:
         """AsyncClient raises APITimeoutError after exhausting retries."""
-        respx.get("https://api.docutray.com/test").mock(
+        respx.get("https://app.docutray.com/test").mock(
             side_effect=httpx.TimeoutException("Connection timed out")
         )
 
@@ -454,7 +454,7 @@ class TestAsyncTimeoutRetryBehavior:
     @respx.mock
     async def test_async_retries_on_connection_error(self) -> None:
         """AsyncClient retries on connection errors."""
-        route = respx.get("https://api.docutray.com/test").mock(
+        route = respx.get("https://app.docutray.com/test").mock(
             side_effect=[
                 httpx.ConnectError("Connection refused"),
                 httpx.ConnectError("Connection refused"),
@@ -471,7 +471,7 @@ class TestAsyncTimeoutRetryBehavior:
     @respx.mock
     async def test_async_raises_connection_error_after_max_retries(self) -> None:
         """AsyncClient raises APIConnectionError after exhausting retries."""
-        respx.get("https://api.docutray.com/test").mock(
+        respx.get("https://app.docutray.com/test").mock(
             side_effect=httpx.ConnectError("Connection refused")
         )
 
@@ -486,7 +486,7 @@ class TestAsyncRetryBehavior:
     @respx.mock
     async def test_async_retries_on_500(self) -> None:
         """AsyncClient retries on 500 errors."""
-        route = respx.get("https://api.docutray.com/test").mock(
+        route = respx.get("https://app.docutray.com/test").mock(
             side_effect=[
                 httpx.Response(500, text="Server Error"),
                 httpx.Response(500, text="Server Error"),
@@ -503,7 +503,7 @@ class TestAsyncRetryBehavior:
     @respx.mock
     async def test_async_retries_on_429(self) -> None:
         """AsyncClient retries on 429 with Retry-After."""
-        route = respx.get("https://api.docutray.com/test").mock(
+        route = respx.get("https://app.docutray.com/test").mock(
             side_effect=[
                 httpx.Response(429, headers={"Retry-After": "0.01"}),
                 httpx.Response(200, json={"success": True}),
@@ -519,7 +519,7 @@ class TestAsyncRetryBehavior:
     @respx.mock
     async def test_async_no_retry_on_400(self) -> None:
         """AsyncClient does not retry on 400 errors."""
-        route = respx.get("https://api.docutray.com/test").mock(
+        route = respx.get("https://app.docutray.com/test").mock(
             return_value=httpx.Response(400, json={"error": "Bad request"})
         )
 
@@ -532,7 +532,7 @@ class TestAsyncRetryBehavior:
     @respx.mock
     async def test_async_raises_after_max_retries(self) -> None:
         """AsyncClient raises after exhausting retries."""
-        respx.get("https://api.docutray.com/test").mock(
+        respx.get("https://app.docutray.com/test").mock(
             return_value=httpx.Response(500, text="Server Error")
         )
 
@@ -543,7 +543,7 @@ class TestAsyncRetryBehavior:
     @respx.mock
     async def test_async_zero_retries_no_retry(self) -> None:
         """AsyncClient with max_retries=0 doesn't retry."""
-        route = respx.get("https://api.docutray.com/test").mock(
+        route = respx.get("https://app.docutray.com/test").mock(
             return_value=httpx.Response(500, text="Server Error")
         )
 

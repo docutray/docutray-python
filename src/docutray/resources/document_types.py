@@ -219,7 +219,9 @@ class AsyncDocumentTypes:
         if search is not None:
             params["search"] = search
 
-        response = await self._client._request("GET", "/api/document-types", params=params)
+        response = await self._client._request(
+            "GET", "/api/document-types", params=params
+        )
         data = response.json()
 
         pagination = Pagination.model_validate(data.get("pagination", {}))
