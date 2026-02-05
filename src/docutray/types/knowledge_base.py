@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class KnowledgeBase(BaseModel):
@@ -22,7 +22,7 @@ class KnowledgeBase(BaseModel):
     description: str | None = None
     """Description of the knowledge base."""
 
-    schema_: dict[str, Any] | None = None
+    schema_: dict[str, Any] | None = Field(default=None, alias="schema")
     """JSON schema for documents in this knowledge base."""
 
     isActive: bool = True

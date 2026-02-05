@@ -892,7 +892,6 @@ class StepsWithRawResponse:
             files = {field_name: file_tuple}
             data: dict[str, Any] = {}
             if input_data:
-                import json
                 data["input_data"] = json.dumps(input_data)
             response = self._steps._client._request("POST", f"/api/steps-async/{step_id}", files=files, data=data if data else None)
         elif url is not None:
@@ -979,7 +978,6 @@ class AsyncStepsWithRawResponse:
             files = {field_name: file_tuple}
             data: dict[str, Any] = {}
             if input_data:
-                import json
                 data["input_data"] = json.dumps(input_data)
             response = await self._steps._client._request("POST", f"/api/steps-async/{step_id}", files=files, data=data if data else None)
         elif url is not None:

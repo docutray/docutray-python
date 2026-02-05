@@ -114,6 +114,7 @@ class KnowledgeBaseDocuments:
         content: dict[str, Any],
         document_id: str | None = None,
         metadata: dict[str, Any] | None = None,
+        generate_embedding: bool = True,
     ) -> KnowledgeBaseDocument:
         """Add a document to the knowledge base.
 
@@ -121,6 +122,7 @@ class KnowledgeBaseDocuments:
             content: Document content matching the knowledge base schema.
             document_id: Optional external document reference ID.
             metadata: Optional additional metadata.
+            generate_embedding: Whether to automatically generate embedding. Defaults to True.
 
         Returns:
             The created document.
@@ -132,7 +134,7 @@ class KnowledgeBaseDocuments:
             ... )
             >>> print(f"Created: {doc.id}")
         """
-        body: dict[str, Any] = {"content": content}
+        body: dict[str, Any] = {"content": content, "generateEmbedding": generate_embedding}
         if document_id is not None:
             body["documentId"] = document_id
         if metadata is not None:
@@ -151,6 +153,7 @@ class KnowledgeBaseDocuments:
         *,
         content: dict[str, Any] | None = None,
         metadata: dict[str, Any] | None = None,
+        regenerate_embedding: bool = False,
     ) -> KnowledgeBaseDocument:
         """Update a document in the knowledge base.
 
@@ -158,6 +161,7 @@ class KnowledgeBaseDocuments:
             document_id: The document ID to update.
             content: Updated document content.
             metadata: Updated metadata.
+            regenerate_embedding: Whether to force embedding regeneration. Defaults to False.
 
         Returns:
             The updated document.
@@ -168,14 +172,14 @@ class KnowledgeBaseDocuments:
             ...     content={"title": "Updated Guide", "text": "..."}
             ... )
         """
-        body: dict[str, Any] = {}
+        body: dict[str, Any] = {"regenerateEmbedding": regenerate_embedding}
         if content is not None:
             body["content"] = content
         if metadata is not None:
             body["metadata"] = metadata
 
         response = self._client._request(
-            "PATCH",
+            "PUT",
             f"/api/knowledge-bases/{self._knowledge_base_id}/documents/{document_id}",
             json=body,
         )
@@ -282,6 +286,7 @@ class AsyncKnowledgeBaseDocuments:
         content: dict[str, Any],
         document_id: str | None = None,
         metadata: dict[str, Any] | None = None,
+        generate_embedding: bool = True,
     ) -> KnowledgeBaseDocument:
         """Add a document to the knowledge base.
 
@@ -289,11 +294,12 @@ class AsyncKnowledgeBaseDocuments:
             content: Document content matching the knowledge base schema.
             document_id: Optional external document reference ID.
             metadata: Optional additional metadata.
+            generate_embedding: Whether to automatically generate embedding. Defaults to True.
 
         Returns:
             The created document.
         """
-        body: dict[str, Any] = {"content": content}
+        body: dict[str, Any] = {"content": content, "generateEmbedding": generate_embedding}
         if document_id is not None:
             body["documentId"] = document_id
         if metadata is not None:
@@ -312,6 +318,7 @@ class AsyncKnowledgeBaseDocuments:
         *,
         content: dict[str, Any] | None = None,
         metadata: dict[str, Any] | None = None,
+        regenerate_embedding: bool = False,
     ) -> KnowledgeBaseDocument:
         """Update a document in the knowledge base.
 
@@ -319,18 +326,19 @@ class AsyncKnowledgeBaseDocuments:
             document_id: The document ID to update.
             content: Updated document content.
             metadata: Updated metadata.
+            regenerate_embedding: Whether to force embedding regeneration. Defaults to False.
 
         Returns:
             The updated document.
         """
-        body: dict[str, Any] = {}
+        body: dict[str, Any] = {"regenerateEmbedding": regenerate_embedding}
         if content is not None:
             body["content"] = content
         if metadata is not None:
             body["metadata"] = metadata
 
         response = await self._client._request(
-            "PATCH",
+            "PUT",
             f"/api/knowledge-bases/{self._knowledge_base_id}/documents/{document_id}",
             json=body,
         )
@@ -519,7 +527,7 @@ class KnowledgeBases:
             body["isActive"] = is_active
 
         response = self._client._request(
-            "PATCH",
+            "PUT",
             f"/api/knowledge-bases/{knowledge_base_id}",
             json=body,
         )
@@ -791,7 +799,7 @@ class AsyncKnowledgeBases:
             body["isActive"] = is_active
 
         response = await self._client._request(
-            "PATCH",
+            "PUT",
             f"/api/knowledge-bases/{knowledge_base_id}",
             json=body,
         )

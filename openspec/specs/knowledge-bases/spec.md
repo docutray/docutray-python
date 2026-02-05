@@ -54,50 +54,50 @@ The SDK SHALL provide a `knowledge_bases.delete()` method that deletes a knowled
 - **THEN** SDK returns None and knowledge base is soft-deleted
 
 ### Requirement: List documents in knowledge base
-The SDK SHALL provide a `knowledge_bases.documents.list()` method that retrieves documents from `/api/knowledge-bases/{id}/documents`.
+The SDK SHALL provide a `knowledge_bases.documents(kb_id).list()` method that retrieves documents from `/api/knowledge-bases/{id}/documents`.
 
 #### Scenario: List documents
-- **WHEN** user calls `client.knowledge_bases.documents.list(kb_id="kb_123")`
+- **WHEN** user calls `client.knowledge_bases.documents("kb_123").list()`
 - **THEN** SDK returns `Page[KnowledgeBaseDocument]` with pagination
 
 #### Scenario: Search documents
-- **WHEN** user calls `client.knowledge_bases.documents.list(kb_id="kb_123", search="installation")`
+- **WHEN** user calls `client.knowledge_bases.documents("kb_123").list(search="installation")`
 - **THEN** SDK returns documents matching search term
 
 ### Requirement: Get document from knowledge base
-The SDK SHALL provide a `knowledge_bases.documents.get()` method that retrieves a specific document from `/api/knowledge-bases/{id}/documents/{documentId}`.
+The SDK SHALL provide a `knowledge_bases.documents(kb_id).get()` method that retrieves a specific document from `/api/knowledge-bases/{id}/documents/{documentId}`.
 
 #### Scenario: Get document
-- **WHEN** user calls `client.knowledge_bases.documents.get(kb_id="kb_123", document_id="doc_456")`
+- **WHEN** user calls `client.knowledge_bases.documents("kb_123").get("doc_456")`
 - **THEN** SDK returns `KnowledgeBaseDocument` with content and metadata
 
 ### Requirement: Create document in knowledge base
-The SDK SHALL provide a `knowledge_bases.documents.create()` method that adds a document via POST `/api/knowledge-bases/{id}/documents`.
+The SDK SHALL provide a `knowledge_bases.documents(kb_id).create()` method that adds a document via POST `/api/knowledge-bases/{id}/documents`.
 
 #### Scenario: Create document
-- **WHEN** user calls `client.knowledge_bases.documents.create(kb_id="kb_123", document_id="doc-001", content={...})`
+- **WHEN** user calls `client.knowledge_bases.documents("kb_123").create(document_id="doc-001", content={...})`
 - **THEN** SDK returns newly created `KnowledgeBaseDocument`
 
 #### Scenario: Create document with embedding
-- **WHEN** user calls `client.knowledge_bases.documents.create(kb_id="kb_123", document_id="doc-001", content={...}, generate_embedding=True)`
+- **WHEN** user calls `client.knowledge_bases.documents("kb_123").create(document_id="doc-001", content={...}, generate_embedding=True)`
 - **THEN** SDK creates document and generates embedding automatically
 
 ### Requirement: Update document in knowledge base
-The SDK SHALL provide a `knowledge_bases.documents.update()` method that updates a document via PUT `/api/knowledge-bases/{id}/documents/{documentId}`.
+The SDK SHALL provide a `knowledge_bases.documents(kb_id).update()` method that updates a document via PUT `/api/knowledge-bases/{id}/documents/{documentId}`.
 
 #### Scenario: Update document content
-- **WHEN** user calls `client.knowledge_bases.documents.update(kb_id="kb_123", document_id="doc_456", content={...})`
+- **WHEN** user calls `client.knowledge_bases.documents("kb_123").update("doc_456", content={...})`
 - **THEN** SDK returns updated `KnowledgeBaseDocument`
 
 #### Scenario: Regenerate embedding
-- **WHEN** user calls `client.knowledge_bases.documents.update(kb_id="kb_123", document_id="doc_456", content={...}, regenerate_embedding=True)`
+- **WHEN** user calls `client.knowledge_bases.documents("kb_123").update("doc_456", content={...}, regenerate_embedding=True)`
 - **THEN** SDK updates content and regenerates embedding
 
 ### Requirement: Delete document from knowledge base
-The SDK SHALL provide a `knowledge_bases.documents.delete()` method that removes a document via DELETE `/api/knowledge-bases/{id}/documents/{documentId}`.
+The SDK SHALL provide a `knowledge_bases.documents(kb_id).delete()` method that removes a document via DELETE `/api/knowledge-bases/{id}/documents/{documentId}`.
 
 #### Scenario: Delete document
-- **WHEN** user calls `client.knowledge_bases.documents.delete(kb_id="kb_123", document_id="doc_456")`
+- **WHEN** user calls `client.knowledge_bases.documents("kb_123").delete("doc_456")`
 - **THEN** SDK returns None and document is deleted
 
 ### Requirement: Semantic search in knowledge base

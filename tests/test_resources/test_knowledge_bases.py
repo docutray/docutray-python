@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import httpx
-import pytest
 import respx
 
 from docutray import (
@@ -139,7 +138,7 @@ class TestKnowledgeBasesUpdate:
 
     def test_update_knowledge_base(self, client: Client, mock_api: respx.MockRouter) -> None:
         """Update a knowledge base."""
-        mock_api.patch("/api/knowledge-bases/kb_123").mock(
+        mock_api.put("/api/knowledge-bases/kb_123").mock(
             return_value=httpx.Response(
                 200,
                 json={
@@ -256,7 +255,7 @@ class TestKnowledgeBasesDocuments:
 
     def test_update_document(self, client: Client, mock_api: respx.MockRouter) -> None:
         """Update a document."""
-        mock_api.patch("/api/knowledge-bases/kb_123/documents/doc_456").mock(
+        mock_api.put("/api/knowledge-bases/kb_123/documents/doc_456").mock(
             return_value=httpx.Response(
                 200,
                 json={

@@ -64,10 +64,6 @@ def wait_for_completion(
     start_time = time.monotonic()
     current_status = status
 
-    # Invoke callback with initial status
-    if on_status is not None:
-        on_status(current_status)
-
     # Check completion first, then sleep if needed (avoids latency for fast ops)
     while True:
         if current_status.is_complete():
@@ -161,9 +157,6 @@ async def wait_for_completion_async(
             result = on_status(s)
             if asyncio.iscoroutine(result):
                 await result
-
-    # Invoke callback with initial status
-    await _call_on_status(current_status)
 
     # Check completion first, then sleep if needed (avoids latency for fast ops)
     while True:
