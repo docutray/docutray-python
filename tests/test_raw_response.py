@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import base64
+
 import httpx
 import pytest
 import respx
@@ -62,8 +64,6 @@ class TestConvertWithRawResponse:
                 json={"data": {"invoice_number": "INV-003"}},
             )
         )
-
-        import base64
 
         file_base64 = base64.b64encode(b"fake pdf content").decode()
         response = client.convert.with_raw_response.run(
@@ -127,8 +127,6 @@ class TestConvertWithRawResponse:
                 json={"conversion_id": "conv_123", "status": "ENQUEUED"},
             )
         )
-
-        import base64
 
         file_base64 = base64.b64encode(b"fake pdf content").decode()
         response = client.convert.with_raw_response.run_async(
@@ -363,8 +361,6 @@ class TestIdentifyWithRawResponse:
             )
         )
 
-        import base64
-
         file_base64 = base64.b64encode(b"fake pdf content").decode()
         response = client.identify.with_raw_response.run(
             file_base64=file_base64,
@@ -426,8 +422,6 @@ class TestIdentifyWithRawResponse:
                 json={"identification_id": "id_789", "status": "ENQUEUED"},
             )
         )
-
-        import base64
 
         file_base64 = base64.b64encode(b"fake pdf content").decode()
         response = client.identify.with_raw_response.run_async(
@@ -585,8 +579,6 @@ class TestStepsWithRawResponse:
                 json={"execution_id": "exec_789", "status": "ENQUEUED"},
             )
         )
-
-        import base64
 
         file_base64 = base64.b64encode(b"fake pdf content").decode()
         response = client.steps.with_raw_response.run_async(
