@@ -6,7 +6,7 @@ from collections.abc import Callable
 from datetime import datetime
 from typing import TYPE_CHECKING, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable
@@ -48,7 +48,9 @@ class IdentificationStatus(BaseModel):
 
     model_config = ConfigDict(extra="allow", populate_by_name=True)
 
-    identification_id: str = Field(alias="id")
+    identification_id: str = Field(
+        validation_alias=AliasChoices("id", "identification_id")
+    )
     """Unique identification ID."""
 
     status: IdentificationStatusType
