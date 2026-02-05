@@ -1,13 +1,15 @@
 # DocuTray SDK Examples
 
-This directory contains examples demonstrating how to use the docutray Python SDK.
+Runnable examples demonstrating how to use the docutray Python SDK.
+
+> **Note:** Each script makes a real API call that consumes credits from your DocuTray account. Review the code before running.
 
 ## Setup
 
-1. Install dependencies (uses the development version of docutray):
+1. Install dependencies:
 
 ```bash
-uv sync
+pip install docutray python-dotenv
 ```
 
 2. Configure your API key:
@@ -20,17 +22,13 @@ cp .env.example .env
 3. Run an example:
 
 ```bash
-uv run python basic_usage.py
+python identify_document.py
 ```
-
-## Development Mode
-
-The examples environment installs `docutray` in editable mode from the parent directory. Any changes to `src/docutray/` are immediately available without reinstalling.
 
 ## Examples
 
-| File | Description |
-|------|-------------|
-| `basic_usage.py` | Basic client initialization and document types listing |
-| `identify_document.py` | Identify document type with confidence scores |
-| `convert_document.py` | Convert document and extract structured data |
+| File | Description | Input |
+|------|-------------|-------|
+| `identify_document.py` | Identify document type with confidence scores | File + URL |
+| `convert_document.py` | Convert document and extract structured data | File + URL |
+| `execute_steps.py` | Execute a predefined processing step | File + URL |

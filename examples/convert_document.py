@@ -1,6 +1,15 @@
-"""Example: Convert document and extract data using the docutray SDK."""
+"""Convert a document and extract structured data using the DocuTray SDK.
+
+NOTE: Running this script makes an API call that consumes credits
+from your DocuTray account.
+
+Usage:
+    python convert_document.py
+"""
 
 import json
+import os
+import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -9,71 +18,64 @@ import docutray
 
 load_dotenv()
 
-client = docutray.Client()
+api_key = os.getenv("DOCUTRAY_API_KEY")
+if not api_key:
+    print("Error: DOCUTRAY_API_KEY not set.")
+    print("Copy .env.example to .env and add your API key.")
+    sys.exit(1)
 
-# Document type to use for conversion
-DOCUMENT_TYPE_CODE = "invoice"
+client = docutray.Client(api_key=api_key)
 
-# Test 1: Convert from a local file
-print("=" * 50)
-print("Test 1: Convert from local file")
-print("=" * 50)
 
-document_path = Path("sample_invoice.pdf")
+def convert_from_file():
+    """Convert a document from a local file."""
+    document_path = Path("sample_invoice.pdf")
+    if not document_path.exists():
+        print(f"Error: File not found: {document_path}")
+        sys.exit(1)
 
-if document_path.exists():
     result = client.convert.run(
         file=document_path,
-        document_type_code=DOCUMENT_TYPE_CODE,
+        document_type_code="invoice",
     )
 
     print("Conversion successful!")
     print("\nExtracted data:")
     print(json.dumps(result.data, indent=2, ensure_ascii=False))
-else:
-    print(f"File not found: {document_path}")
-
-# Test 2: Convert from URL
-print("\n" + "=" * 50)
-print("Test 2: Convert from URL")
-print("=" * 50)
-
-url = "https://storage.googleapis.com/public.docutray.com/api-examples/sample_invoice.pdf"
-print(f"URL: {url}")
-
-result = client.convert.run(
-    url=url,
-    document_type_code=DOCUMENT_TYPE_CODE,
-)
-
-print("Conversion successful!")
-print("\nExtracted data:")
-print(json.dumps(result.data, indent=2, ensure_ascii=False))
-
-# Test 3: Async conversion with polling
-print("\n" + "=" * 50)
-print("Test 3: Async conversion with polling")
-print("=" * 50)
 
 
-def on_status(status):
-    """Callback to track conversion progress."""
-    print(f"  Status: {status.status}")
+# --- Additional usage examples (each call consumes API credits) ---
 
 
-# Start async conversion
-status = client.convert.run_async(
-    url=url,
-    document_type_code=DOCUMENT_TYPE_CODE,
-)
-print(f"Started async conversion: {status.conversion_id}")
+def convert_from_url():
+    """Convert a document from a URL."""
+    url = "https://storage.googleapis.com/public.docutray.com/api-examples/sample_invoice.pdf"
 
-# Wait for completion with progress callback
-final_status = status.wait(on_status=on_status)
+    result = client.convert.run(
+        url=url,
+        document_type_code="invoice",
+    )
 
-if final_status.is_success():
-    print("\nConversion successful!")
+    print("Conversion successful!")
     print("\nExtracted data:")
-    print(json.dumps(final_status.data, indent=2, ensure_ascii=False))
-elif final_status.is_error():
-    print(f"\nConversion failed: {final_status.error}")
+    print(json.dumps(result.data, indent=2, ensure_ascii=False))
+
+
+def convert_async_with_polling():
+    """Convert a document asynchronously with progress polling."""
+    result = client.convert.run_async(
+        file=Path("sample_invoice.pdf"),
+        document_type_code="invoice",
+    )
+    print(f"Conversion started: {result.conversion_id}")
+
+    final = result.wait(on_status=lambda s: print(f"  Status: {s.status}"))
+
+    if final.is_success():
+        print(json.dumps(final.data, indent=2, ensure_ascii=False))
+    elif final.is_error():
+        print(f"Conversion failed: {final.error}")
+
+
+if __name__ == "__main__":
+    convert_from_file()

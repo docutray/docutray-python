@@ -1,5 +1,14 @@
-"""Example: Identify document type using the docutray SDK."""
+"""Identify the type of a document using the DocuTray SDK.
 
+NOTE: Running this script makes an API call that consumes credits
+from your DocuTray account.
+
+Usage:
+    python identify_document.py
+"""
+
+import os
+import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -8,81 +17,63 @@ import docutray
 
 load_dotenv()
 
-client = docutray.Client()
+api_key = os.getenv("DOCUTRAY_API_KEY")
+if not api_key:
+    print("Error: DOCUTRAY_API_KEY not set.")
+    print("Copy .env.example to .env and add your API key.")
+    sys.exit(1)
 
-# Document type options to consider
-DOC_TYPE_OPTIONS = ["invoice"]
+client = docutray.Client(api_key=api_key)
 
-# Test 1: Identify from a local file
-print("=" * 50)
-print("Test 1: Identify from local file")
-print("=" * 50)
 
-document_path = Path("sample_invoice.pdf")
+def identify_from_file():
+    """Identify a document from a local file."""
+    document_path = Path("sample_invoice.pdf")
+    if not document_path.exists():
+        print(f"Error: File not found: {document_path}")
+        sys.exit(1)
 
-if document_path.exists():
     result = client.identify.run(
         file=document_path,
-        document_type_code_options=DOC_TYPE_OPTIONS,
+        document_type_code_options=["invoice"],
     )
 
-    print(f"Identified document type: {result.document_type.name}")
-    print(f"Code: {result.document_type.code}")
-    print(f"Confidence: {result.document_type.confidence:.2%}")
+    print(f"Document type: {result.document_type.name}")
+    print(f"Code:          {result.document_type.code}")
+    print(f"Confidence:    {result.document_type.confidence:.2%}")
 
     if result.alternatives:
-        print("\nAlternative matches:")
+        print("\nAlternatives:")
         for alt in result.alternatives:
             print(f"  - {alt.name}: {alt.confidence:.2%}")
-else:
-    print(f"File not found: {document_path}")
-
-# Test 2: Identify from URL
-print("\n" + "=" * 50)
-print("Test 2: Identify from URL")
-print("=" * 50)
-
-url = "https://storage.googleapis.com/public.docutray.com/api-examples/sample_invoice.pdf"
-print(f"URL: {url}")
-
-result = client.identify.run(
-    url=url,
-    document_type_code_options=DOC_TYPE_OPTIONS,
-)
-
-print(f"Identified document type: {result.document_type.name}")
-print(f"Code: {result.document_type.code}")
-print(f"Confidence: {result.document_type.confidence:.2%}")
-
-if result.alternatives:
-    print("\nAlternative matches:")
-    for alt in result.alternatives:
-        print(f"  - {alt.name}: {alt.confidence:.2%}")
-
-# Test 3: Async identification with polling
-print("\n" + "=" * 50)
-print("Test 3: Async identification with polling")
-print("=" * 50)
 
 
-def on_status(status):
-    """Callback to track identification progress."""
-    print(f"  Status: {status.status}")
+# --- Additional usage examples (each call consumes API credits) ---
 
 
-# Start async identification
-status = client.identify.run_async(
-    url=url,
-    document_type_code_options=DOC_TYPE_OPTIONS,
-)
-print(f"Started async identification: {status.identification_id}")
+def identify_from_url():
+    """Identify a document from a URL."""
+    url = "https://storage.googleapis.com/public.docutray.com/api-examples/sample_invoice.pdf"
+    result = client.identify.run(
+        url=url,
+        document_type_code_options=["invoice"],
+    )
 
-# Wait for completion with progress callback
-final_status = status.wait(on_status=on_status)
+    print(f"Document type: {result.document_type.name}")
+    print(f"Code:          {result.document_type.code}")
+    print(f"Confidence:    {result.document_type.confidence:.2%}")
 
-if final_status.is_success():
-    print(f"\nIdentified document type: {final_status.document_type.name}")
-    print(f"Code: {final_status.document_type.code}")
-    print(f"Confidence: {final_status.document_type.confidence:.2%}")
-elif final_status.is_error():
-    print(f"\nIdentification failed: {final_status.error}")
+
+def identify_with_options():
+    """Identify a document limiting to specific document types."""
+    result = client.identify.run(
+        file=Path("sample_invoice.pdf"),
+        document_type_code_options=["invoice", "receipt"],
+    )
+
+    print(f"Document type: {result.document_type.name}")
+    print(f"Confidence:    {result.document_type.confidence:.2%}")
+
+
+if __name__ == "__main__":
+    identify_from_file()
