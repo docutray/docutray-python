@@ -48,7 +48,7 @@ Each example script SHALL follow a consistent structure: docstring with billing 
 - **THEN** it SHALL follow the order: docstring, imports, load_dotenv, key check, API call, output
 
 ### Requirement: File and URL input modes
-Identify and convert examples SHALL demonstrate file-based input using the included sample document. Step execution SHALL demonstrate URL-based input.
+All examples SHALL demonstrate file-based input as the default execution path. Alternative input modes (URL, async) SHALL be provided as uncalled reference functions.
 
 #### Scenario: Identify uses local file
 - **WHEN** `identify_document.py` is executed
@@ -58,6 +58,6 @@ Identify and convert examples SHALL demonstrate file-based input using the inclu
 - **WHEN** `convert_document.py` is executed
 - **THEN** it SHALL use `sample_invoice.pdf` as file input
 
-#### Scenario: Execute step uses URL
-- **WHEN** `execute_step.py` is executed
-- **THEN** it SHALL use a URL as input
+#### Scenario: Execute step uses local file
+- **WHEN** `execute_steps.py` is executed
+- **THEN** it SHALL use `sample_invoice.pdf` as file input
