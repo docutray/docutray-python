@@ -6,6 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 docutray-python is the official Python SDK for the DocuTray API, providing access to document processing capabilities including OCR, document identification, data extraction, and knowledge bases. The library follows patterns from stripe-python and openai-python.
 
+### Optional Dependencies
+- `pip install docutray[docs]` - Includes griffe for API reference generation
+
 ## Language Policy
 
 All repository artifacts must be written in **English**, including:
@@ -40,6 +43,9 @@ uv run ruff check src
 
 # Format code
 uv run ruff format src
+
+# Generate API reference docs (requires griffe)
+uv run python scripts/gen_api_ref.py
 ```
 
 ## Architecture
@@ -96,17 +102,25 @@ DocuTrayError (base)
 - **Polling Callbacks**: `status.wait(on_status=callback)` for progress tracking during async operations
 - **Knowledge Bases**: Semantic search with `client.knowledge_bases.search(kb_id, query="...")` returning similarity scores
 
-## API Reference
+## Documentation
 
+### Public Documentation
+- **`README.md`**: Comprehensive SDK usage guide with examples for all features
+- **`CHANGELOG.md`**: Version history following Keep a Changelog format
+- **`docs/api/`**: Generated API reference (run `scripts/gen_api_ref.py` to regenerate)
+
+### API Reference
 - Main site: https://docutray.com
 - API docs: https://docs.docutray.com
 
-## Internal Documentation
-
+### Internal Documentation
 The `/docs` directory contains internal design documents and research in Spanish:
 - `ROADMAP.md` - Implementation phases and acceptance criteria
 - `best-practices-pip-api-wrapper.md` - SDK design patterns from stripe/openai analysis
 - `research-sdks-python.md` - Competitor SDK analysis
+
+### Scripts
+- **`scripts/gen_api_ref.py`**: Generates Markdown API docs from source docstrings using griffe
 
 ## OpenSpec Workflow
 
