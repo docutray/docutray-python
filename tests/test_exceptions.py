@@ -167,6 +167,133 @@ class TestRateLimitError:
         )
         assert error.retry_after is None
 
+    def test_limit_type_property(self) -> None:
+        """RateLimitError extracts limit_type from body."""
+        error = RateLimitError(
+            message="Rate limited",
+            status_code=429,
+            body={"limitType": "minute"},
+        )
+        assert error.limit_type == "minute"
+
+    def test_limit_type_missing(self) -> None:
+        """RateLimitError returns None when limitType missing."""
+        error = RateLimitError(
+            message="Rate limited",
+            status_code=429,
+            body={},
+        )
+        assert error.limit_type is None
+
+    def test_limit_type_invalid(self) -> None:
+        """RateLimitError returns None when limitType is not a string."""
+        error = RateLimitError(
+            message="Rate limited",
+            status_code=429,
+            body={"limitType": 123},
+        )
+        assert error.limit_type is None
+
+    def test_limit_property(self) -> None:
+        """RateLimitError extracts limit from body."""
+        error = RateLimitError(
+            message="Rate limited",
+            status_code=429,
+            body={"limit": 100},
+        )
+        assert error.limit == 100
+
+    def test_limit_missing(self) -> None:
+        """RateLimitError returns None when limit missing."""
+        error = RateLimitError(
+            message="Rate limited",
+            status_code=429,
+            body={},
+        )
+        assert error.limit is None
+
+    def test_limit_invalid(self) -> None:
+        """RateLimitError returns None when limit is not an int."""
+        error = RateLimitError(
+            message="Rate limited",
+            status_code=429,
+            body={"limit": "100"},
+        )
+        assert error.limit is None
+
+    def test_remaining_property(self) -> None:
+        """RateLimitError extracts remaining from body."""
+        error = RateLimitError(
+            message="Rate limited",
+            status_code=429,
+            body={"remaining": 5},
+        )
+        assert error.remaining == 5
+
+    def test_remaining_missing(self) -> None:
+        """RateLimitError returns None when remaining missing."""
+        error = RateLimitError(
+            message="Rate limited",
+            status_code=429,
+            body={},
+        )
+        assert error.remaining is None
+
+    def test_remaining_invalid(self) -> None:
+        """RateLimitError returns None when remaining is not an int."""
+        error = RateLimitError(
+            message="Rate limited",
+            status_code=429,
+            body={"remaining": "5"},
+        )
+        assert error.remaining is None
+
+    def test_reset_time_property(self) -> None:
+        """RateLimitError extracts reset_time from body."""
+        error = RateLimitError(
+            message="Rate limited",
+            status_code=429,
+            body={"resetTime": 1704067200},
+        )
+        assert error.reset_time == 1704067200
+
+    def test_reset_time_missing(self) -> None:
+        """RateLimitError returns None when resetTime missing."""
+        error = RateLimitError(
+            message="Rate limited",
+            status_code=429,
+            body={},
+        )
+        assert error.reset_time is None
+
+    def test_reset_time_invalid(self) -> None:
+        """RateLimitError returns None when resetTime is not an int."""
+        error = RateLimitError(
+            message="Rate limited",
+            status_code=429,
+            body={"resetTime": "1704067200"},
+        )
+        assert error.reset_time is None
+
+    def test_all_rate_limit_properties(self) -> None:
+        """RateLimitError extracts all properties from a complete response."""
+        error = RateLimitError(
+            message="Rate limited",
+            status_code=429,
+            headers={"Retry-After": "60"},
+            body={
+                "limitType": "hour",
+                "limit": 1000,
+                "remaining": 0,
+                "resetTime": 1704070800,
+            },
+        )
+        assert error.retry_after == 60.0
+        assert error.limit_type == "hour"
+        assert error.limit == 1000
+        assert error.remaining == 0
+        assert error.reset_time == 1704070800
+
 
 class TestStatusCodeMapping:
     """Tests for STATUS_CODE_TO_EXCEPTION mapping."""

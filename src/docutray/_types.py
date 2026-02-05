@@ -3,15 +3,33 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, BinaryIO, TypedDict
+from typing import Any, BinaryIO, Literal, TypedDict
 
 from typing_extensions import NotRequired, Required
 
-# File input types
+# =============================================================================
+# File Input Types
+# =============================================================================
+
 FileInput = Path | bytes | BinaryIO
 """Type alias for file inputs: Path, bytes, or file-like object."""
 
-# Content type constants
+# =============================================================================
+# Content Type Literals and Constants
+# =============================================================================
+
+ImageContentType = Literal[
+    "application/pdf",
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/bmp",
+    "image/webp",
+    "image/tiff",
+]
+"""Literal type for supported image/document content types."""
+
+# Content type constants for runtime use
 CONTENT_TYPE_PDF = "application/pdf"
 CONTENT_TYPE_JPEG = "image/jpeg"
 CONTENT_TYPE_PNG = "image/png"
@@ -43,6 +61,13 @@ SUPPORTED_CONTENT_TYPES: frozenset[str] = frozenset([
     CONTENT_TYPE_WEBP,
     CONTENT_TYPE_TIFF,
 ])
+
+# =============================================================================
+# Rate Limit Types
+# =============================================================================
+
+RateLimitType = Literal["minute", "hour", "day"]
+"""Literal type for rate limit period types."""
 
 
 class ClientOptions(TypedDict, total=False):
@@ -126,3 +151,82 @@ class StepsRunParams(TypedDict, total=False):
 
     document_metadata: NotRequired[dict[str, Any]]
     """Additional document metadata."""
+
+
+# =============================================================================
+# Rate Limit Info Types (for exception enrichment)
+# =============================================================================
+
+
+class RateLimitInfo(TypedDict, total=False):
+    """Rate limit information from 429 responses."""
+
+    error: str
+    """Error message."""
+
+    limitType: NotRequired[RateLimitType]
+    """Type of limit exceeded (minute, hour, day)."""
+
+    limit: NotRequired[int]
+    """Maximum limit for this period."""
+
+    remaining: NotRequired[int]
+    """Remaining requests."""
+
+    resetTime: NotRequired[int]
+    """Timestamp when the limit resets."""
+
+    retryAfter: NotRequired[int]
+    """Seconds until retry is allowed."""
+
+
+class QuotaExceededInfo(TypedDict, total=False):
+    """Quota exceeded information from 402 responses."""
+
+    error: str
+    """Error message."""
+
+    quota: NotRequired[int]
+    """Monthly quota limit."""
+
+    used: NotRequired[int]
+    """Number of conversions used this month."""
+
+    resetDate: NotRequired[str]
+    """Quota reset date (ISO 8601 format)."""
+
+
+# =============================================================================
+# Public API Exports
+# =============================================================================
+
+__all__ = [
+    # File types
+    "FileInput",
+    "ImageContentType",
+    # Content type constants
+    "CONTENT_TYPE_PDF",
+    "CONTENT_TYPE_JPEG",
+    "CONTENT_TYPE_PNG",
+    "CONTENT_TYPE_GIF",
+    "CONTENT_TYPE_BMP",
+    "CONTENT_TYPE_WEBP",
+    "CONTENT_TYPE_TIFF",
+    "EXTENSION_TO_CONTENT_TYPE",
+    "SUPPORTED_CONTENT_TYPES",
+    # Rate limit types
+    "RateLimitType",
+    "RateLimitInfo",
+    "QuotaExceededInfo",
+    # Client options
+    "ClientOptions",
+    # Upload params
+    "FileUploadParams",
+    "UrlUploadParams",
+    "Base64UploadParams",
+    # Request params
+    "ConvertParams",
+    "IdentifyParams",
+    "DocumentTypesListParams",
+    "StepsRunParams",
+]

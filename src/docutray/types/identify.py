@@ -51,6 +51,9 @@ class IdentificationStatus(BaseModel):
     status: IdentificationStatusType
     """Current identification status."""
 
+    status_url: str | None = None
+    """URL to check identification status."""
+
     request_timestamp: datetime | None = None
     """Timestamp when identification was started."""
 
