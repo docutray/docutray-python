@@ -66,7 +66,10 @@ The SDK follows a 3-layer architecture:
 - **`_http.py`**: HTTP transport with automatic retry, exponential backoff, and jitter
 - **`_exceptions.py`**: Exception hierarchy mapping HTTP status codes to specific errors
 - **`_constants.py`**: Configuration defaults including `RetryConfig` and `httpx.Timeout`
-- **`resources/`**: API resource classes (documents, extraction, etc.)
+- **`_pagination.py`**: Generic `Page[T]` and `AsyncPage[T]` classes for paginated results
+- **`_response.py`**: `RawResponse[T]` wrapper and `*WithRawResponse` classes for HTTP debugging
+- **`_polling.py`**: Polling utilities with `on_status` callback support
+- **`resources/`**: API resource classes (convert, identify, document_types, steps, knowledge_bases)
 - **`types/`**: Pydantic models for API responses
 
 ### Exception Hierarchy
@@ -85,6 +88,13 @@ DocuTrayError (base)
     ├── RateLimitError (429) - has retry_after property
     └── InternalServerError (5xx)
 ```
+
+### Advanced Features
+
+- **Pagination**: `Page[T]` and `AsyncPage[T]` with `iter_pages()`, `auto_paging_iter()` for automatic page traversal
+- **Raw Response**: `.with_raw_response` on all resources returns `RawResponse` with `status_code`, `headers`, `parse()`
+- **Polling Callbacks**: `status.wait(on_status=callback)` for progress tracking during async operations
+- **Knowledge Bases**: Semantic search with `client.knowledge_bases.search(kb_id, query="...")` returning similarity scores
 
 ## API Reference
 

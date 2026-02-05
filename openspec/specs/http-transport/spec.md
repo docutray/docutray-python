@@ -1,4 +1,10 @@
-## ADDED Requirements
+# HTTP Transport
+
+## Purpose
+
+Provides the HTTP layer with proper headers, timeout enforcement, connection pooling, and retry logic for API communication.
+
+## Requirements
 
 ### Requirement: Authorization header
 

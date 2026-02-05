@@ -11,6 +11,7 @@ from ._base_client import BaseAsyncClient, BaseClient
 from .resources.convert import AsyncConvert, Convert
 from .resources.document_types import AsyncDocumentTypes, DocumentTypes
 from .resources.identify import AsyncIdentify, Identify
+from .resources.knowledge_bases import AsyncKnowledgeBases, KnowledgeBases
 from .resources.steps import AsyncSteps, Steps
 
 
@@ -105,6 +106,20 @@ class Client(BaseClient):
             ... )
         """
         return Steps(self)
+
+    @cached_property
+    def knowledge_bases(self) -> KnowledgeBases:
+        """Knowledge base operations for semantic search.
+
+        Example:
+            >>> results = client.knowledge_bases.search(
+            ...     "kb_123",
+            ...     query="how to configure authentication"
+            ... )
+            >>> for item in results.data:
+            ...     print(f"{item.similarity:.2%}: {item.document.content}")
+        """
+        return KnowledgeBases(self)
 
     def __enter__(self) -> Self:
         """Enter the context manager.
@@ -208,6 +223,20 @@ class AsyncClient(BaseAsyncClient):
             ... )
         """
         return AsyncSteps(self)
+
+    @cached_property
+    def knowledge_bases(self) -> AsyncKnowledgeBases:
+        """Knowledge base operations for semantic search (async).
+
+        Example:
+            >>> results = await client.knowledge_bases.search(
+            ...     "kb_123",
+            ...     query="how to configure authentication"
+            ... )
+            >>> for item in results.data:
+            ...     print(f"{item.similarity:.2%}: {item.document.content}")
+        """
+        return AsyncKnowledgeBases(self)
 
     async def __aenter__(self) -> Self:
         """Enter the async context manager.

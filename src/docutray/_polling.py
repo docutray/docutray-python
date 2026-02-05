@@ -4,12 +4,15 @@ from __future__ import annotations
 
 import asyncio
 import time
+from collections.abc import Callable
 from typing import TYPE_CHECKING, TypeVar
 
 from ._constants import DEFAULT_POLL_INTERVAL, DEFAULT_POLL_TIMEOUT
 from ._exceptions import APITimeoutError
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable
+
     from .types.convert import ConversionStatus
     from .types.identify import IdentificationStatus
     from .types.step import StepExecutionStatus
@@ -22,6 +25,7 @@ def wait_for_completion(
     *,
     poll_interval: float = DEFAULT_POLL_INTERVAL,
     timeout: float = DEFAULT_POLL_TIMEOUT,
+    on_status: Callable[[T], None] | None = None,
 ) -> T:
     """Wait for an async operation to complete by polling.
 
@@ -29,6 +33,9 @@ def wait_for_completion(
         status: The initial status object with a _resource reference.
         poll_interval: Seconds between status checks. Defaults to 2.0.
         timeout: Maximum seconds to wait. Defaults to 300.0 (5 minutes).
+        on_status: Optional callback invoked with each status update. Called
+            with the current status object after each poll, allowing progress
+            tracking or logging.
 
     Returns:
         The final status with completion data.
@@ -36,6 +43,12 @@ def wait_for_completion(
     Raises:
         APITimeoutError: If the operation doesn't complete within timeout.
         ValueError: If the status object doesn't have a resource reference.
+
+    Example:
+        >>> def log_status(status):
+        ...     print(f"Status: {status.status}")
+        >>>
+        >>> final = wait_for_completion(status, on_status=log_status)
     """
     from .types.convert import ConversionStatus
     from .types.identify import IdentificationStatus
@@ -50,6 +63,10 @@ def wait_for_completion(
 
     start_time = time.monotonic()
     current_status = status
+
+    # Invoke callback with initial status
+    if on_status is not None:
+        on_status(current_status)
 
     # Check completion first, then sleep if needed (avoids latency for fast ops)
     while True:
@@ -89,12 +106,17 @@ def wait_for_completion(
         elif isinstance(current_status, StepExecutionStatus):
             current_status = resource.get_status(current_status.execution_id)
 
+        # Invoke callback after each poll
+        if on_status is not None:
+            on_status(current_status)
+
 
 async def wait_for_completion_async(
     status: T,
     *,
     poll_interval: float = DEFAULT_POLL_INTERVAL,
     timeout: float = DEFAULT_POLL_TIMEOUT,
+    on_status: Callable[[T], None] | Callable[[T], Awaitable[None]] | None = None,
 ) -> T:
     """Wait for an async operation to complete by polling (async version).
 
@@ -102,6 +124,9 @@ async def wait_for_completion_async(
         status: The initial status object with a _resource reference.
         poll_interval: Seconds between status checks. Defaults to 2.0.
         timeout: Maximum seconds to wait. Defaults to 300.0 (5 minutes).
+        on_status: Optional callback invoked with each status update. Can be
+            a sync or async function. Called with the current status object
+            after each poll, allowing progress tracking or logging.
 
     Returns:
         The final status with completion data.
@@ -109,6 +134,12 @@ async def wait_for_completion_async(
     Raises:
         APITimeoutError: If the operation doesn't complete within timeout.
         ValueError: If the status object doesn't have a resource reference.
+
+    Example:
+        >>> async def log_status(status):
+        ...     print(f"Status: {status.status}")
+        >>>
+        >>> final = await wait_for_completion_async(status, on_status=log_status)
     """
     from .types.convert import ConversionStatus
     from .types.identify import IdentificationStatus
@@ -123,6 +154,16 @@ async def wait_for_completion_async(
 
     start_time = time.monotonic()
     current_status = status
+
+    # Helper to call on_status callback (handles both sync and async)
+    async def _call_on_status(s: T) -> None:
+        if on_status is not None:
+            result = on_status(s)
+            if asyncio.iscoroutine(result):
+                await result
+
+    # Invoke callback with initial status
+    await _call_on_status(current_status)
 
     # Check completion first, then sleep if needed (avoids latency for fast ops)
     while True:
@@ -161,3 +202,6 @@ async def wait_for_completion_async(
             current_status = await resource.get_status(current_status.identification_id)
         elif isinstance(current_status, StepExecutionStatus):
             current_status = await resource.get_status(current_status.execution_id)
+
+        # Invoke callback after each poll
+        await _call_on_status(current_status)

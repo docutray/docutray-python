@@ -49,8 +49,8 @@ class TestDocumentTypesList:
         assert len(response.data) == 2
         assert response.data[0].codeType == "invoice"
         assert response.data[1].codeType == "receipt"
-        assert response.pagination.total == 2
-        assert response.pagination.page == 1
+        assert response.total == 2
+        assert response.page == 1
 
     def test_list_with_pagination(self, client: Client, mock_api: respx.MockRouter) -> None:
         """List document types with pagination parameters."""
@@ -66,8 +66,8 @@ class TestDocumentTypesList:
 
         response = client.document_types.list(page=2, limit=5)
 
-        assert response.pagination.page == 2
-        assert response.pagination.limit == 5
+        assert response.page == 2
+        assert response.limit == 5
 
     def test_list_with_search(self, client: Client, mock_api: respx.MockRouter) -> None:
         """List document types with search filter."""

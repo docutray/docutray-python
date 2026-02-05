@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from functools import cached_property
 from typing import TYPE_CHECKING, Any
 
 from .._files import prepare_base64_upload, prepare_file_upload, prepare_url_upload
@@ -125,6 +126,21 @@ class Steps:
         object.__setattr__(status, "_resource", self)
         return status
 
+    @cached_property
+    def with_raw_response(self) -> StepsWithRawResponse:
+        """Access methods that return raw HTTP responses.
+
+        Example:
+            >>> response = client.steps.with_raw_response.run_async(
+            ...     step_id="step_extraction",
+            ...     file=Path("document.pdf")
+            ... )
+            >>> print(response.status_code)
+            >>> print(response.headers)
+            >>> result = response.parse()
+        """
+        return StepsWithRawResponse(self)
+
 
 class AsyncSteps:
     """Asynchronous step execution operations.
@@ -215,3 +231,24 @@ class AsyncSteps:
         status = StepExecutionStatus.model_validate(response.json())
         object.__setattr__(status, "_resource", self)
         return status
+
+    @cached_property
+    def with_raw_response(self) -> AsyncStepsWithRawResponse:
+        """Access methods that return raw HTTP responses.
+
+        Example:
+            >>> response = await client.steps.with_raw_response.run_async(
+            ...     step_id="step_extraction",
+            ...     file=Path("document.pdf")
+            ... )
+            >>> print(response.status_code)
+            >>> result = response.parse()
+        """
+        return AsyncStepsWithRawResponse(self)
+
+
+# Import here to avoid circular imports
+from .._response import (  # noqa: E402
+    AsyncStepsWithRawResponse,
+    StepsWithRawResponse,
+)

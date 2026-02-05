@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from functools import cached_property
 from typing import TYPE_CHECKING, Any
 
 from .._files import prepare_base64_upload, prepare_file_upload, prepare_url_upload
@@ -192,6 +193,21 @@ class Convert:
         object.__setattr__(status, "_resource", self)
         return status
 
+    @cached_property
+    def with_raw_response(self) -> ConvertWithRawResponse:
+        """Access methods that return raw HTTP responses.
+
+        Example:
+            >>> response = client.convert.with_raw_response.run(
+            ...     file=Path("invoice.pdf"),
+            ...     document_type_code="invoice"
+            ... )
+            >>> print(response.status_code)
+            >>> print(response.headers)
+            >>> result = response.parse()
+        """
+        return ConvertWithRawResponse(self)
+
 
 class AsyncConvert:
     """Asynchronous document conversion operations.
@@ -332,3 +348,24 @@ class AsyncConvert:
         status = ConversionStatus.model_validate(response.json())
         object.__setattr__(status, "_resource", self)
         return status
+
+    @cached_property
+    def with_raw_response(self) -> AsyncConvertWithRawResponse:
+        """Access methods that return raw HTTP responses.
+
+        Example:
+            >>> response = await client.convert.with_raw_response.run(
+            ...     file=Path("invoice.pdf"),
+            ...     document_type_code="invoice"
+            ... )
+            >>> print(response.status_code)
+            >>> result = response.parse()
+        """
+        return AsyncConvertWithRawResponse(self)
+
+
+# Import here to avoid circular imports
+from .._response import (  # noqa: E402
+    AsyncConvertWithRawResponse,
+    ConvertWithRawResponse,
+)
