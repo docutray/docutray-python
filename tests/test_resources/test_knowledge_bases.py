@@ -6,6 +6,7 @@ import httpx
 import respx
 
 from docutray import (
+    AsyncClient,
     Client,
     KnowledgeBase,
     KnowledgeBaseDocument,
@@ -430,3 +431,313 @@ class TestKnowledgeBaseDocumentModel:
         assert doc.documentId == "external_1"
         assert doc.content["title"] == "Test"
         assert doc.metadata["source"] == "manual"
+
+
+class TestAsyncKnowledgeBasesList:
+    """Tests for AsyncKnowledgeBases.list()."""
+
+    async def test_async_list_knowledge_bases(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter
+    ) -> None:
+        """Async list all knowledge bases."""
+        mock_api.get("/api/knowledge-bases").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "data": [
+                        {
+                            "id": "kb_1",
+                            "name": "User Documentation",
+                            "description": "Product guides",
+                            "isActive": True,
+                            "documentCount": 50,
+                        },
+                    ],
+                    "pagination": {"total": 1, "page": 1, "limit": 20},
+                },
+            )
+        )
+
+        page = await async_client.knowledge_bases.list()
+
+        assert len(page.data) == 1
+        assert page.data[0].name == "User Documentation"
+
+
+class TestAsyncKnowledgeBasesGet:
+    """Tests for AsyncKnowledgeBases.get()."""
+
+    async def test_async_get_knowledge_base(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter
+    ) -> None:
+        """Async get a specific knowledge base."""
+        mock_api.get("/api/knowledge-bases/kb_123").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "data": {
+                        "id": "kb_123",
+                        "name": "User Documentation",
+                        "description": "Complete product documentation",
+                        "isActive": True,
+                        "documentCount": 75,
+                    }
+                },
+            )
+        )
+
+        kb = await async_client.knowledge_bases.get("kb_123")
+
+        assert isinstance(kb, KnowledgeBase)
+        assert kb.id == "kb_123"
+        assert kb.name == "User Documentation"
+
+
+class TestAsyncKnowledgeBasesCreate:
+    """Tests for AsyncKnowledgeBases.create()."""
+
+    async def test_async_create_knowledge_base(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter
+    ) -> None:
+        """Async create a new knowledge base."""
+        mock_api.post("/api/knowledge-bases").mock(
+            return_value=httpx.Response(
+                201,
+                json={
+                    "data": {
+                        "id": "kb_new",
+                        "name": "New KB",
+                        "description": "A new knowledge base",
+                        "isActive": True,
+                    }
+                },
+            )
+        )
+
+        kb = await async_client.knowledge_bases.create(
+            name="New KB",
+            description="A new knowledge base",
+            schema={"type": "object"},
+        )
+
+        assert isinstance(kb, KnowledgeBase)
+        assert kb.id == "kb_new"
+
+
+class TestAsyncKnowledgeBasesUpdate:
+    """Tests for AsyncKnowledgeBases.update()."""
+
+    async def test_async_update_knowledge_base(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter
+    ) -> None:
+        """Async update a knowledge base."""
+        mock_api.put("/api/knowledge-bases/kb_123").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "data": {
+                        "id": "kb_123",
+                        "name": "Updated KB",
+                        "description": "Updated description",
+                        "isActive": True,
+                    }
+                },
+            )
+        )
+
+        kb = await async_client.knowledge_bases.update(
+            "kb_123", description="Updated description"
+        )
+
+        assert kb.description == "Updated description"
+
+
+class TestAsyncKnowledgeBasesDelete:
+    """Tests for AsyncKnowledgeBases.delete()."""
+
+    async def test_async_delete_knowledge_base(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter
+    ) -> None:
+        """Async delete a knowledge base."""
+        mock_api.delete("/api/knowledge-bases/kb_123").mock(
+            return_value=httpx.Response(200, json={"success": True})
+        )
+
+        # Should not raise
+        await async_client.knowledge_bases.delete("kb_123")
+
+
+class TestAsyncKnowledgeBasesDocuments:
+    """Tests for AsyncKnowledgeBases.documents()."""
+
+    async def test_async_list_documents(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter
+    ) -> None:
+        """Async list documents in a knowledge base."""
+        mock_api.get("/api/knowledge-bases/kb_123/documents").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "data": [
+                        {
+                            "id": "doc_1",
+                            "documentId": "external_1",
+                            "content": {"title": "Getting Started"},
+                            "metadata": {"category": "guide"},
+                        },
+                    ],
+                    "pagination": {"total": 1, "page": 1, "limit": 20},
+                },
+            )
+        )
+
+        docs = async_client.knowledge_bases.documents("kb_123")
+        page = await docs.list()
+
+        assert len(page.data) == 1
+        assert page.data[0].content["title"] == "Getting Started"
+
+    async def test_async_get_document(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter
+    ) -> None:
+        """Async get a specific document."""
+        mock_api.get("/api/knowledge-bases/kb_123/documents/doc_456").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "data": {
+                        "id": "doc_456",
+                        "documentId": "external_456",
+                        "content": {"title": "Test Document"},
+                        "metadata": {"author": "Test"},
+                    }
+                },
+            )
+        )
+
+        docs = async_client.knowledge_bases.documents("kb_123")
+        doc = await docs.get("doc_456")
+
+        assert isinstance(doc, KnowledgeBaseDocument)
+        assert doc.id == "doc_456"
+
+    async def test_async_create_document(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter
+    ) -> None:
+        """Async add a document to a knowledge base."""
+        mock_api.post("/api/knowledge-bases/kb_123/documents").mock(
+            return_value=httpx.Response(
+                201,
+                json={
+                    "data": {
+                        "id": "doc_new",
+                        "documentId": "external_new",
+                        "content": {"title": "New Doc"},
+                    }
+                },
+            )
+        )
+
+        docs = async_client.knowledge_bases.documents("kb_123")
+        doc = await docs.create(
+            content={"title": "New Doc"},
+            document_id="external_new",
+        )
+
+        assert doc.id == "doc_new"
+
+    async def test_async_update_document(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter
+    ) -> None:
+        """Async update a document."""
+        mock_api.put("/api/knowledge-bases/kb_123/documents/doc_456").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "data": {
+                        "id": "doc_456",
+                        "content": {"title": "Updated Doc"},
+                    }
+                },
+            )
+        )
+
+        docs = async_client.knowledge_bases.documents("kb_123")
+        doc = await docs.update("doc_456", content={"title": "Updated Doc"})
+
+        assert doc.content["title"] == "Updated Doc"
+
+    async def test_async_delete_document(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter
+    ) -> None:
+        """Async delete a document."""
+        mock_api.delete("/api/knowledge-bases/kb_123/documents/doc_456").mock(
+            return_value=httpx.Response(200, json={"success": True})
+        )
+
+        docs = async_client.knowledge_bases.documents("kb_123")
+        await docs.delete("doc_456")
+
+
+class TestAsyncKnowledgeBasesSearch:
+    """Tests for AsyncKnowledgeBases.search()."""
+
+    async def test_async_search(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter
+    ) -> None:
+        """Async perform semantic search in a knowledge base."""
+        mock_api.post("/api/knowledge-bases/kb_123/search").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "data": [
+                        {
+                            "document": {
+                                "id": "doc_1",
+                                "content": {"title": "Authentication Guide"},
+                            },
+                            "similarity": 0.92,
+                        },
+                    ],
+                    "query": "how to authenticate",
+                    "resultsCount": 1,
+                },
+            )
+        )
+
+        results = await async_client.knowledge_bases.search(
+            "kb_123",
+            query="how to authenticate",
+            limit=5,
+        )
+
+        assert isinstance(results, SearchResult)
+        assert results.resultsCount == 1
+        assert results.data[0].similarity == 0.92
+
+
+class TestAsyncKnowledgeBasesSync:
+    """Tests for AsyncKnowledgeBases.sync()."""
+
+    async def test_async_sync(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter
+    ) -> None:
+        """Async trigger knowledge base synchronization."""
+        mock_api.post("/api/knowledge-bases/kb_123/sync").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "data": {
+                        "syncId": "sync_abc",
+                        "status": "started",
+                        "documentsProcessed": 0,
+                    }
+                },
+            )
+        )
+
+        result = await async_client.knowledge_bases.sync("kb_123")
+
+        assert isinstance(result, SyncResult)
+        assert result.status == "started"
+        assert result.syncId == "sync_abc"

@@ -354,6 +354,132 @@ class TestRetryLogging:
                 client.close()
 
 
+class TestTimeoutRetryBehavior:
+    """Integration tests for timeout retry behavior."""
+
+    @respx.mock
+    def test_retries_on_timeout(self) -> None:
+        """Client retries on timeout errors."""
+        route = respx.get("https://api.docutray.com/test").mock(
+            side_effect=[
+                httpx.TimeoutException("Connection timed out"),
+                httpx.TimeoutException("Connection timed out"),
+                httpx.Response(200, json={"success": True}),
+            ]
+        )
+
+        client = Client(api_key="sk_test", max_retries=2)
+        response = client._http.request("GET", "/test")
+
+        assert response.status_code == 200
+        assert route.call_count == 3
+        client.close()
+
+    @respx.mock
+    def test_raises_timeout_after_max_retries(self) -> None:
+        """Client raises APITimeoutError after exhausting retries."""
+        respx.get("https://api.docutray.com/test").mock(
+            side_effect=httpx.TimeoutException("Connection timed out")
+        )
+
+        client = Client(api_key="sk_test", max_retries=2)
+        with pytest.raises(APITimeoutError):
+            client._http.request("GET", "/test")
+
+        client.close()
+
+    @respx.mock
+    def test_retries_on_connection_error(self) -> None:
+        """Client retries on connection errors."""
+        route = respx.get("https://api.docutray.com/test").mock(
+            side_effect=[
+                httpx.ConnectError("Connection refused"),
+                httpx.ConnectError("Connection refused"),
+                httpx.Response(200, json={"success": True}),
+            ]
+        )
+
+        client = Client(api_key="sk_test", max_retries=2)
+        response = client._http.request("GET", "/test")
+
+        assert response.status_code == 200
+        assert route.call_count == 3
+        client.close()
+
+    @respx.mock
+    def test_raises_connection_error_after_max_retries(self) -> None:
+        """Client raises APIConnectionError after exhausting retries."""
+        respx.get("https://api.docutray.com/test").mock(
+            side_effect=httpx.ConnectError("Connection refused")
+        )
+
+        client = Client(api_key="sk_test", max_retries=2)
+        with pytest.raises(APIConnectionError):
+            client._http.request("GET", "/test")
+
+        client.close()
+
+
+class TestAsyncTimeoutRetryBehavior:
+    """Integration tests for async timeout retry behavior."""
+
+    @respx.mock
+    async def test_async_retries_on_timeout(self) -> None:
+        """AsyncClient retries on timeout errors."""
+        route = respx.get("https://api.docutray.com/test").mock(
+            side_effect=[
+                httpx.TimeoutException("Connection timed out"),
+                httpx.TimeoutException("Connection timed out"),
+                httpx.Response(200, json={"success": True}),
+            ]
+        )
+
+        async with AsyncClient(api_key="sk_test", max_retries=2) as client:
+            response = await client._http.request("GET", "/test")
+
+            assert response.status_code == 200
+            assert route.call_count == 3
+
+    @respx.mock
+    async def test_async_raises_timeout_after_max_retries(self) -> None:
+        """AsyncClient raises APITimeoutError after exhausting retries."""
+        respx.get("https://api.docutray.com/test").mock(
+            side_effect=httpx.TimeoutException("Connection timed out")
+        )
+
+        async with AsyncClient(api_key="sk_test", max_retries=2) as client:
+            with pytest.raises(APITimeoutError):
+                await client._http.request("GET", "/test")
+
+    @respx.mock
+    async def test_async_retries_on_connection_error(self) -> None:
+        """AsyncClient retries on connection errors."""
+        route = respx.get("https://api.docutray.com/test").mock(
+            side_effect=[
+                httpx.ConnectError("Connection refused"),
+                httpx.ConnectError("Connection refused"),
+                httpx.Response(200, json={"success": True}),
+            ]
+        )
+
+        async with AsyncClient(api_key="sk_test", max_retries=2) as client:
+            response = await client._http.request("GET", "/test")
+
+            assert response.status_code == 200
+            assert route.call_count == 3
+
+    @respx.mock
+    async def test_async_raises_connection_error_after_max_retries(self) -> None:
+        """AsyncClient raises APIConnectionError after exhausting retries."""
+        respx.get("https://api.docutray.com/test").mock(
+            side_effect=httpx.ConnectError("Connection refused")
+        )
+
+        async with AsyncClient(api_key="sk_test", max_retries=2) as client:
+            with pytest.raises(APIConnectionError):
+                await client._http.request("GET", "/test")
+
+
 class TestAsyncRetryBehavior:
     """Integration tests for async retry behavior."""
 
