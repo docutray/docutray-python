@@ -1,4 +1,8 @@
-## ADDED Requirements
+## Purpose
+
+Automated generation of API reference documentation from source code docstrings, producing Markdown files for the SDK public API.
+
+## Requirements
 
 ### Requirement: Generator script exists
 The system SHALL provide a script at `scripts/gen_api_ref.py` that generates API reference documentation from source code.
