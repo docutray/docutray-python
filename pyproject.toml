@@ -53,6 +53,7 @@ dev = [
     "respx>=0.20",
     "mypy>=1.8",
     "ruff>=0.3",
+    "python-dotenv>=1.2.1",
 ]
 
 [build-system]
