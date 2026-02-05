@@ -38,6 +38,12 @@ Homepage = "https://docutray.com"
 Documentation = "https://docs.docutray.com"
 Repository = "https://github.com/docutray/docutray-python"
 Changelog = "https://github.com/docutray/docutray-python/blob/main/CHANGELOG.md"
+"Bug Tracker" = "https://github.com/docutray/docutray-python/issues"
+
+[project.optional-dependencies]
+docs = [
+    "griffe>=1.0",
+]
 
 [dependency-groups]
 dev = [
