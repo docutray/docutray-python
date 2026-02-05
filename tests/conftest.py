@@ -29,9 +29,11 @@ def client(api_key: str, base_url: str) -> Client:
 
 
 @pytest.fixture
-def async_client(api_key: str, base_url: str) -> AsyncClient:
+async def async_client(api_key: str, base_url: str) -> AsyncClient:
     """Provide a configured async client for testing."""
-    return AsyncClient(api_key=api_key, base_url=base_url)
+    client = AsyncClient(api_key=api_key, base_url=base_url)
+    yield client
+    await client.close()
 
 
 @pytest.fixture

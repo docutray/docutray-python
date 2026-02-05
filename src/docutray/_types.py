@@ -18,6 +18,7 @@ CONTENT_TYPE_PNG = "image/png"
 CONTENT_TYPE_GIF = "image/gif"
 CONTENT_TYPE_BMP = "image/bmp"
 CONTENT_TYPE_WEBP = "image/webp"
+CONTENT_TYPE_TIFF = "image/tiff"
 
 # Mapping of file extensions to content types
 EXTENSION_TO_CONTENT_TYPE: dict[str, str] = {
@@ -28,6 +29,8 @@ EXTENSION_TO_CONTENT_TYPE: dict[str, str] = {
     ".gif": CONTENT_TYPE_GIF,
     ".bmp": CONTENT_TYPE_BMP,
     ".webp": CONTENT_TYPE_WEBP,
+    ".tiff": CONTENT_TYPE_TIFF,
+    ".tif": CONTENT_TYPE_TIFF,
 }
 
 # Supported content types for upload
@@ -38,6 +41,7 @@ SUPPORTED_CONTENT_TYPES: frozenset[str] = frozenset([
     CONTENT_TYPE_GIF,
     CONTENT_TYPE_BMP,
     CONTENT_TYPE_WEBP,
+    CONTENT_TYPE_TIFF,
 ])
 
 

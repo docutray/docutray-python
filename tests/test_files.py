@@ -6,8 +6,6 @@ import base64
 from io import BytesIO
 from pathlib import Path
 
-import pytest
-
 from docutray._files import (
     detect_content_type,
     encode_file_to_base64,

@@ -6,7 +6,12 @@ import httpx
 import pytest
 import respx
 
-from docutray import Client, DocumentTypeMatch, IdentificationResult, IdentificationStatus
+from docutray import (
+    Client,
+    DocumentTypeMatch,
+    IdentificationResult,
+    IdentificationStatus,
+)
 
 
 class TestIdentifyRun:

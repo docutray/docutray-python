@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import TYPE_CHECKING, Any
 
 from .._files import prepare_base64_upload, prepare_file_upload, prepare_url_upload
@@ -76,7 +77,7 @@ class Convert:
             files = {field_name: file_tuple}
             data: dict[str, Any] = {"document_type_code": document_type_code}
             if document_metadata:
-                import json
+                # Multipart form data requires JSON-stringified metadata
                 data["document_metadata"] = json.dumps(document_metadata)
 
             response = self._client._request("POST", "/api/convert", files=files, data=data)
@@ -142,7 +143,7 @@ class Convert:
             files = {field_name: file_tuple}
             data: dict[str, Any] = {"document_type_code": document_type_code}
             if document_metadata:
-                import json
+                # Multipart form data requires JSON-stringified metadata
                 data["document_metadata"] = json.dumps(document_metadata)
 
             response = self._client._request("POST", "/api/convert-async", files=files, data=data)
@@ -240,7 +241,7 @@ class AsyncConvert:
             files = {field_name: file_tuple}
             data: dict[str, Any] = {"document_type_code": document_type_code}
             if document_metadata:
-                import json
+                # Multipart form data requires JSON-stringified metadata
                 data["document_metadata"] = json.dumps(document_metadata)
 
             response = await self._client._request("POST", "/api/convert", files=files, data=data)
@@ -291,7 +292,7 @@ class AsyncConvert:
             files = {field_name: file_tuple}
             data: dict[str, Any] = {"document_type_code": document_type_code}
             if document_metadata:
-                import json
+                # Multipart form data requires JSON-stringified metadata
                 data["document_metadata"] = json.dumps(document_metadata)
 
             response = await self._client._request("POST", "/api/convert-async", files=files, data=data)

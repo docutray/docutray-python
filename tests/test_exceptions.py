@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import httpx
 import pytest
 
 from docutray import (
@@ -19,7 +20,6 @@ from docutray import (
     UnprocessableEntityError,
 )
 from docutray._exceptions import STATUS_CODE_TO_EXCEPTION, raise_for_status
-import httpx
 
 
 class TestExceptionHierarchy:

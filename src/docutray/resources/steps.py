@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import TYPE_CHECKING, Any
 
 from .._files import prepare_base64_upload, prepare_file_upload, prepare_url_upload
@@ -78,7 +79,7 @@ class Steps:
             files = {field_name: file_tuple}
             data: dict[str, Any] = {}
             if document_metadata:
-                import json
+                # Multipart form data requires JSON-stringified metadata
                 data["document_metadata"] = json.dumps(document_metadata)
 
             response = self._client._request(
@@ -174,7 +175,7 @@ class AsyncSteps:
             files = {field_name: file_tuple}
             data: dict[str, Any] = {}
             if document_metadata:
-                import json
+                # Multipart form data requires JSON-stringified metadata
                 data["document_metadata"] = json.dumps(document_metadata)
 
             response = await self._client._request(

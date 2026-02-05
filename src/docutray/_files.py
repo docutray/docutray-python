@@ -11,9 +11,13 @@ from typing import IO, Any
 from ._types import (
     CONTENT_TYPE_PDF,
     EXTENSION_TO_CONTENT_TYPE,
-    SUPPORTED_CONTENT_TYPES,
     FileInput,
 )
+
+# Note: The DocuTray API uses "image" as the field name for all document uploads,
+# regardless of whether the document is an actual image or a PDF. This naming
+# convention is part of the API specification.
+_UPLOAD_FIELD_NAME = "image"
 
 
 def detect_content_type(path: Path) -> str:
@@ -42,6 +46,12 @@ def prepare_file_upload(
 ) -> tuple[str, tuple[str, IO[bytes], str]]:
     """Prepare a file for multipart upload.
 
+    Note:
+        When passing a file-like object (BinaryIO), be aware that:
+        - The object will be read during the request (consumed)
+        - The SDK does not close user-provided file objects
+        - File position is not reset after reading
+
     Args:
         file: File input - Path, bytes, or file-like object.
         content_type: Content type override. Auto-detected if not provided.
@@ -50,9 +60,6 @@ def prepare_file_upload(
     Returns:
         A tuple of (field_name, (filename, file_object, content_type)) suitable
         for httpx multipart uploads.
-
-    Raises:
-        ValueError: If content type cannot be determined.
     """
     file_obj: IO[bytes]
     detected_filename: str
@@ -81,13 +88,7 @@ def prepare_file_upload(
     final_filename = filename or detected_filename
     final_content_type = content_type or detected_content_type
 
-    # Validate content type
-    if final_content_type not in SUPPORTED_CONTENT_TYPES:
-        if final_content_type != "application/octet-stream":
-            # Allow unknown types but warn via the content type
-            pass
-
-    return ("image", (final_filename, file_obj, final_content_type))
+    return (_UPLOAD_FIELD_NAME, (final_filename, file_obj, final_content_type))
 
 
 def prepare_url_upload(

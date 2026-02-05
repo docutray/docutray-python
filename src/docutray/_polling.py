@@ -51,7 +51,11 @@ def wait_for_completion(
     start_time = time.monotonic()
     current_status = status
 
-    while not current_status.is_complete():
+    # Check completion first, then sleep if needed (avoids latency for fast ops)
+    while True:
+        if current_status.is_complete():
+            return current_status
+
         elapsed = time.monotonic() - start_time
         if elapsed >= timeout:
             if isinstance(current_status, ConversionStatus):
@@ -74,6 +78,7 @@ def wait_for_completion(
                     f"Operation did not complete within {timeout} seconds"
                 )
 
+        # Sleep before polling for new status
         time.sleep(poll_interval)
 
         # Get fresh status
@@ -83,8 +88,6 @@ def wait_for_completion(
             current_status = resource.get_status(current_status.identification_id)
         elif isinstance(current_status, StepExecutionStatus):
             current_status = resource.get_status(current_status.execution_id)
-
-    return current_status
 
 
 async def wait_for_completion_async(
@@ -121,7 +124,11 @@ async def wait_for_completion_async(
     start_time = time.monotonic()
     current_status = status
 
-    while not current_status.is_complete():
+    # Check completion first, then sleep if needed (avoids latency for fast ops)
+    while True:
+        if current_status.is_complete():
+            return current_status
+
         elapsed = time.monotonic() - start_time
         if elapsed >= timeout:
             if isinstance(current_status, ConversionStatus):
@@ -144,6 +151,7 @@ async def wait_for_completion_async(
                     f"Operation did not complete within {timeout} seconds"
                 )
 
+        # Sleep before polling for new status
         await asyncio.sleep(poll_interval)
 
         # Get fresh status
@@ -153,5 +161,3 @@ async def wait_for_completion_async(
             current_status = await resource.get_status(current_status.identification_id)
         elif isinstance(current_status, StepExecutionStatus):
             current_status = await resource.get_status(current_status.execution_id)
-
-    return current_status
