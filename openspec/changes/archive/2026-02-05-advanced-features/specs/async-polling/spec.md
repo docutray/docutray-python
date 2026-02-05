@@ -1,10 +1,4 @@
-# Async Polling
-
-## Purpose
-
-Provides polling utilities for waiting on asynchronous operations to complete, with configurable intervals, timeouts, and progress callbacks.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Wait for async operation completion
 The SDK SHALL provide a `wait()` method on async status objects that polls until completion or timeout. The method SHALL support an optional progress callback.
@@ -29,23 +23,7 @@ The SDK SHALL provide a `wait()` method on async status objects that polls until
 - **WHEN** user calls `status.wait(on_status=lambda s: print(s.status))`
 - **THEN** the SDK invokes callback with current status after each poll
 
-### Requirement: Default polling configuration
-The SDK SHALL use sensible defaults for polling: `poll_interval=2.0` seconds, `timeout=300.0` seconds.
-
-#### Scenario: Default poll interval
-- **WHEN** user calls `status.wait()` without arguments
-- **THEN** the SDK polls every 2 seconds
-
-#### Scenario: Default timeout
-- **WHEN** user calls `status.wait()` without timeout argument
-- **THEN** the SDK times out after 300 seconds (5 minutes)
-
-### Requirement: Async wait method
-The SDK SHALL provide async `wait()` method for use with `AsyncClient`.
-
-#### Scenario: Async wait for completion
-- **WHEN** user calls `await status.wait()` on async status object
-- **THEN** the SDK performs async polling and returns final result
+## ADDED Requirements
 
 ### Requirement: Direct wait method on status models
 The SDK SHALL provide `wait()` method directly on `ConversionStatus`, `IdentificationStatus`, and `StepExecutionStatus` Pydantic models.

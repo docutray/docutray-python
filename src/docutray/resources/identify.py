@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import cached_property
 from typing import TYPE_CHECKING
 
 from .._files import prepare_base64_upload, prepare_file_upload, prepare_url_upload
@@ -143,6 +144,20 @@ class Identify:
         object.__setattr__(status, "_resource", self)
         return status
 
+    @cached_property
+    def with_raw_response(self) -> IdentifyWithRawResponse:
+        """Access methods that return raw HTTP responses.
+
+        Example:
+            >>> response = client.identify.with_raw_response.run(
+            ...     file=Path("document.pdf")
+            ... )
+            >>> print(response.status_code)
+            >>> print(response.headers)
+            >>> result = response.parse()
+        """
+        return IdentifyWithRawResponse(self)
+
 
 class AsyncIdentify:
     """Asynchronous document identification operations.
@@ -246,3 +261,23 @@ class AsyncIdentify:
         status = IdentificationStatus.model_validate(response.json())
         object.__setattr__(status, "_resource", self)
         return status
+
+    @cached_property
+    def with_raw_response(self) -> AsyncIdentifyWithRawResponse:
+        """Access methods that return raw HTTP responses.
+
+        Example:
+            >>> response = await client.identify.with_raw_response.run(
+            ...     file=Path("document.pdf")
+            ... )
+            >>> print(response.status_code)
+            >>> result = response.parse()
+        """
+        return AsyncIdentifyWithRawResponse(self)
+
+
+# Import here to avoid circular imports
+from .._response import (  # noqa: E402
+    AsyncIdentifyWithRawResponse,
+    IdentifyWithRawResponse,
+)

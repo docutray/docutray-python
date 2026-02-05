@@ -53,6 +53,15 @@ from .identify import (
     IdentificationStatusType,
 )
 
+# Knowledge base types
+from .knowledge_base import (
+    KnowledgeBase,
+    KnowledgeBaseDocument,
+    SearchResult,
+    SearchResultItem,
+    SyncResult,
+)
+
 # Shared types
 from .shared import APIResponse, ErrorDetail, PaginatedResponse, Pagination
 
@@ -82,6 +91,12 @@ __all__ = [
     "ValidationWarningInfo",
     # Steps
     "StepExecutionStatus",
+    # Knowledge Bases
+    "KnowledgeBase",
+    "KnowledgeBaseDocument",
+    "SearchResult",
+    "SearchResultItem",
+    "SyncResult",
     # ==========================================================================
     # Literal Types (Status Enums)
     # ==========================================================================

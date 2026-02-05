@@ -37,6 +37,8 @@ from ._exceptions import (
     RateLimitError,
     UnprocessableEntityError,
 )
+from ._pagination import AsyncPage, Page
+from ._response import RawResponse
 from ._version import __version__
 from .types import (
     ConversionResult,
@@ -45,8 +47,13 @@ from .types import (
     DocumentTypeMatch,
     IdentificationResult,
     IdentificationStatus,
+    KnowledgeBase,
+    KnowledgeBaseDocument,
     Pagination,
+    SearchResult,
+    SearchResultItem,
     StepExecutionStatus,
+    SyncResult,
     ValidationResult,
 )
 
@@ -70,6 +77,11 @@ __all__ = [
     "PermissionDeniedError",
     "RateLimitError",
     "UnprocessableEntityError",
+    # Pagination
+    "Page",
+    "AsyncPage",
+    # Raw Response
+    "RawResponse",
     # Types - Conversion
     "ConversionResult",
     "ConversionStatus",
@@ -82,6 +94,12 @@ __all__ = [
     "ValidationResult",
     # Types - Steps
     "StepExecutionStatus",
+    # Types - Knowledge Bases
+    "KnowledgeBase",
+    "KnowledgeBaseDocument",
+    "SearchResult",
+    "SearchResultItem",
+    "SyncResult",
     # Types - Shared
     "Pagination",
 ]

@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
 from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, ConfigDict
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable
+
     from ..resources.identify import AsyncIdentify, Identify
 
 IdentificationStatusType = Literal["ENQUEUED", "PROCESSING", "SUCCESS", "ERROR"]
@@ -92,12 +95,15 @@ class IdentificationStatus(BaseModel):
         *,
         poll_interval: float | None = None,
         timeout: float | None = None,
+        on_status: Callable[[IdentificationStatus], None] | None = None,
     ) -> IdentificationStatus:
         """Wait for the identification to complete by polling.
 
         Args:
             poll_interval: Seconds between status checks. Defaults to 2.0.
             timeout: Maximum seconds to wait. Defaults to 300.0 (5 minutes).
+            on_status: Optional callback invoked with each status update.
+                Called with the current status after each poll for progress tracking.
 
         Returns:
             The final identification status with results or error.
@@ -108,7 +114,7 @@ class IdentificationStatus(BaseModel):
 
         Example:
             >>> status = client.identify.run_async(file=path)
-            >>> final = status.wait(timeout=60)
+            >>> final = status.wait(timeout=60, on_status=lambda s: print(s.status))
             >>> if final.is_success():
             ...     print(final.document_type.name)
         """
@@ -119,6 +125,7 @@ class IdentificationStatus(BaseModel):
             self,
             poll_interval=poll_interval or DEFAULT_POLL_INTERVAL,
             timeout=timeout or DEFAULT_POLL_TIMEOUT,
+            on_status=on_status,
         )
 
     async def wait_async(
@@ -126,12 +133,17 @@ class IdentificationStatus(BaseModel):
         *,
         poll_interval: float | None = None,
         timeout: float | None = None,
+        on_status: Callable[[IdentificationStatus], None]
+        | Callable[[IdentificationStatus], Awaitable[None]]
+        | None = None,
     ) -> IdentificationStatus:
         """Wait for the identification to complete by polling (async version).
 
         Args:
             poll_interval: Seconds between status checks. Defaults to 2.0.
             timeout: Maximum seconds to wait. Defaults to 300.0 (5 minutes).
+            on_status: Optional callback invoked with each status update.
+                Can be sync or async. Called with the current status after each poll.
 
         Returns:
             The final identification status with results or error.
@@ -146,4 +158,5 @@ class IdentificationStatus(BaseModel):
             self,
             poll_interval=poll_interval or DEFAULT_POLL_INTERVAL,
             timeout=timeout or DEFAULT_POLL_TIMEOUT,
+            on_status=on_status,
         )

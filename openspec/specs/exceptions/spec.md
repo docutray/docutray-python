@@ -1,4 +1,10 @@
-## ADDED Requirements
+# Exceptions
+
+## Purpose
+
+Provides a hierarchy of exception classes for handling errors from the DocuTray API and SDK operations.
+
+## Requirements
 
 ### Requirement: Base exception class
 

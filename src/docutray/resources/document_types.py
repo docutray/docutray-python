@@ -2,19 +2,15 @@
 
 from __future__ import annotations
 
+from functools import cached_property
 from typing import TYPE_CHECKING, Any
 
+from .._pagination import AsyncPage, Page
 from ..types.document_type import DocumentType, ValidationResult
-from ..types.shared import PaginatedResponse, Pagination
+from ..types.shared import Pagination
 
 if TYPE_CHECKING:
     from .._base_client import BaseAsyncClient, BaseClient
-
-
-class DocumentTypesListResponse(PaginatedResponse[DocumentType]):
-    """Response from listing document types."""
-
-    pass
 
 
 class DocumentTypes:
@@ -22,9 +18,13 @@ class DocumentTypes:
 
     Example:
         >>> client = Client(api_key="...")
-        >>> types = client.document_types.list()
-        >>> for doc_type in types.data:
+        >>> page = client.document_types.list()
+        >>> for doc_type in page.data:
         ...     print(f"{doc_type.codeType}: {doc_type.name}")
+        >>>
+        >>> # Iterate through all document types across pages
+        >>> for doc_type in client.document_types.list().auto_paging_iter():
+        ...     print(doc_type.name)
     """
 
     def __init__(self, client: BaseClient) -> None:
@@ -35,35 +35,24 @@ class DocumentTypes:
         """
         self._client = client
 
-    def list(
+    def _fetch_page(
         self,
+        page_num: int,
         *,
-        page: int | None = None,
         limit: int | None = None,
         search: str | None = None,
-    ) -> DocumentTypesListResponse:
-        """List available document types.
+    ) -> Page[DocumentType]:
+        """Fetch a specific page of document types.
 
         Args:
-            page: Page number (1-indexed). Defaults to 1.
-            limit: Number of items per page. Defaults to server default.
-            search: Search term to filter document types by name.
+            page_num: The page number to fetch.
+            limit: Number of items per page.
+            search: Search term to filter document types.
 
         Returns:
-            Paginated list of document types.
-
-        Example:
-            >>> # List all document types
-            >>> response = client.document_types.list()
-            >>> for doc_type in response.data:
-            ...     print(doc_type.name)
-            >>>
-            >>> # Search for specific types
-            >>> response = client.document_types.list(search="invoice")
+            The requested page of document types.
         """
-        params: dict[str, Any] = {}
-        if page is not None:
-            params["page"] = page
+        params: dict[str, Any] = {"page": page_num}
         if limit is not None:
             params["limit"] = limit
         if search is not None:
@@ -72,10 +61,50 @@ class DocumentTypes:
         response = self._client._request("GET", "/api/document-types", params=params)
         data = response.json()
 
-        return DocumentTypesListResponse(
-            data=[DocumentType.model_validate(item) for item in data.get("data", [])],
-            pagination=Pagination.model_validate(data.get("pagination", {})),
+        pagination = Pagination.model_validate(data.get("pagination", {}))
+        items = [DocumentType.model_validate(item) for item in data.get("data", [])]
+
+        return Page(
+            data=items,
+            pagination=pagination,
+            fetch_page=lambda p: self._fetch_page(p, limit=limit, search=search),
         )
+
+    def list(
+        self,
+        *,
+        page: int | None = None,
+        limit: int | None = None,
+        search: str | None = None,
+    ) -> Page[DocumentType]:
+        """List available document types.
+
+        Args:
+            page: Page number (1-indexed). Defaults to 1.
+            limit: Number of items per page. Defaults to server default.
+            search: Search term to filter document types by name.
+
+        Returns:
+            A Page of document types with pagination support.
+
+        Example:
+            >>> # List all document types
+            >>> page = client.document_types.list()
+            >>> for doc_type in page.data:
+            ...     print(doc_type.name)
+            >>>
+            >>> # Iterate through all pages
+            >>> for page in client.document_types.list().iter_pages():
+            ...     print(f"Page {page.page}: {len(page.data)} items")
+            >>>
+            >>> # Iterate through all items automatically
+            >>> for doc_type in client.document_types.list().auto_paging_iter():
+            ...     print(doc_type.name)
+            >>>
+            >>> # Search for specific types
+            >>> page = client.document_types.list(search="invoice")
+        """
+        return self._fetch_page(page or 1, limit=limit, search=search)
 
     def get(self, type_id: str) -> DocumentType:
         """Get a specific document type by ID.
@@ -132,15 +161,31 @@ class DocumentTypes:
         )
         return ValidationResult.model_validate(response.json())
 
+    @cached_property
+    def with_raw_response(self) -> DocumentTypesWithRawResponse:
+        """Access methods that return raw HTTP responses.
+
+        Example:
+            >>> response = client.document_types.with_raw_response.list()
+            >>> print(response.status_code)
+            >>> print(response.headers)
+            >>> page = response.parse()
+        """
+        return DocumentTypesWithRawResponse(self)
+
 
 class AsyncDocumentTypes:
     """Asynchronous document type operations.
 
     Example:
         >>> async with AsyncClient(api_key="...") as client:
-        ...     types = await client.document_types.list()
-        ...     for doc_type in types.data:
+        ...     page = await client.document_types.list()
+        ...     for doc_type in page.data:
         ...         print(f"{doc_type.codeType}: {doc_type.name}")
+        >>>
+        >>> # Iterate through all document types across pages
+        >>> async for doc_type in (await client.document_types.list()).auto_paging_iter_async():
+        ...     print(doc_type.name)
     """
 
     def __init__(self, client: BaseAsyncClient) -> None:
@@ -151,26 +196,24 @@ class AsyncDocumentTypes:
         """
         self._client = client
 
-    async def list(
+    async def _fetch_page(
         self,
+        page_num: int,
         *,
-        page: int | None = None,
         limit: int | None = None,
         search: str | None = None,
-    ) -> DocumentTypesListResponse:
-        """List available document types.
+    ) -> AsyncPage[DocumentType]:
+        """Fetch a specific page of document types.
 
         Args:
-            page: Page number (1-indexed). Defaults to 1.
-            limit: Number of items per page. Defaults to server default.
-            search: Search term to filter document types by name.
+            page_num: The page number to fetch.
+            limit: Number of items per page.
+            search: Search term to filter document types.
 
         Returns:
-            Paginated list of document types.
+            The requested page of document types.
         """
-        params: dict[str, Any] = {}
-        if page is not None:
-            params["page"] = page
+        params: dict[str, Any] = {"page": page_num}
         if limit is not None:
             params["limit"] = limit
         if search is not None:
@@ -179,10 +222,33 @@ class AsyncDocumentTypes:
         response = await self._client._request("GET", "/api/document-types", params=params)
         data = response.json()
 
-        return DocumentTypesListResponse(
-            data=[DocumentType.model_validate(item) for item in data.get("data", [])],
-            pagination=Pagination.model_validate(data.get("pagination", {})),
+        pagination = Pagination.model_validate(data.get("pagination", {}))
+        items = [DocumentType.model_validate(item) for item in data.get("data", [])]
+
+        return AsyncPage(
+            data=items,
+            pagination=pagination,
+            fetch_page=lambda p: self._fetch_page(p, limit=limit, search=search),
         )
+
+    async def list(
+        self,
+        *,
+        page: int | None = None,
+        limit: int | None = None,
+        search: str | None = None,
+    ) -> AsyncPage[DocumentType]:
+        """List available document types.
+
+        Args:
+            page: Page number (1-indexed). Defaults to 1.
+            limit: Number of items per page. Defaults to server default.
+            search: Search term to filter document types by name.
+
+        Returns:
+            An AsyncPage of document types with pagination support.
+        """
+        return await self._fetch_page(page or 1, limit=limit, search=search)
 
     async def get(self, type_id: str) -> DocumentType:
         """Get a specific document type by ID.
@@ -216,3 +282,21 @@ class AsyncDocumentTypes:
             json=data,
         )
         return ValidationResult.model_validate(response.json())
+
+    @cached_property
+    def with_raw_response(self) -> AsyncDocumentTypesWithRawResponse:
+        """Access methods that return raw HTTP responses.
+
+        Example:
+            >>> response = await client.document_types.with_raw_response.list()
+            >>> print(response.status_code)
+            >>> page = response.parse()
+        """
+        return AsyncDocumentTypesWithRawResponse(self)
+
+
+# Import here to avoid circular imports
+from .._response import (  # noqa: E402
+    AsyncDocumentTypesWithRawResponse,
+    DocumentTypesWithRawResponse,
+)

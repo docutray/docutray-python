@@ -1,86 +1,49 @@
-# Spec: Type Definitions
+# Type Definitions
 
-## Overview
+## Purpose
 
-Comprehensive type definitions for the DocuTray SDK providing full type safety for IDE autocompletion and static type checking.
+Provides comprehensive type definitions for the DocuTray SDK enabling full type safety, IDE autocompletion, and static type checking.
 
-## Files
+## Requirements
 
-- `src/docutray/_types.py` - Internal type definitions
-- `src/docutray/types/__init__.py` - Public type exports
+### Requirement: Image content type literals
+The SDK SHALL provide `ImageContentType` literal type for supported content types.
 
-## Literal Types
+#### Scenario: Define supported content types
+- **WHEN** user imports `ImageContentType` from `docutray.types`
+- **THEN** it includes "application/pdf", "image/jpeg", "image/png", "image/gif", "image/bmp", "image/webp", "image/tiff"
 
-### ImageContentType
+### Requirement: Rate limit type literals
+The SDK SHALL provide `RateLimitType` literal type for rate limit period types.
 
-Supported image and document content types:
+#### Scenario: Define rate limit periods
+- **WHEN** user imports `RateLimitType` from `docutray.types`
+- **THEN** it includes "minute", "hour", "day"
 
-```python
-ImageContentType = Literal[
-    "application/pdf",
-    "image/jpeg",
-    "image/png",
-    "image/gif",
-    "image/bmp",
-    "image/webp",
-    "image/tiff",
-]
-```
+### Requirement: Rate limit info typed dict
+The SDK SHALL provide `RateLimitInfo` TypedDict for 429 response details.
 
-### RateLimitType
+#### Scenario: Access rate limit info fields
+- **WHEN** user accesses `RateLimitInfo`
+- **THEN** it contains error, limitType, limit, remaining, resetTime, retryAfter fields
 
-Rate limit period types from API responses:
+### Requirement: Quota exceeded info typed dict
+The SDK SHALL provide `QuotaExceededInfo` TypedDict for 402 response details.
 
-```python
-RateLimitType = Literal["minute", "hour", "day"]
-```
+#### Scenario: Access quota info fields
+- **WHEN** user accesses `QuotaExceededInfo`
+- **THEN** it contains error, quota, used, resetDate fields
 
-## TypedDicts
+### Requirement: Public type exports
+The SDK SHALL export all public types via `docutray.types` module.
 
-### RateLimitInfo
+#### Scenario: Import all types
+- **WHEN** user imports from `docutray.types`
+- **THEN** all response models, literal types, and TypedDicts are accessible
 
-Details from 429 rate limit responses:
+### Requirement: Type checking compatibility
+The SDK SHALL pass mypy strict mode validation.
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `error` | `str` | Error message |
-| `limitType` | `RateLimitType` | Period type (minute/hour/day) |
-| `limit` | `int` | Maximum limit for period |
-| `remaining` | `int` | Remaining requests |
-| `resetTime` | `int` | Unix timestamp when limit resets |
-| `retryAfter` | `int` | Seconds until retry allowed |
-
-### QuotaExceededInfo
-
-Details from 402 quota exceeded responses:
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `error` | `str` | Error message |
-| `quota` | `int` | Monthly quota limit |
-| `used` | `int` | Conversions used this month |
-| `resetDate` | `str` | ISO 8601 date when quota resets |
-
-## Public Exports
-
-All types exported via `docutray.types`:
-
-```python
-from docutray.types import (
-    # Response models
-    ConversionResult, ConversionStatus,
-    DocumentType, ValidationResult,
-    # Literal types
-    ConversionStatusType, ImageContentType,
-    # TypedDicts
-    ConvertParams, RateLimitInfo,
-    # Type aliases
-    FileInput,
-)
-```
-
-## Validation
-
-- mypy strict mode must pass
-- All types must have docstrings
-- All optional fields must have explicit `None` defaults
+#### Scenario: Static type checking
+- **WHEN** mypy is run with strict mode on the SDK
+- **THEN** no type errors are reported

@@ -1,4 +1,10 @@
-## ADDED Requirements
+# Client
+
+## Purpose
+
+Provides the main entry point for the SDK through `Client` and `AsyncClient` classes with authentication, configuration, and resource access.
+
+## Requirements
 
 ### Requirement: Client instantiation with explicit API key
 

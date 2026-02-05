@@ -1,4 +1,10 @@
-## ADDED Requirements
+# File Handling
+
+## Purpose
+
+Provides flexible file input handling supporting paths, bytes, file objects, URLs, and base64-encoded data with automatic content type detection.
+
+## Requirements
 
 ### Requirement: Support Path file input
 The SDK SHALL accept `pathlib.Path` objects as file input and read the file contents automatically.
