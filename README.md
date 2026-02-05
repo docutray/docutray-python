@@ -149,6 +149,7 @@ DocuTrayError (base)
 ### Catching Errors
 
 ```python
+from pathlib import Path
 from docutray import Client
 from docutray import (
     DocuTrayError,
@@ -185,6 +186,10 @@ except DocuTrayError as e:
 
 ```python
 import time
+from pathlib import Path
+from docutray import Client, RateLimitError
+
+client = Client(api_key="your-api-key")
 
 try:
     result = client.convert.run(file=Path("document.pdf"), document_type_code="invoice")
@@ -373,9 +378,9 @@ for page in client.document_types.list().iter_pages():
 for doc_type in client.document_types.list().auto_paging_iter():
     print(doc_type.name)
 
-# Async pagination
-async for doc_type in (await client.document_types.list()).auto_paging_iter_async():
-    print(doc_type.name)
+# Async pagination (inside an async function)
+# async for doc_type in (await client.document_types.list()).auto_paging_iter_async():
+#     print(doc_type.name)
 ```
 
 ## Raw Response Access
@@ -383,6 +388,11 @@ async for doc_type in (await client.document_types.list()).auto_paging_iter_asyn
 Access raw HTTP response data for debugging:
 
 ```python
+from pathlib import Path
+from docutray import Client
+
+client = Client(api_key="your-api-key")
+
 response = client.convert.with_raw_response.run(
     file=Path("invoice.pdf"),
     document_type_code="invoice"
@@ -402,6 +412,11 @@ print(result.data)
 For long-running operations, use async methods with polling:
 
 ```python
+from pathlib import Path
+from docutray import Client
+
+client = Client(api_key="your-api-key")
+
 # Start async conversion
 status = client.convert.run_async(
     file=Path("large_document.pdf"),
@@ -430,7 +445,11 @@ elif final.is_failed():
 The SDK uses Pydantic models for all responses, providing full type safety:
 
 ```python
+from pathlib import Path
+from docutray import Client
 from docutray.types import ConversionResult, DocumentType
+
+client = Client(api_key="your-api-key")
 
 # Type hints work with your IDE
 result: ConversionResult = client.convert.run(

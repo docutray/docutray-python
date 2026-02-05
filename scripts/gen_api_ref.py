@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Any
 
 try:
     import griffe
@@ -181,7 +180,7 @@ def format_class_doc(cls: griffe.Class) -> str:
         for prop in sorted(properties, key=lambda p: p.name):
             lines.append(f"- `{prop.name}`")
             if prop.docstring:
-                lines.append(f": {prop.docstring.value.split(chr(10))[0]}")
+                lines.append(f": {prop.docstring.value.splitlines()[0]}")
             lines.append("\n")
 
     return "\n".join(lines)
@@ -342,7 +341,7 @@ def generate_types_doc(module: griffe.Module, type_name: str) -> str:
                     annotation = field.annotation if field.annotation else "Any"
                     desc = ""
                     if field.docstring:
-                        desc = f" - {field.docstring.value.split(chr(10))[0]}"
+                        desc = f" - {field.docstring.value.splitlines()[0]}"
                     lines.append(f"- `{field_name}`: `{annotation}`{desc}\n")
 
     return "\n".join(lines)
@@ -352,7 +351,6 @@ def main() -> None:
     """Generate API reference documentation."""
     # Ensure we're in the project root
     project_root = Path(__file__).parent.parent
-    src_path = project_root / "src" / "docutray"
     docs_path = project_root / "docs" / "api"
 
     # Create output directories
