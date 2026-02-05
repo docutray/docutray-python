@@ -33,6 +33,9 @@ class ConversionStatus(BaseModel):
     status: ConversionStatusType
     """Current conversion status."""
 
+    status_url: str | None = None
+    """URL to check conversion status."""
+
     request_timestamp: datetime | None = None
     """Timestamp when conversion was started."""
 

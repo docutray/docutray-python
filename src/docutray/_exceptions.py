@@ -137,6 +137,8 @@ class RateLimitError(APIError):
     """Raised when rate limit is exceeded (429 Too Many Requests).
 
     Check the `retry_after` property for the recommended wait time.
+    Additional rate limit details are available in `limit_type`, `limit`,
+    `remaining`, and `reset_time` properties when provided by the API.
     """
 
     @property
@@ -157,12 +159,70 @@ class RateLimitError(APIError):
                 break
 
         if retry_after_value is None:
+            # Also check body for retryAfter field
+            if isinstance(self.body, dict):
+                body_retry = self.body.get("retryAfter")
+                if body_retry is not None:
+                    try:
+                        return float(body_retry)
+                    except (ValueError, TypeError):
+                        pass
             return None
 
         try:
             return float(retry_after_value)
         except (ValueError, TypeError):
             return None
+
+    @property
+    def limit_type(self) -> str | None:
+        """Get the type of rate limit exceeded (minute, hour, day).
+
+        Returns:
+            The limit type, or None if not specified.
+        """
+        if isinstance(self.body, dict):
+            return self.body.get("limitType")
+        return None
+
+    @property
+    def limit(self) -> int | None:
+        """Get the maximum limit for this period.
+
+        Returns:
+            The limit value, or None if not specified.
+        """
+        if isinstance(self.body, dict):
+            limit_val = self.body.get("limit")
+            if isinstance(limit_val, int):
+                return limit_val
+        return None
+
+    @property
+    def remaining(self) -> int | None:
+        """Get the number of remaining requests.
+
+        Returns:
+            The remaining requests, or None if not specified.
+        """
+        if isinstance(self.body, dict):
+            remaining_val = self.body.get("remaining")
+            if isinstance(remaining_val, int):
+                return remaining_val
+        return None
+
+    @property
+    def reset_time(self) -> int | None:
+        """Get the timestamp when the rate limit resets.
+
+        Returns:
+            Unix timestamp when limit resets, or None if not specified.
+        """
+        if isinstance(self.body, dict):
+            reset_val = self.body.get("resetTime")
+            if isinstance(reset_val, int):
+                return reset_val
+        return None
 
 
 class InternalServerError(APIError):
