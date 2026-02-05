@@ -6,7 +6,7 @@ import httpx
 import pytest
 import respx
 
-from docutray import Client, StepExecutionStatus
+from docutray import AsyncClient, Client, StepExecutionStatus
 
 
 class TestStepsRunAsync:
@@ -176,3 +176,136 @@ class TestStepExecutionStatusHelpers:
         assert status.is_complete()
         assert not status.is_success()
         assert status.is_error()
+
+
+class TestAsyncStepsRunAsync:
+    """Tests for AsyncSteps.run_async()."""
+
+    async def test_async_run_async_with_url(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter
+    ) -> None:
+        """Async execute step with URL input."""
+        mock_api.post("/api/steps-async/step_123").mock(
+            return_value=httpx.Response(
+                202,
+                json={
+                    "execution_id": "exec_xyz789",
+                    "status": "ENQUEUED",
+                    "step_id": "step_123",
+                },
+            )
+        )
+
+        status = await async_client.steps.run_async(
+            "step_123",
+            url="https://example.com/document.pdf",
+        )
+
+        assert isinstance(status, StepExecutionStatus)
+        assert status.execution_id == "exec_xyz789"
+        assert status.status == "ENQUEUED"
+        assert not status.is_complete()
+
+    async def test_async_run_async_with_bytes(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter
+    ) -> None:
+        """Async execute step with bytes input."""
+        mock_api.post("/api/steps-async/step_456").mock(
+            return_value=httpx.Response(
+                202,
+                json={
+                    "execution_id": "exec_abc123",
+                    "status": "ENQUEUED",
+                    "step_id": "step_456",
+                },
+            )
+        )
+
+        status = await async_client.steps.run_async(
+            "step_456",
+            file=b"fake pdf content",
+            content_type="application/pdf",
+        )
+
+        assert status.execution_id == "exec_abc123"
+        assert status.status == "ENQUEUED"
+
+    async def test_async_run_async_requires_input(
+        self, async_client: AsyncClient
+    ) -> None:
+        """Async execute step raises error when no input provided."""
+        with pytest.raises(ValueError, match="Must provide one of"):
+            await async_client.steps.run_async("step_123")
+
+
+class TestAsyncStepsGetStatus:
+    """Tests for AsyncSteps.get_status()."""
+
+    async def test_async_get_status_processing(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter
+    ) -> None:
+        """Async get status returns PROCESSING state."""
+        mock_api.get("/api/steps-async/status/exec_123").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "execution_id": "exec_123",
+                    "status": "PROCESSING",
+                    "step_id": "step_invoice",
+                    "request_timestamp": "2024-01-15T10:30:00.000Z",
+                },
+            )
+        )
+
+        status = await async_client.steps.get_status("exec_123")
+
+        assert status.status == "PROCESSING"
+        assert not status.is_complete()
+        assert not status.is_success()
+
+    async def test_async_get_status_success(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter
+    ) -> None:
+        """Async get status returns SUCCESS state with data."""
+        mock_api.get("/api/steps-async/status/exec_123").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "execution_id": "exec_123",
+                    "status": "SUCCESS",
+                    "step_id": "step_invoice",
+                    "request_timestamp": "2024-01-15T10:30:00.000Z",
+                    "response_timestamp": "2024-01-15T10:30:05.000Z",
+                    "data": {"invoice_number": "INV-001", "total": 1500.00},
+                },
+            )
+        )
+
+        status = await async_client.steps.get_status("exec_123")
+
+        assert status.status == "SUCCESS"
+        assert status.is_complete()
+        assert status.is_success()
+        assert status.data == {"invoice_number": "INV-001", "total": 1500.00}
+
+    async def test_async_get_status_error(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter
+    ) -> None:
+        """Async get status returns ERROR state with message."""
+        mock_api.get("/api/steps-async/status/exec_123").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "execution_id": "exec_123",
+                    "status": "ERROR",
+                    "error": "Step execution failed: invalid document format",
+                },
+            )
+        )
+
+        status = await async_client.steps.get_status("exec_123")
+
+        assert status.status == "ERROR"
+        assert status.is_complete()
+        assert status.is_error()
+        assert "invalid document format" in status.error

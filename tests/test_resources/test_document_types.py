@@ -5,7 +5,7 @@ from __future__ import annotations
 import httpx
 import respx
 
-from docutray import Client, DocumentType, ValidationResult
+from docutray import AsyncClient, Client, DocumentType, ValidationResult
 
 
 class TestDocumentTypesList:
@@ -201,3 +201,152 @@ class TestDocumentTypeModel:
         assert doc_type.name == "Invoice"
         assert doc_type.codeType == "invoice"
         assert doc_type.isPublic is True
+
+
+class TestAsyncDocumentTypesList:
+    """Tests for AsyncDocumentTypes.list()."""
+
+    async def test_async_list_document_types(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter
+    ) -> None:
+        """Async list all document types."""
+        mock_api.get("/api/document-types").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "data": [
+                        {
+                            "id": "dt_1",
+                            "name": "Invoice",
+                            "codeType": "invoice",
+                            "description": "Invoice documents",
+                            "isPublic": True,
+                            "isDraft": False,
+                        },
+                        {
+                            "id": "dt_2",
+                            "name": "Receipt",
+                            "codeType": "receipt",
+                            "description": "Receipt documents",
+                            "isPublic": True,
+                            "isDraft": False,
+                        },
+                    ],
+                    "pagination": {
+                        "total": 2,
+                        "page": 1,
+                        "limit": 10,
+                    },
+                },
+            )
+        )
+
+        response = await async_client.document_types.list()
+
+        assert len(response.data) == 2
+        assert response.data[0].codeType == "invoice"
+        assert response.data[1].codeType == "receipt"
+        assert response.total == 2
+
+    async def test_async_list_with_pagination(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter
+    ) -> None:
+        """Async list document types with pagination parameters."""
+        mock_api.get("/api/document-types").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "data": [{"id": "dt_3", "name": "Contract", "codeType": "contract"}],
+                    "pagination": {"total": 15, "page": 2, "limit": 5},
+                },
+            )
+        )
+
+        response = await async_client.document_types.list(page=2, limit=5)
+
+        assert response.page == 2
+        assert response.limit == 5
+
+
+class TestAsyncDocumentTypesGet:
+    """Tests for AsyncDocumentTypes.get()."""
+
+    async def test_async_get_document_type(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter
+    ) -> None:
+        """Async get a specific document type."""
+        mock_api.get("/api/document-types/dt_123").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "id": "dt_123",
+                    "name": "Invoice",
+                    "codeType": "invoice",
+                    "description": "Invoice documents with line items",
+                    "isPublic": True,
+                    "isDraft": False,
+                    "createdAt": "2024-01-01T00:00:00.000Z",
+                },
+            )
+        )
+
+        doc_type = await async_client.document_types.get("dt_123")
+
+        assert isinstance(doc_type, DocumentType)
+        assert doc_type.id == "dt_123"
+        assert doc_type.name == "Invoice"
+        assert doc_type.codeType == "invoice"
+
+
+class TestAsyncDocumentTypesValidate:
+    """Tests for AsyncDocumentTypes.validate()."""
+
+    async def test_async_validate_valid_data(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter
+    ) -> None:
+        """Async validate data that passes validation."""
+        mock_api.post("/api/document-types/dt_123/validate").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "errors": {"count": 0, "messages": []},
+                    "warnings": {"count": 0, "messages": []},
+                },
+            )
+        )
+
+        result = await async_client.document_types.validate(
+            "dt_123",
+            {"invoice_number": "INV-001", "total": 100},
+        )
+
+        assert isinstance(result, ValidationResult)
+        assert result.is_valid()
+        assert not result.has_warnings()
+
+    async def test_async_validate_invalid_data(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter
+    ) -> None:
+        """Async validate data that fails validation."""
+        mock_api.post("/api/document-types/dt_123/validate").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "errors": {
+                        "count": 2,
+                        "messages": [
+                            "Missing required field: invoice_number",
+                            "Invalid type for field: total",
+                        ],
+                    },
+                    "warnings": {"count": 0, "messages": []},
+                },
+            )
+        )
+
+        result = await async_client.document_types.validate(
+            "dt_123", {"total": "not-a-number"}
+        )
+
+        assert not result.is_valid()
+        assert result.errors.count == 2
