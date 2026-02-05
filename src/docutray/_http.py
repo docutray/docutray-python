@@ -46,12 +46,18 @@ def build_headers(api_key: str) -> dict[str, str]:
 
     Returns:
         Dictionary of HTTP headers.
+
+    Note:
+        Content-Type is NOT included here because httpx automatically sets
+        the correct Content-Type based on the request body:
+        - application/json for json= parameter
+        - multipart/form-data with boundary for files= parameter
+        Setting Content-Type explicitly would break multipart uploads.
     """
     return {
         "Authorization": f"Bearer {api_key}",
         "User-Agent": f"docutray-python/{__version__}",
         "Accept": "application/json",
-        "Content-Type": "application/json",
     }
 
 
@@ -130,7 +136,9 @@ def _get_retry_after(response: httpx.Response) -> float | None:
     Returns:
         The Retry-After value in seconds, or None if not present.
     """
-    retry_after = response.headers.get("retry-after") or response.headers.get("Retry-After")
+    retry_after = response.headers.get("retry-after") or response.headers.get(
+        "Retry-After"
+    )
     if retry_after is None:
         return None
     try:
@@ -161,7 +169,9 @@ class SyncHTTPClient:
         self._api_key = api_key
         self._base_url = base_url
         self._timeout = timeout if timeout is not None else DEFAULT_TIMEOUT
-        self._retry_config = retry_config if retry_config is not None else DEFAULT_RETRY_CONFIG
+        self._retry_config = (
+            retry_config if retry_config is not None else DEFAULT_RETRY_CONFIG
+        )
         self._client: httpx.Client | None = None
 
     def _ensure_client(self) -> httpx.Client:
@@ -218,9 +228,13 @@ class SyncHTTPClient:
                     status_code = response.status_code
 
                     # Check if we should retry
-                    if should_retry(attempt, self._retry_config, status_code=status_code):
+                    if should_retry(
+                        attempt, self._retry_config, status_code=status_code
+                    ):
                         retry_after = _get_retry_after(response)
-                        delay = calculate_delay(attempt, self._retry_config, retry_after)
+                        delay = calculate_delay(
+                            attempt, self._retry_config, retry_after
+                        )
 
                         if logging_enabled:
                             logger.warning(
@@ -307,7 +321,9 @@ class AsyncHTTPClient:
         self._api_key = api_key
         self._base_url = base_url
         self._timeout = timeout if timeout is not None else DEFAULT_TIMEOUT
-        self._retry_config = retry_config if retry_config is not None else DEFAULT_RETRY_CONFIG
+        self._retry_config = (
+            retry_config if retry_config is not None else DEFAULT_RETRY_CONFIG
+        )
         self._client: httpx.AsyncClient | None = None
 
     def _ensure_client(self) -> httpx.AsyncClient:
@@ -364,9 +380,13 @@ class AsyncHTTPClient:
                     status_code = response.status_code
 
                     # Check if we should retry
-                    if should_retry(attempt, self._retry_config, status_code=status_code):
+                    if should_retry(
+                        attempt, self._retry_config, status_code=status_code
+                    ):
                         retry_after = _get_retry_after(response)
-                        delay = calculate_delay(attempt, self._retry_config, retry_after)
+                        delay = calculate_delay(
+                            attempt, self._retry_config, retry_after
+                        )
 
                         if logging_enabled:
                             logger.warning(

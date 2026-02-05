@@ -63,7 +63,7 @@ The `Client` and `AsyncClient` SHALL accept a `base_url` parameter with a sensib
 
 #### Scenario: Default base URL
 - **WHEN** `Client(api_key="sk_test")` is called without base_url
-- **THEN** the client uses `https://api.docutray.com` as the base URL
+- **THEN** the client uses `https://app.docutray.com` as the base URL
 
 #### Scenario: Custom base URL
 - **WHEN** `Client(api_key="sk_test", base_url="https://custom.api.com")` is called

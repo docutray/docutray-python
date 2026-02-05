@@ -53,7 +53,9 @@ class BaseClient(ABC):
         self._api_key = resolved_api_key
         self._base_url = base_url if base_url is not None else DEFAULT_BASE_URL
         self._timeout = timeout if timeout is not None else DEFAULT_TIMEOUT
-        self._max_retries = max_retries if max_retries is not None else DEFAULT_MAX_RETRIES
+        self._max_retries = (
+            max_retries if max_retries is not None else DEFAULT_MAX_RETRIES
+        )
 
         if self._max_retries < 0:
             raise ValueError("max_retries must be >= 0")
@@ -176,7 +178,9 @@ class BaseAsyncClient(ABC):
         self._api_key = resolved_api_key
         self._base_url = base_url if base_url is not None else DEFAULT_BASE_URL
         self._timeout = timeout if timeout is not None else DEFAULT_TIMEOUT
-        self._max_retries = max_retries if max_retries is not None else DEFAULT_MAX_RETRIES
+        self._max_retries = (
+            max_retries if max_retries is not None else DEFAULT_MAX_RETRIES
+        )
 
         if self._max_retries < 0:
             raise ValueError("max_retries must be >= 0")

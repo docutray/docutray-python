@@ -6,7 +6,7 @@ from collections.abc import Callable
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable
@@ -19,9 +19,9 @@ StepExecutionStatusType = Literal["ENQUEUED", "PROCESSING", "SUCCESS", "ERROR"]
 class StepExecutionStatus(BaseModel):
     """Status of an asynchronous step execution."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
-    execution_id: str
+    execution_id: str = Field(validation_alias=AliasChoices("id", "conversion_id"))
     """Unique execution ID."""
 
     status: StepExecutionStatusType
@@ -42,8 +42,8 @@ class StepExecutionStatus(BaseModel):
     data: dict[str, Any] | None = None
     """Result data (only present when status is SUCCESS)."""
 
-    error: str | None = None
-    """Error message (only present when status is ERROR)."""
+    error: str | dict[str, Any] | None = None
+    """Error message or details (only present when status is ERROR)."""
 
     # Internal reference to the resource for polling
     _resource: Steps | AsyncSteps | None = None

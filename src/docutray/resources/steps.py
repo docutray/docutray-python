@@ -76,28 +76,34 @@ class Steps:
             >>> print(f"Execution ID: {status.execution_id}")
         """
         if file is not None:
-            field_name, file_tuple = prepare_file_upload(file, content_type=content_type)
-            files = {field_name: file_tuple}
+            upload = prepare_file_upload(file, content_type=content_type)
             data: dict[str, Any] = {}
             if document_metadata:
                 # Multipart form data requires JSON-stringified metadata
                 data["document_metadata"] = json.dumps(document_metadata)
 
             response = self._client._request(
-                "POST", f"/api/steps-async/{step_id}", files=files, data=data if data else None
+                "POST",
+                f"/api/steps-async/{step_id}",
+                files=upload.files,
+                data=data if data else None,
             )
         elif url is not None:
             body = prepare_url_upload(url, content_type=content_type)
             if document_metadata:
                 body["document_metadata"] = document_metadata
 
-            response = self._client._request("POST", f"/api/steps-async/{step_id}", json=body)
+            response = self._client._request(
+                "POST", f"/api/steps-async/{step_id}", json=body
+            )
         elif file_base64 is not None:
             body = prepare_base64_upload(file_base64, content_type=content_type)
             if document_metadata:
                 body["document_metadata"] = document_metadata
 
-            response = self._client._request("POST", f"/api/steps-async/{step_id}", json=body)
+            response = self._client._request(
+                "POST", f"/api/steps-async/{step_id}", json=body
+            )
         else:
             raise ValueError("Must provide one of: file, url, or file_base64")
 
@@ -187,28 +193,34 @@ class AsyncSteps:
             The initial execution status with execution_id.
         """
         if file is not None:
-            field_name, file_tuple = prepare_file_upload(file, content_type=content_type)
-            files = {field_name: file_tuple}
+            upload = prepare_file_upload(file, content_type=content_type)
             data: dict[str, Any] = {}
             if document_metadata:
                 # Multipart form data requires JSON-stringified metadata
                 data["document_metadata"] = json.dumps(document_metadata)
 
             response = await self._client._request(
-                "POST", f"/api/steps-async/{step_id}", files=files, data=data if data else None
+                "POST",
+                f"/api/steps-async/{step_id}",
+                files=upload.files,
+                data=data if data else None,
             )
         elif url is not None:
             body = prepare_url_upload(url, content_type=content_type)
             if document_metadata:
                 body["document_metadata"] = document_metadata
 
-            response = await self._client._request("POST", f"/api/steps-async/{step_id}", json=body)
+            response = await self._client._request(
+                "POST", f"/api/steps-async/{step_id}", json=body
+            )
         elif file_base64 is not None:
             body = prepare_base64_upload(file_base64, content_type=content_type)
             if document_metadata:
                 body["document_metadata"] = document_metadata
 
-            response = await self._client._request("POST", f"/api/steps-async/{step_id}", json=body)
+            response = await self._client._request(
+                "POST", f"/api/steps-async/{step_id}", json=body
+            )
         else:
             raise ValueError("Must provide one of: file, url, or file_base64")
 

@@ -68,9 +68,10 @@ class TestPrepareFileUpload:
     def test_from_bytes(self) -> None:
         """Prepare upload from bytes."""
         data = b"fake pdf content"
-        field_name, (filename, file_obj, content_type) = prepare_file_upload(data)
+        upload = prepare_file_upload(data)
 
-        assert field_name == "image"
+        assert "image" in upload.files
+        filename, file_obj, content_type = upload.files["image"]
         assert filename == "document"
         assert content_type == CONTENT_TYPE_PDF
         assert file_obj.read() == data
@@ -78,28 +79,26 @@ class TestPrepareFileUpload:
     def test_from_bytes_with_content_type(self) -> None:
         """Prepare upload from bytes with explicit content type."""
         data = b"fake image content"
-        field_name, (filename, file_obj, content_type) = prepare_file_upload(
-            data, content_type="image/png"
-        )
+        upload = prepare_file_upload(data, content_type="image/png")
 
-        assert content_type == "image/png"
+        assert upload.content_type == "image/png"
 
     def test_from_bytes_with_filename(self) -> None:
         """Prepare upload from bytes with explicit filename."""
         data = b"fake content"
-        field_name, (filename, file_obj, content_type) = prepare_file_upload(
-            data, filename="custom.pdf"
-        )
+        upload = prepare_file_upload(data, filename="custom.pdf")
 
+        filename, _, _ = upload.files["image"]
         assert filename == "custom.pdf"
 
     def test_from_bytesio(self) -> None:
         """Prepare upload from BytesIO object."""
         data = b"fake content"
         file_obj = BytesIO(data)
-        field_name, (filename, result_obj, content_type) = prepare_file_upload(file_obj)
+        upload = prepare_file_upload(file_obj)
 
-        assert field_name == "image"
+        assert "image" in upload.files
+        _, result_obj, _ = upload.files["image"]
         assert result_obj.read() == data
 
     def test_from_path(self, tmp_path: Path) -> None:
@@ -107,9 +106,10 @@ class TestPrepareFileUpload:
         test_file = tmp_path / "test.pdf"
         test_file.write_bytes(b"test pdf content")
 
-        field_name, (filename, file_obj, content_type) = prepare_file_upload(test_file)
+        upload = prepare_file_upload(test_file)
 
-        assert field_name == "image"
+        assert "image" in upload.files
+        filename, file_obj, content_type = upload.files["image"]
         assert filename == "test.pdf"
         assert content_type == "application/pdf"
         assert file_obj.read() == b"test pdf content"
@@ -119,8 +119,9 @@ class TestPrepareFileUpload:
         test_file = tmp_path / "image.png"
         test_file.write_bytes(b"fake png content")
 
-        field_name, (filename, file_obj, content_type) = prepare_file_upload(test_file)
+        upload = prepare_file_upload(test_file)
 
+        filename, _, content_type = upload.files["image"]
         assert filename == "image.png"
         assert content_type == "image/png"
 

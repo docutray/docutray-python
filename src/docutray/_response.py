@@ -141,12 +141,14 @@ class ConvertWithRawResponse:
         from .types.convert import ConversionResult
 
         if file is not None:
-            field_name, file_tuple = prepare_file_upload(file, content_type=content_type)
-            files = {field_name: file_tuple}
+            upload = prepare_file_upload(file, content_type=content_type)
+
             data: dict[str, Any] = {"document_type_code": document_type_code}
             if document_metadata:
                 data["document_metadata"] = json.dumps(document_metadata)
-            response = self._convert._client._request("POST", "/api/convert", files=files, data=data)
+            response = self._convert._client._request(
+                "POST", "/api/convert", files=upload.files, data=data
+            )
         elif url is not None:
             body = prepare_url_upload(url, content_type=content_type)
             body["document_type_code"] = document_type_code
@@ -198,24 +200,30 @@ class ConvertWithRawResponse:
         from .types.convert import ConversionStatus
 
         if file is not None:
-            field_name, file_tuple = prepare_file_upload(file, content_type=content_type)
-            files = {field_name: file_tuple}
+            upload = prepare_file_upload(file, content_type=content_type)
+
             data: dict[str, Any] = {"document_type_code": document_type_code}
             if document_metadata:
                 data["document_metadata"] = json.dumps(document_metadata)
-            response = self._convert._client._request("POST", "/api/convert-async", files=files, data=data)
+            response = self._convert._client._request(
+                "POST", "/api/convert-async", files=upload.files, data=data
+            )
         elif url is not None:
             body = prepare_url_upload(url, content_type=content_type)
             body["document_type_code"] = document_type_code
             if document_metadata:
                 body["document_metadata"] = document_metadata
-            response = self._convert._client._request("POST", "/api/convert-async", json=body)
+            response = self._convert._client._request(
+                "POST", "/api/convert-async", json=body
+            )
         elif file_base64 is not None:
             body = prepare_base64_upload(file_base64, content_type=content_type)
             body["document_type_code"] = document_type_code
             if document_metadata:
                 body["document_metadata"] = document_metadata
-            response = self._convert._client._request("POST", "/api/convert-async", json=body)
+            response = self._convert._client._request(
+                "POST", "/api/convert-async", json=body
+            )
         else:
             raise ValueError("Must provide one of: file, url, or file_base64")
 
@@ -286,24 +294,30 @@ class AsyncConvertWithRawResponse:
         from .types.convert import ConversionResult
 
         if file is not None:
-            field_name, file_tuple = prepare_file_upload(file, content_type=content_type)
-            files = {field_name: file_tuple}
+            upload = prepare_file_upload(file, content_type=content_type)
+
             data: dict[str, Any] = {"document_type_code": document_type_code}
             if document_metadata:
                 data["document_metadata"] = json.dumps(document_metadata)
-            response = await self._convert._client._request("POST", "/api/convert", files=files, data=data)
+            response = await self._convert._client._request(
+                "POST", "/api/convert", files=upload.files, data=data
+            )
         elif url is not None:
             body = prepare_url_upload(url, content_type=content_type)
             body["document_type_code"] = document_type_code
             if document_metadata:
                 body["document_metadata"] = document_metadata
-            response = await self._convert._client._request("POST", "/api/convert", json=body)
+            response = await self._convert._client._request(
+                "POST", "/api/convert", json=body
+            )
         elif file_base64 is not None:
             body = prepare_base64_upload(file_base64, content_type=content_type)
             body["document_type_code"] = document_type_code
             if document_metadata:
                 body["document_metadata"] = document_metadata
-            response = await self._convert._client._request("POST", "/api/convert", json=body)
+            response = await self._convert._client._request(
+                "POST", "/api/convert", json=body
+            )
         else:
             raise ValueError("Must provide one of: file, url, or file_base64")
 
@@ -343,24 +357,30 @@ class AsyncConvertWithRawResponse:
         from .types.convert import ConversionStatus
 
         if file is not None:
-            field_name, file_tuple = prepare_file_upload(file, content_type=content_type)
-            files = {field_name: file_tuple}
+            upload = prepare_file_upload(file, content_type=content_type)
+
             data: dict[str, Any] = {"document_type_code": document_type_code}
             if document_metadata:
                 data["document_metadata"] = json.dumps(document_metadata)
-            response = await self._convert._client._request("POST", "/api/convert-async", files=files, data=data)
+            response = await self._convert._client._request(
+                "POST", "/api/convert-async", files=upload.files, data=data
+            )
         elif url is not None:
             body = prepare_url_upload(url, content_type=content_type)
             body["document_type_code"] = document_type_code
             if document_metadata:
                 body["document_metadata"] = document_metadata
-            response = await self._convert._client._request("POST", "/api/convert-async", json=body)
+            response = await self._convert._client._request(
+                "POST", "/api/convert-async", json=body
+            )
         elif file_base64 is not None:
             body = prepare_base64_upload(file_base64, content_type=content_type)
             body["document_type_code"] = document_type_code
             if document_metadata:
                 body["document_metadata"] = document_metadata
-            response = await self._convert._client._request("POST", "/api/convert-async", json=body)
+            response = await self._convert._client._request(
+                "POST", "/api/convert-async", json=body
+            )
         else:
             raise ValueError("Must provide one of: file, url, or file_base64")
 
@@ -412,6 +432,7 @@ class IdentifyWithRawResponse:
         url: str | None = None,
         file_base64: str | None = None,
         content_type: str | None = None,
+        document_type_code_options: list[str] | None = None,
     ) -> RawResponse[IdentificationResult]:
         """Identify a document and return the raw HTTP response.
 
@@ -420,6 +441,8 @@ class IdentifyWithRawResponse:
             url: URL of the document to identify.
             file_base64: Base64-encoded document.
             content_type: Content type of the file.
+            document_type_code_options: List of document type codes to limit
+                identification to.
 
         Returns:
             RawResponse wrapping the HTTP response.
@@ -432,15 +455,29 @@ class IdentifyWithRawResponse:
         from .types.identify import IdentificationResult
 
         if file is not None:
-            field_name, file_tuple = prepare_file_upload(file, content_type=content_type)
-            files = {field_name: file_tuple}
-            response = self._identify._client._request("POST", "/api/identify", files=files)
+            upload = prepare_file_upload(file, content_type=content_type)
+            data: dict[str, Any] = {"image_content_type": upload.content_type}
+            if document_type_code_options:
+                data["document_type_code_options"] = json.dumps(
+                    document_type_code_options
+                )
+            response = self._identify._client._request(
+                "POST", "/api/identify", files=upload.files, data=data
+            )
         elif url is not None:
             body = prepare_url_upload(url, content_type=content_type)
-            response = self._identify._client._request("POST", "/api/identify", json=body)
+            if document_type_code_options:
+                body["document_type_code_options"] = document_type_code_options
+            response = self._identify._client._request(
+                "POST", "/api/identify", json=body
+            )
         elif file_base64 is not None:
             body = prepare_base64_upload(file_base64, content_type=content_type)
-            response = self._identify._client._request("POST", "/api/identify", json=body)
+            if document_type_code_options:
+                body["document_type_code_options"] = document_type_code_options
+            response = self._identify._client._request(
+                "POST", "/api/identify", json=body
+            )
         else:
             raise ValueError("Must provide one of: file, url, or file_base64")
 
@@ -456,6 +493,7 @@ class IdentifyWithRawResponse:
         url: str | None = None,
         file_base64: str | None = None,
         content_type: str | None = None,
+        document_type_code_options: list[str] | None = None,
     ) -> RawResponse[IdentificationStatus]:
         """Start async identification and return the raw HTTP response.
 
@@ -464,6 +502,8 @@ class IdentifyWithRawResponse:
             url: URL of the document to identify.
             file_base64: Base64-encoded document.
             content_type: Content type of the file.
+            document_type_code_options: List of document type codes to limit
+                identification to.
 
         Returns:
             RawResponse wrapping the HTTP response.
@@ -476,15 +516,29 @@ class IdentifyWithRawResponse:
         from .types.identify import IdentificationStatus
 
         if file is not None:
-            field_name, file_tuple = prepare_file_upload(file, content_type=content_type)
-            files = {field_name: file_tuple}
-            response = self._identify._client._request("POST", "/api/identify-async", files=files)
+            upload = prepare_file_upload(file, content_type=content_type)
+            data: dict[str, Any] = {"image_content_type": upload.content_type}
+            if document_type_code_options:
+                data["document_type_code_options"] = json.dumps(
+                    document_type_code_options
+                )
+            response = self._identify._client._request(
+                "POST", "/api/identify-async", files=upload.files, data=data
+            )
         elif url is not None:
             body = prepare_url_upload(url, content_type=content_type)
-            response = self._identify._client._request("POST", "/api/identify-async", json=body)
+            if document_type_code_options:
+                body["document_type_code_options"] = document_type_code_options
+            response = self._identify._client._request(
+                "POST", "/api/identify-async", json=body
+            )
         elif file_base64 is not None:
             body = prepare_base64_upload(file_base64, content_type=content_type)
-            response = self._identify._client._request("POST", "/api/identify-async", json=body)
+            if document_type_code_options:
+                body["document_type_code_options"] = document_type_code_options
+            response = self._identify._client._request(
+                "POST", "/api/identify-async", json=body
+            )
         else:
             raise ValueError("Must provide one of: file, url, or file_base64")
 
@@ -531,6 +585,7 @@ class AsyncIdentifyWithRawResponse:
         url: str | None = None,
         file_base64: str | None = None,
         content_type: str | None = None,
+        document_type_code_options: list[str] | None = None,
     ) -> RawResponse[IdentificationResult]:
         """Identify a document and return the raw HTTP response.
 
@@ -539,6 +594,8 @@ class AsyncIdentifyWithRawResponse:
             url: URL of the document to identify.
             file_base64: Base64-encoded document.
             content_type: Content type of the file.
+            document_type_code_options: List of document type codes to limit
+                identification to.
 
         Returns:
             RawResponse wrapping the HTTP response.
@@ -551,15 +608,29 @@ class AsyncIdentifyWithRawResponse:
         from .types.identify import IdentificationResult
 
         if file is not None:
-            field_name, file_tuple = prepare_file_upload(file, content_type=content_type)
-            files = {field_name: file_tuple}
-            response = await self._identify._client._request("POST", "/api/identify", files=files)
+            upload = prepare_file_upload(file, content_type=content_type)
+            data: dict[str, Any] = {"image_content_type": upload.content_type}
+            if document_type_code_options:
+                data["document_type_code_options"] = json.dumps(
+                    document_type_code_options
+                )
+            response = await self._identify._client._request(
+                "POST", "/api/identify", files=upload.files, data=data
+            )
         elif url is not None:
             body = prepare_url_upload(url, content_type=content_type)
-            response = await self._identify._client._request("POST", "/api/identify", json=body)
+            if document_type_code_options:
+                body["document_type_code_options"] = document_type_code_options
+            response = await self._identify._client._request(
+                "POST", "/api/identify", json=body
+            )
         elif file_base64 is not None:
             body = prepare_base64_upload(file_base64, content_type=content_type)
-            response = await self._identify._client._request("POST", "/api/identify", json=body)
+            if document_type_code_options:
+                body["document_type_code_options"] = document_type_code_options
+            response = await self._identify._client._request(
+                "POST", "/api/identify", json=body
+            )
         else:
             raise ValueError("Must provide one of: file, url, or file_base64")
 
@@ -575,6 +646,7 @@ class AsyncIdentifyWithRawResponse:
         url: str | None = None,
         file_base64: str | None = None,
         content_type: str | None = None,
+        document_type_code_options: list[str] | None = None,
     ) -> RawResponse[IdentificationStatus]:
         """Start async identification and return the raw HTTP response.
 
@@ -583,6 +655,8 @@ class AsyncIdentifyWithRawResponse:
             url: URL of the document to identify.
             file_base64: Base64-encoded document.
             content_type: Content type of the file.
+            document_type_code_options: List of document type codes to limit
+                identification to.
 
         Returns:
             RawResponse wrapping the HTTP response.
@@ -595,15 +669,29 @@ class AsyncIdentifyWithRawResponse:
         from .types.identify import IdentificationStatus
 
         if file is not None:
-            field_name, file_tuple = prepare_file_upload(file, content_type=content_type)
-            files = {field_name: file_tuple}
-            response = await self._identify._client._request("POST", "/api/identify-async", files=files)
+            upload = prepare_file_upload(file, content_type=content_type)
+            data: dict[str, Any] = {"image_content_type": upload.content_type}
+            if document_type_code_options:
+                data["document_type_code_options"] = json.dumps(
+                    document_type_code_options
+                )
+            response = await self._identify._client._request(
+                "POST", "/api/identify-async", files=upload.files, data=data
+            )
         elif url is not None:
             body = prepare_url_upload(url, content_type=content_type)
-            response = await self._identify._client._request("POST", "/api/identify-async", json=body)
+            if document_type_code_options:
+                body["document_type_code_options"] = document_type_code_options
+            response = await self._identify._client._request(
+                "POST", "/api/identify-async", json=body
+            )
         elif file_base64 is not None:
             body = prepare_base64_upload(file_base64, content_type=content_type)
-            response = await self._identify._client._request("POST", "/api/identify-async", json=body)
+            if document_type_code_options:
+                body["document_type_code_options"] = document_type_code_options
+            response = await self._identify._client._request(
+                "POST", "/api/identify-async", json=body
+            )
         else:
             raise ValueError("Must provide one of: file, url, or file_base64")
 
@@ -612,7 +700,9 @@ class AsyncIdentifyWithRawResponse:
             lambda r: IdentificationStatus.model_validate(r.json()),
         )
 
-    async def get_status(self, identification_id: str) -> RawResponse[IdentificationStatus]:
+    async def get_status(
+        self, identification_id: str
+    ) -> RawResponse[IdentificationStatus]:
         """Get identification status and return the raw HTTP response.
 
         Args:
@@ -688,7 +778,9 @@ class DocumentTypesWithRawResponse:
             return Page(
                 data=items,
                 pagination=pagination,
-                fetch_page=lambda p: self._document_types._fetch_page(p, limit=limit, search=search),
+                fetch_page=lambda p: self._document_types._fetch_page(
+                    p, limit=limit, search=search
+                ),
             )
 
         return RawResponse(response, parse_page)
@@ -790,7 +882,9 @@ class AsyncDocumentTypesWithRawResponse:
             return AsyncPage(
                 data=items,
                 pagination=pagination,
-                fetch_page=lambda p: self._document_types._fetch_page(p, limit=limit, search=search),
+                fetch_page=lambda p: self._document_types._fetch_page(
+                    p, limit=limit, search=search
+                ),
             )
 
         return RawResponse(response, parse_page)
@@ -888,22 +982,31 @@ class StepsWithRawResponse:
         from .types.step import StepExecutionStatus
 
         if file is not None:
-            field_name, file_tuple = prepare_file_upload(file, content_type=content_type)
-            files = {field_name: file_tuple}
+            upload = prepare_file_upload(file, content_type=content_type)
+
             data: dict[str, Any] = {}
             if input_data:
                 data["input_data"] = json.dumps(input_data)
-            response = self._steps._client._request("POST", f"/api/steps-async/{step_id}", files=files, data=data if data else None)
+            response = self._steps._client._request(
+                "POST",
+                f"/api/steps-async/{step_id}",
+                files=upload.files,
+                data=data if data else None,
+            )
         elif url is not None:
             body = prepare_url_upload(url, content_type=content_type)
             if input_data:
                 body["input_data"] = input_data
-            response = self._steps._client._request("POST", f"/api/steps-async/{step_id}", json=body)
+            response = self._steps._client._request(
+                "POST", f"/api/steps-async/{step_id}", json=body
+            )
         elif file_base64 is not None:
             body = prepare_base64_upload(file_base64, content_type=content_type)
             if input_data:
                 body["input_data"] = input_data
-            response = self._steps._client._request("POST", f"/api/steps-async/{step_id}", json=body)
+            response = self._steps._client._request(
+                "POST", f"/api/steps-async/{step_id}", json=body
+            )
         else:
             raise ValueError("Must provide one of: file, url, or file_base64")
 
@@ -974,22 +1077,31 @@ class AsyncStepsWithRawResponse:
         from .types.step import StepExecutionStatus
 
         if file is not None:
-            field_name, file_tuple = prepare_file_upload(file, content_type=content_type)
-            files = {field_name: file_tuple}
+            upload = prepare_file_upload(file, content_type=content_type)
+
             data: dict[str, Any] = {}
             if input_data:
                 data["input_data"] = json.dumps(input_data)
-            response = await self._steps._client._request("POST", f"/api/steps-async/{step_id}", files=files, data=data if data else None)
+            response = await self._steps._client._request(
+                "POST",
+                f"/api/steps-async/{step_id}",
+                files=upload.files,
+                data=data if data else None,
+            )
         elif url is not None:
             body = prepare_url_upload(url, content_type=content_type)
             if input_data:
                 body["input_data"] = input_data
-            response = await self._steps._client._request("POST", f"/api/steps-async/{step_id}", json=body)
+            response = await self._steps._client._request(
+                "POST", f"/api/steps-async/{step_id}", json=body
+            )
         elif file_base64 is not None:
             body = prepare_base64_upload(file_base64, content_type=content_type)
             if input_data:
                 body["input_data"] = input_data
-            response = await self._steps._client._request("POST", f"/api/steps-async/{step_id}", json=body)
+            response = await self._steps._client._request(
+                "POST", f"/api/steps-async/{step_id}", json=body
+            )
         else:
             raise ValueError("Must provide one of: file, url, or file_base64")
 
@@ -1074,7 +1186,9 @@ class KnowledgeBasesWithRawResponse:
         def parse_page(r: httpx.Response) -> Page[KnowledgeBase]:
             data = r.json()
             pagination = Pagination.model_validate(data.get("pagination", {}))
-            items = [KnowledgeBase.model_validate(item) for item in data.get("data", [])]
+            items = [
+                KnowledgeBase.model_validate(item) for item in data.get("data", [])
+            ]
             return Page(
                 data=items,
                 pagination=pagination,
@@ -1149,8 +1263,14 @@ class KnowledgeBasesWithRawResponse:
             data = r.json()
             items = []
             for item_data in data.get("data", []):
-                doc = KnowledgeBaseDocument.model_validate(item_data.get("document", {}))
-                items.append(SearchResultItem(document=doc, similarity=item_data.get("similarity", 0)))
+                doc = KnowledgeBaseDocument.model_validate(
+                    item_data.get("document", {})
+                )
+                items.append(
+                    SearchResultItem(
+                        document=doc, similarity=item_data.get("similarity", 0)
+                    )
+                )
             return SearchResult(
                 data=items,
                 query=data.get("query"),
@@ -1242,7 +1362,9 @@ class AsyncKnowledgeBasesWithRawResponse:
         def parse_page(r: httpx.Response) -> AsyncPage[KnowledgeBase]:
             data = r.json()
             pagination = Pagination.model_validate(data.get("pagination", {}))
-            items = [KnowledgeBase.model_validate(item) for item in data.get("data", [])]
+            items = [
+                KnowledgeBase.model_validate(item) for item in data.get("data", [])
+            ]
             return AsyncPage(
                 data=items,
                 pagination=pagination,
@@ -1317,8 +1439,14 @@ class AsyncKnowledgeBasesWithRawResponse:
             data = r.json()
             items = []
             for item_data in data.get("data", []):
-                doc = KnowledgeBaseDocument.model_validate(item_data.get("document", {}))
-                items.append(SearchResultItem(document=doc, similarity=item_data.get("similarity", 0)))
+                doc = KnowledgeBaseDocument.model_validate(
+                    item_data.get("document", {})
+                )
+                items.append(
+                    SearchResultItem(
+                        document=doc, similarity=item_data.get("similarity", 0)
+                    )
+                )
             return SearchResult(
                 data=items,
                 query=data.get("query"),

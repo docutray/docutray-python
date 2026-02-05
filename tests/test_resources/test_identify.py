@@ -73,6 +73,102 @@ class TestIdentifyRun:
         with pytest.raises(ValueError, match="Must provide one of"):
             client.identify.run()
 
+    def test_identify_with_document_type_code_options_url(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
+        """Identify with document_type_code_options via URL."""
+        mock_api.post("/api/identify").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "document_type": {
+                        "code": "cartola_cc",
+                        "name": "Cartola Cuenta Corriente",
+                        "confidence": 0.95,
+                    },
+                    "alternatives": [],
+                },
+            )
+        )
+
+        result = client.identify.run(
+            url="https://example.com/statement.pdf",
+            document_type_code_options=["cartola_cc", "cartola_tc"],
+        )
+
+        assert result.document_type.code == "cartola_cc"
+        # Verify the request body contains document_type_code_options
+        request = mock_api.calls.last.request
+        import json
+
+        body = json.loads(request.content)
+        assert body["document_type_code_options"] == ["cartola_cc", "cartola_tc"]
+
+    def test_identify_with_document_type_code_options_file(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
+        """Identify with document_type_code_options via file (multipart)."""
+        mock_api.post("/api/identify").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "document_type": {
+                        "code": "invoice",
+                        "name": "Invoice",
+                        "confidence": 0.88,
+                    },
+                    "alternatives": [],
+                },
+            )
+        )
+
+        result = client.identify.run(
+            file=b"fake pdf content",
+            content_type="application/pdf",
+            document_type_code_options=["invoice", "receipt"],
+        )
+
+        assert result.document_type.code == "invoice"
+        # Verify the multipart request contains document_type_code_options as JSON
+        request = mock_api.calls.last.request
+        content = request.content.decode("utf-8")
+        assert "document_type_code_options" in content
+        # The value should be JSON encoded in multipart
+        assert '["invoice", "receipt"]' in content or '["invoice","receipt"]' in content
+
+    def test_identify_with_document_type_code_options_base64(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
+        """Identify with document_type_code_options via base64."""
+        import base64
+
+        mock_api.post("/api/identify").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "document_type": {
+                        "code": "contract",
+                        "name": "Contract",
+                        "confidence": 0.92,
+                    },
+                    "alternatives": [],
+                },
+            )
+        )
+
+        result = client.identify.run(
+            file_base64=base64.b64encode(b"fake content").decode(),
+            content_type="application/pdf",
+            document_type_code_options=["contract"],
+        )
+
+        assert result.document_type.code == "contract"
+        request = mock_api.calls.last.request
+        import json
+
+        body = json.loads(request.content)
+        assert body["document_type_code_options"] == ["contract"]
+
 
 class TestIdentifyRunAsync:
     """Tests for Identify.run_async() asynchronous identification."""
@@ -94,6 +190,50 @@ class TestIdentifyRunAsync:
         assert isinstance(status, IdentificationStatus)
         assert status.identification_id == "id_xyz789"
         assert status.status == "ENQUEUED"
+
+    def test_run_async_accepts_id_alias(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
+        """run_async accepts 'id' field as alias for identification_id."""
+        mock_api.post("/api/identify-async").mock(
+            return_value=httpx.Response(
+                202,
+                json={
+                    "id": "id_from_api",  # API returns 'id' instead of 'identification_id'
+                    "status": "ENQUEUED",
+                },
+            )
+        )
+
+        status = client.identify.run_async(url="https://example.com/doc.pdf")
+
+        assert status.identification_id == "id_from_api"
+
+    def test_run_async_with_document_type_code_options(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
+        """run_async with document_type_code_options."""
+        mock_api.post("/api/identify-async").mock(
+            return_value=httpx.Response(
+                202,
+                json={
+                    "id": "id_abc123",
+                    "status": "ENQUEUED",
+                },
+            )
+        )
+
+        status = client.identify.run_async(
+            url="https://example.com/doc.pdf",
+            document_type_code_options=["invoice", "receipt"],
+        )
+
+        assert status.identification_id == "id_abc123"
+        request = mock_api.calls.last.request
+        import json
+
+        body = json.loads(request.content)
+        assert body["document_type_code_options"] == ["invoice", "receipt"]
 
 
 class TestIdentifyGetStatus:
@@ -215,6 +355,65 @@ class TestAsyncIdentifyRun:
         """Async identify raises error when no input provided."""
         with pytest.raises(ValueError, match="Must provide one of"):
             await async_client.identify.run()
+
+    async def test_async_identify_with_document_type_code_options_url(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter
+    ) -> None:
+        """Async identify with document_type_code_options via URL."""
+        mock_api.post("/api/identify").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "document_type": {
+                        "code": "cartola_cc",
+                        "name": "Cartola Cuenta Corriente",
+                        "confidence": 0.95,
+                    },
+                    "alternatives": [],
+                },
+            )
+        )
+
+        result = await async_client.identify.run(
+            url="https://example.com/statement.pdf",
+            document_type_code_options=["cartola_cc", "cartola_tc"],
+        )
+
+        assert result.document_type.code == "cartola_cc"
+        request = mock_api.calls.last.request
+        import json
+
+        body = json.loads(request.content)
+        assert body["document_type_code_options"] == ["cartola_cc", "cartola_tc"]
+
+    async def test_async_identify_with_document_type_code_options_file(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter
+    ) -> None:
+        """Async identify with document_type_code_options via file (multipart)."""
+        mock_api.post("/api/identify").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "document_type": {
+                        "code": "invoice",
+                        "name": "Invoice",
+                        "confidence": 0.88,
+                    },
+                    "alternatives": [],
+                },
+            )
+        )
+
+        result = await async_client.identify.run(
+            file=b"fake pdf content",
+            content_type="application/pdf",
+            document_type_code_options=["invoice", "receipt"],
+        )
+
+        assert result.document_type.code == "invoice"
+        request = mock_api.calls.last.request
+        content = request.content.decode("utf-8")
+        assert "document_type_code_options" in content
 
 
 class TestAsyncIdentifyRunAsync:

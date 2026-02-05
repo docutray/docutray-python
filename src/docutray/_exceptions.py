@@ -280,7 +280,9 @@ def raise_for_status(response: httpx.Response) -> None:
         return
 
     status_code = response.status_code
-    request_id = response.headers.get("X-Request-ID") or response.headers.get("x-request-id")
+    request_id = response.headers.get("X-Request-ID") or response.headers.get(
+        "x-request-id"
+    )
     headers = dict(response.headers)
 
     # Try to parse JSON body for error message
@@ -296,10 +298,14 @@ def raise_for_status(response: httpx.Response) -> None:
         # JSON parsed successfully, try to extract message if it's a dict
         if isinstance(body, dict):
             extracted_message = (
-                body.get("error", {}).get("message")
-                if isinstance(body.get("error"), dict)
-                else None
-            ) or body.get("message") or body.get("detail")
+                (
+                    body.get("error", {}).get("message")
+                    if isinstance(body.get("error"), dict)
+                    else None
+                )
+                or body.get("message")
+                or body.get("detail")
+            )
             if extracted_message:
                 message = str(extracted_message)
 

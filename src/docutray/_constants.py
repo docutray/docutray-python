@@ -7,17 +7,17 @@ from dataclasses import dataclass
 import httpx
 
 # API Configuration
-DEFAULT_BASE_URL = "https://api.docutray.com"
+DEFAULT_BASE_URL = "https://app.docutray.com"
 ENV_VAR_API_KEY = "DOCUTRAY_API_KEY"
 ENV_VAR_LOG = "DOCUTRAY_LOG"
 
 # Timeout Configuration (in seconds)
 # Using httpx.Timeout for granular control
 DEFAULT_TIMEOUT = httpx.Timeout(
-    connect=5.0,   # Time to establish connection
-    read=60.0,     # Time to read response
-    write=60.0,    # Time to send request
-    pool=10.0,     # Time waiting for connection from pool
+    connect=5.0,  # Time to establish connection
+    read=60.0,  # Time to read response
+    write=60.0,  # Time to send request
+    pool=10.0,  # Time waiting for connection from pool
 )
 
 # For backward compatibility
@@ -29,7 +29,7 @@ INITIAL_RETRY_DELAY = 0.5  # seconds
 MAX_RETRY_DELAY = 8.0  # seconds
 EXPONENTIAL_BASE = 2.0
 JITTER_MIN = 0.25  # 25% of delay
-JITTER_MAX = 0.5   # 50% of delay
+JITTER_MAX = 0.5  # 50% of delay
 
 # HTTP status codes that should trigger a retry
 RETRYABLE_STATUS_CODES: frozenset[int] = frozenset({429, 500, 502, 503, 504})

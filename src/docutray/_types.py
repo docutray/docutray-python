@@ -52,15 +52,17 @@ EXTENSION_TO_CONTENT_TYPE: dict[str, str] = {
 }
 
 # Supported content types for upload
-SUPPORTED_CONTENT_TYPES: frozenset[str] = frozenset([
-    CONTENT_TYPE_PDF,
-    CONTENT_TYPE_JPEG,
-    CONTENT_TYPE_PNG,
-    CONTENT_TYPE_GIF,
-    CONTENT_TYPE_BMP,
-    CONTENT_TYPE_WEBP,
-    CONTENT_TYPE_TIFF,
-])
+SUPPORTED_CONTENT_TYPES: frozenset[str] = frozenset(
+    [
+        CONTENT_TYPE_PDF,
+        CONTENT_TYPE_JPEG,
+        CONTENT_TYPE_PNG,
+        CONTENT_TYPE_GIF,
+        CONTENT_TYPE_BMP,
+        CONTENT_TYPE_WEBP,
+        CONTENT_TYPE_TIFF,
+    ]
+)
 
 # =============================================================================
 # Rate Limit Types

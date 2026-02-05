@@ -38,12 +38,29 @@ def detect_content_type(path: Path) -> str:
     return mime_type or "application/octet-stream"
 
 
+class FileUpload:
+    """Result of preparing a file for multipart upload.
+
+    Attributes:
+        files: Dictionary for httpx files parameter.
+        content_type: The detected or provided content type.
+    """
+
+    def __init__(
+        self,
+        files: dict[str, tuple[str, Any, str]],
+        content_type: str,
+    ) -> None:
+        self.files: dict[str, tuple[str, Any, str]] = files
+        self.content_type = content_type
+
+
 def prepare_file_upload(
     file: FileInput,
     *,
     content_type: str | None = None,
     filename: str | None = None,
-) -> tuple[str, tuple[str, IO[bytes], str]]:
+) -> FileUpload:
     """Prepare a file for multipart upload.
 
     Note:
@@ -58,8 +75,7 @@ def prepare_file_upload(
         filename: Filename override. Auto-detected from Path if not provided.
 
     Returns:
-        A tuple of (field_name, (filename, file_object, content_type)) suitable
-        for httpx multipart uploads.
+        A FileUpload object with files dict and data dict for httpx.
     """
     file_obj: IO[bytes]
     detected_filename: str
@@ -79,7 +95,9 @@ def prepare_file_upload(
         # Assume file-like object (BinaryIO)
         file_obj = file
         file_name_attr = getattr(file, "name", None)
-        detected_filename = filename or (file_name_attr if isinstance(file_name_attr, str) else "document")
+        detected_filename = filename or (
+            file_name_attr if isinstance(file_name_attr, str) else "document"
+        )
         if "/" in detected_filename:
             detected_filename = detected_filename.rsplit("/", 1)[-1]
         detected_content_type = content_type or CONTENT_TYPE_PDF
@@ -88,7 +106,8 @@ def prepare_file_upload(
     final_filename = filename or detected_filename
     final_content_type = content_type or detected_content_type
 
-    return (_UPLOAD_FIELD_NAME, (final_filename, file_obj, final_content_type))
+    files = {_UPLOAD_FIELD_NAME: (final_filename, file_obj, final_content_type)}
+    return FileUpload(files=files, content_type=final_content_type)
 
 
 def prepare_url_upload(

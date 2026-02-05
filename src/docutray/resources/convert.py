@@ -74,14 +74,15 @@ class Convert:
         """
         if file is not None:
             # Multipart upload
-            field_name, file_tuple = prepare_file_upload(file, content_type=content_type)
-            files = {field_name: file_tuple}
+            upload = prepare_file_upload(file, content_type=content_type)
             data: dict[str, Any] = {"document_type_code": document_type_code}
             if document_metadata:
                 # Multipart form data requires JSON-stringified metadata
                 data["document_metadata"] = json.dumps(document_metadata)
 
-            response = self._client._request("POST", "/api/convert", files=files, data=data)
+            response = self._client._request(
+                "POST", "/api/convert", files=upload.files, data=data
+            )
         elif url is not None:
             # JSON with URL
             body = prepare_url_upload(url, content_type=content_type)
@@ -140,14 +141,15 @@ class Convert:
         """
         if file is not None:
             # Multipart upload
-            field_name, file_tuple = prepare_file_upload(file, content_type=content_type)
-            files = {field_name: file_tuple}
+            upload = prepare_file_upload(file, content_type=content_type)
             data: dict[str, Any] = {"document_type_code": document_type_code}
             if document_metadata:
                 # Multipart form data requires JSON-stringified metadata
                 data["document_metadata"] = json.dumps(document_metadata)
 
-            response = self._client._request("POST", "/api/convert-async", files=files, data=data)
+            response = self._client._request(
+                "POST", "/api/convert-async", files=upload.files, data=data
+            )
         elif url is not None:
             # JSON with URL
             body = prepare_url_upload(url, content_type=content_type)
@@ -253,14 +255,15 @@ class AsyncConvert:
             The conversion result with extracted data.
         """
         if file is not None:
-            field_name, file_tuple = prepare_file_upload(file, content_type=content_type)
-            files = {field_name: file_tuple}
+            upload = prepare_file_upload(file, content_type=content_type)
             data: dict[str, Any] = {"document_type_code": document_type_code}
             if document_metadata:
                 # Multipart form data requires JSON-stringified metadata
                 data["document_metadata"] = json.dumps(document_metadata)
 
-            response = await self._client._request("POST", "/api/convert", files=files, data=data)
+            response = await self._client._request(
+                "POST", "/api/convert", files=upload.files, data=data
+            )
         elif url is not None:
             body = prepare_url_upload(url, content_type=content_type)
             body["document_type_code"] = document_type_code
@@ -304,28 +307,33 @@ class AsyncConvert:
             The initial conversion status with conversion_id.
         """
         if file is not None:
-            field_name, file_tuple = prepare_file_upload(file, content_type=content_type)
-            files = {field_name: file_tuple}
+            upload = prepare_file_upload(file, content_type=content_type)
             data: dict[str, Any] = {"document_type_code": document_type_code}
             if document_metadata:
                 # Multipart form data requires JSON-stringified metadata
                 data["document_metadata"] = json.dumps(document_metadata)
 
-            response = await self._client._request("POST", "/api/convert-async", files=files, data=data)
+            response = await self._client._request(
+                "POST", "/api/convert-async", files=upload.files, data=data
+            )
         elif url is not None:
             body = prepare_url_upload(url, content_type=content_type)
             body["document_type_code"] = document_type_code
             if document_metadata:
                 body["document_metadata"] = document_metadata
 
-            response = await self._client._request("POST", "/api/convert-async", json=body)
+            response = await self._client._request(
+                "POST", "/api/convert-async", json=body
+            )
         elif file_base64 is not None:
             body = prepare_base64_upload(file_base64, content_type=content_type)
             body["document_type_code"] = document_type_code
             if document_metadata:
                 body["document_metadata"] = document_metadata
 
-            response = await self._client._request("POST", "/api/convert-async", json=body)
+            response = await self._client._request(
+                "POST", "/api/convert-async", json=body
+            )
         else:
             raise ValueError("Must provide one of: file, url, or file_base64")
 

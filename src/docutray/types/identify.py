@@ -6,7 +6,7 @@ from collections.abc import Callable
 from datetime import datetime
 from typing import TYPE_CHECKING, Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable
@@ -46,9 +46,11 @@ class IdentificationResult(BaseModel):
 class IdentificationStatus(BaseModel):
     """Status of an asynchronous document identification."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
-    identification_id: str
+    identification_id: str = Field(
+        validation_alias=AliasChoices("id", "identification_id")
+    )
     """Unique identification ID."""
 
     status: IdentificationStatusType
