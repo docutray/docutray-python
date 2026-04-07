@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from .resources.knowledge_bases import AsyncKnowledgeBases, KnowledgeBases
     from .resources.steps import AsyncSteps, Steps
     from .types.convert import ConversionResult, ConversionStatus
-    from .types.document_type import DocumentType, ValidationResult
+    from .types.document_type import ConversionMode, DocumentType, ValidationResult
     from .types.identify import IdentificationResult, IdentificationStatus
     from .types.knowledge_base import KnowledgeBase, SearchResult, SyncResult
     from .types.step import StepExecutionStatus
@@ -830,6 +830,121 @@ class DocumentTypesWithRawResponse:
             lambda r: ValidationResult.model_validate(r.json()),
         )
 
+    def create(
+        self,
+        *,
+        name: str,
+        code_type: str,
+        description: str,
+        json_schema: dict[str, Any],
+        is_draft: bool | None = None,
+        prompt_hints: str | None = None,
+        identify_prompt_hints: str | None = None,
+        conversion_mode: ConversionMode | None = None,
+        keep_property_ordering: bool | None = None,
+    ) -> RawResponse[DocumentType]:
+        """Create a document type and return the raw HTTP response.
+
+        Args:
+            name: Document type name.
+            code_type: Unique code identifier.
+            description: Document type description.
+            json_schema: JSON Schema for document validation.
+            is_draft: Whether the document type is a draft.
+            prompt_hints: Hints for OCR prompt processing.
+            identify_prompt_hints: Hints for document identification prompt.
+            conversion_mode: Processing mode.
+            keep_property_ordering: Preserve property ordering in schema.
+
+        Returns:
+            RawResponse wrapping the HTTP response.
+        """
+        from .types.document_type import DocumentType
+
+        body: dict[str, Any] = {
+            "name": name,
+            "codeType": code_type,
+            "description": description,
+            "jsonSchema": json_schema,
+        }
+        if is_draft is not None:
+            body["isDraft"] = is_draft
+        if prompt_hints is not None:
+            body["promptHints"] = prompt_hints
+        if identify_prompt_hints is not None:
+            body["identifyPromptHints"] = identify_prompt_hints
+        if conversion_mode is not None:
+            body["conversionMode"] = conversion_mode
+        if keep_property_ordering is not None:
+            body["keepPropertyOrdering"] = keep_property_ordering
+
+        response = self._document_types._client._request(
+            "POST", "/api/document-types", json=body
+        )
+        return RawResponse(
+            response,
+            lambda r: DocumentType.model_validate(r.json().get("data", r.json())),
+        )
+
+    def update(
+        self,
+        type_id: str,
+        *,
+        name: str | None = None,
+        description: str | None = None,
+        json_schema: dict[str, Any] | None = None,
+        is_draft: bool | None = None,
+        prompt_hints: str | None = None,
+        identify_prompt_hints: str | None = None,
+        conversion_mode: ConversionMode | None = None,
+        keep_property_ordering: bool | None = None,
+    ) -> RawResponse[DocumentType]:
+        """Update a document type and return the raw HTTP response.
+
+        Args:
+            type_id: The document type ID.
+            name: New document type name.
+            description: New description.
+            json_schema: New JSON Schema.
+            is_draft: New draft status.
+            prompt_hints: New OCR prompt hints.
+            identify_prompt_hints: New identification prompt hints.
+            conversion_mode: New processing mode.
+            keep_property_ordering: New property ordering setting.
+
+        Returns:
+            RawResponse wrapping the HTTP response.
+        """
+        from .types.document_type import DocumentType
+
+        body: dict[str, Any] = {}
+        if name is not None:
+            body["name"] = name
+        if description is not None:
+            body["description"] = description
+        if json_schema is not None:
+            body["jsonSchema"] = json_schema
+        if is_draft is not None:
+            body["isDraft"] = is_draft
+        if prompt_hints is not None:
+            body["promptHints"] = prompt_hints
+        if identify_prompt_hints is not None:
+            body["identifyPromptHints"] = identify_prompt_hints
+        if conversion_mode is not None:
+            body["conversionMode"] = conversion_mode
+        if keep_property_ordering is not None:
+            body["keepPropertyOrdering"] = keep_property_ordering
+
+        response = self._document_types._client._request(
+            "PUT",
+            f"/api/document-types/{type_id}",
+            json=body,
+        )
+        return RawResponse(
+            response,
+            lambda r: DocumentType.model_validate(r.json().get("data", r.json())),
+        )
+
 
 class AsyncDocumentTypesWithRawResponse:
     """Wrapper for AsyncDocumentTypes resource that returns raw HTTP responses."""
@@ -932,6 +1047,121 @@ class AsyncDocumentTypesWithRawResponse:
         return RawResponse(
             response,
             lambda r: ValidationResult.model_validate(r.json()),
+        )
+
+    async def create(
+        self,
+        *,
+        name: str,
+        code_type: str,
+        description: str,
+        json_schema: dict[str, Any],
+        is_draft: bool | None = None,
+        prompt_hints: str | None = None,
+        identify_prompt_hints: str | None = None,
+        conversion_mode: ConversionMode | None = None,
+        keep_property_ordering: bool | None = None,
+    ) -> RawResponse[DocumentType]:
+        """Create a document type and return the raw HTTP response.
+
+        Args:
+            name: Document type name.
+            code_type: Unique code identifier.
+            description: Document type description.
+            json_schema: JSON Schema for document validation.
+            is_draft: Whether the document type is a draft.
+            prompt_hints: Hints for OCR prompt processing.
+            identify_prompt_hints: Hints for document identification prompt.
+            conversion_mode: Processing mode.
+            keep_property_ordering: Preserve property ordering in schema.
+
+        Returns:
+            RawResponse wrapping the HTTP response.
+        """
+        from .types.document_type import DocumentType
+
+        body: dict[str, Any] = {
+            "name": name,
+            "codeType": code_type,
+            "description": description,
+            "jsonSchema": json_schema,
+        }
+        if is_draft is not None:
+            body["isDraft"] = is_draft
+        if prompt_hints is not None:
+            body["promptHints"] = prompt_hints
+        if identify_prompt_hints is not None:
+            body["identifyPromptHints"] = identify_prompt_hints
+        if conversion_mode is not None:
+            body["conversionMode"] = conversion_mode
+        if keep_property_ordering is not None:
+            body["keepPropertyOrdering"] = keep_property_ordering
+
+        response = await self._document_types._client._request(
+            "POST", "/api/document-types", json=body
+        )
+        return RawResponse(
+            response,
+            lambda r: DocumentType.model_validate(r.json().get("data", r.json())),
+        )
+
+    async def update(
+        self,
+        type_id: str,
+        *,
+        name: str | None = None,
+        description: str | None = None,
+        json_schema: dict[str, Any] | None = None,
+        is_draft: bool | None = None,
+        prompt_hints: str | None = None,
+        identify_prompt_hints: str | None = None,
+        conversion_mode: ConversionMode | None = None,
+        keep_property_ordering: bool | None = None,
+    ) -> RawResponse[DocumentType]:
+        """Update a document type and return the raw HTTP response.
+
+        Args:
+            type_id: The document type ID.
+            name: New document type name.
+            description: New description.
+            json_schema: New JSON Schema.
+            is_draft: New draft status.
+            prompt_hints: New OCR prompt hints.
+            identify_prompt_hints: New identification prompt hints.
+            conversion_mode: New processing mode.
+            keep_property_ordering: New property ordering setting.
+
+        Returns:
+            RawResponse wrapping the HTTP response.
+        """
+        from .types.document_type import DocumentType
+
+        body: dict[str, Any] = {}
+        if name is not None:
+            body["name"] = name
+        if description is not None:
+            body["description"] = description
+        if json_schema is not None:
+            body["jsonSchema"] = json_schema
+        if is_draft is not None:
+            body["isDraft"] = is_draft
+        if prompt_hints is not None:
+            body["promptHints"] = prompt_hints
+        if identify_prompt_hints is not None:
+            body["identifyPromptHints"] = identify_prompt_hints
+        if conversion_mode is not None:
+            body["conversionMode"] = conversion_mode
+        if keep_property_ordering is not None:
+            body["keepPropertyOrdering"] = keep_property_ordering
+
+        response = await self._document_types._client._request(
+            "PUT",
+            f"/api/document-types/{type_id}",
+            json=body,
+        )
+        return RawResponse(
+            response,
+            lambda r: DocumentType.model_validate(r.json().get("data", r.json())),
         )
 
 

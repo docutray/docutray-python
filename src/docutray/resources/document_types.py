@@ -6,7 +6,7 @@ from functools import cached_property
 from typing import TYPE_CHECKING, Any
 
 from .._pagination import AsyncPage, Page
-from ..types.document_type import DocumentType, ValidationResult
+from ..types.document_type import ConversionMode, DocumentType, ValidationResult
 from ..types.shared import Pagination
 
 if TYPE_CHECKING:
@@ -161,6 +161,141 @@ class DocumentTypes:
         )
         return ValidationResult.model_validate(response.json())
 
+    def create(
+        self,
+        *,
+        name: str,
+        code_type: str,
+        description: str,
+        json_schema: dict[str, Any],
+        is_draft: bool | None = None,
+        prompt_hints: str | None = None,
+        identify_prompt_hints: str | None = None,
+        conversion_mode: ConversionMode | None = None,
+        keep_property_ordering: bool | None = None,
+    ) -> DocumentType:
+        """Create a new document type.
+
+        Args:
+            name: Document type name (min 2 characters).
+            code_type: Unique code identifier (lowercase alphanumeric and underscores).
+            description: Document type description (min 1 character).
+            json_schema: JSON Schema for document validation.
+            is_draft: Whether the document type is a draft. Defaults to True.
+            prompt_hints: Hints for OCR prompt processing.
+            identify_prompt_hints: Hints for document identification prompt.
+            conversion_mode: Processing mode ("json", "toon", or "multi_prompt").
+            keep_property_ordering: Preserve property ordering in schema.
+
+        Returns:
+            The created document type.
+
+        Raises:
+            ConflictError: If a document type with that code_type already exists.
+
+        Example:
+            >>> doc_type = client.document_types.create(
+            ...     name="Invoice",
+            ...     code_type="invoice",
+            ...     description="Invoice documents with line items",
+            ...     json_schema={
+            ...         "type": "object",
+            ...         "properties": {
+            ...             "invoice_number": {"type": "string"},
+            ...             "total": {"type": "number"},
+            ...         },
+            ...     },
+            ... )
+            >>> print(f"Created: {doc_type.id}")
+        """
+        body: dict[str, Any] = {
+            "name": name,
+            "codeType": code_type,
+            "description": description,
+            "jsonSchema": json_schema,
+        }
+        if is_draft is not None:
+            body["isDraft"] = is_draft
+        if prompt_hints is not None:
+            body["promptHints"] = prompt_hints
+        if identify_prompt_hints is not None:
+            body["identifyPromptHints"] = identify_prompt_hints
+        if conversion_mode is not None:
+            body["conversionMode"] = conversion_mode
+        if keep_property_ordering is not None:
+            body["keepPropertyOrdering"] = keep_property_ordering
+
+        response = self._client._request("POST", "/api/document-types", json=body)
+        return DocumentType.model_validate(response.json().get("data", response.json()))
+
+    def update(
+        self,
+        type_id: str,
+        *,
+        name: str | None = None,
+        description: str | None = None,
+        json_schema: dict[str, Any] | None = None,
+        is_draft: bool | None = None,
+        prompt_hints: str | None = None,
+        identify_prompt_hints: str | None = None,
+        conversion_mode: ConversionMode | None = None,
+        keep_property_ordering: bool | None = None,
+    ) -> DocumentType:
+        """Update an existing document type.
+
+        All fields are optional; only provided fields will be updated.
+
+        Args:
+            type_id: The document type ID to update.
+            name: New document type name.
+            description: New description.
+            json_schema: New JSON Schema for document validation.
+            is_draft: New draft status.
+            prompt_hints: New OCR prompt hints.
+            identify_prompt_hints: New identification prompt hints.
+            conversion_mode: New processing mode.
+            keep_property_ordering: New property ordering setting.
+
+        Returns:
+            The updated document type.
+
+        Raises:
+            NotFoundError: If the document type doesn't exist.
+            PermissionDeniedError: If insufficient permissions.
+
+        Example:
+            >>> doc_type = client.document_types.update(
+            ...     "dt_123",
+            ...     name="Updated Invoice",
+            ...     is_draft=False,
+            ... )
+            >>> print(f"Updated: {doc_type.name}")
+        """
+        body: dict[str, Any] = {}
+        if name is not None:
+            body["name"] = name
+        if description is not None:
+            body["description"] = description
+        if json_schema is not None:
+            body["jsonSchema"] = json_schema
+        if is_draft is not None:
+            body["isDraft"] = is_draft
+        if prompt_hints is not None:
+            body["promptHints"] = prompt_hints
+        if identify_prompt_hints is not None:
+            body["identifyPromptHints"] = identify_prompt_hints
+        if conversion_mode is not None:
+            body["conversionMode"] = conversion_mode
+        if keep_property_ordering is not None:
+            body["keepPropertyOrdering"] = keep_property_ordering
+
+        response = self._client._request(
+            "PUT",
+            f"/api/document-types/{type_id}",
+            json=body,
+        )
+        return DocumentType.model_validate(response.json().get("data", response.json()))
+
     @cached_property
     def with_raw_response(self) -> DocumentTypesWithRawResponse:
         """Access methods that return raw HTTP responses.
@@ -284,6 +419,111 @@ class AsyncDocumentTypes:
             json=data,
         )
         return ValidationResult.model_validate(response.json())
+
+    async def create(
+        self,
+        *,
+        name: str,
+        code_type: str,
+        description: str,
+        json_schema: dict[str, Any],
+        is_draft: bool | None = None,
+        prompt_hints: str | None = None,
+        identify_prompt_hints: str | None = None,
+        conversion_mode: ConversionMode | None = None,
+        keep_property_ordering: bool | None = None,
+    ) -> DocumentType:
+        """Create a new document type.
+
+        Args:
+            name: Document type name (min 2 characters).
+            code_type: Unique code identifier (lowercase alphanumeric and underscores).
+            description: Document type description (min 1 character).
+            json_schema: JSON Schema for document validation.
+            is_draft: Whether the document type is a draft. Defaults to True.
+            prompt_hints: Hints for OCR prompt processing.
+            identify_prompt_hints: Hints for document identification prompt.
+            conversion_mode: Processing mode ("json", "toon", or "multi_prompt").
+            keep_property_ordering: Preserve property ordering in schema.
+
+        Returns:
+            The created document type.
+        """
+        body: dict[str, Any] = {
+            "name": name,
+            "codeType": code_type,
+            "description": description,
+            "jsonSchema": json_schema,
+        }
+        if is_draft is not None:
+            body["isDraft"] = is_draft
+        if prompt_hints is not None:
+            body["promptHints"] = prompt_hints
+        if identify_prompt_hints is not None:
+            body["identifyPromptHints"] = identify_prompt_hints
+        if conversion_mode is not None:
+            body["conversionMode"] = conversion_mode
+        if keep_property_ordering is not None:
+            body["keepPropertyOrdering"] = keep_property_ordering
+
+        response = await self._client._request("POST", "/api/document-types", json=body)
+        return DocumentType.model_validate(response.json().get("data", response.json()))
+
+    async def update(
+        self,
+        type_id: str,
+        *,
+        name: str | None = None,
+        description: str | None = None,
+        json_schema: dict[str, Any] | None = None,
+        is_draft: bool | None = None,
+        prompt_hints: str | None = None,
+        identify_prompt_hints: str | None = None,
+        conversion_mode: ConversionMode | None = None,
+        keep_property_ordering: bool | None = None,
+    ) -> DocumentType:
+        """Update an existing document type.
+
+        All fields are optional; only provided fields will be updated.
+
+        Args:
+            type_id: The document type ID to update.
+            name: New document type name.
+            description: New description.
+            json_schema: New JSON Schema for document validation.
+            is_draft: New draft status.
+            prompt_hints: New OCR prompt hints.
+            identify_prompt_hints: New identification prompt hints.
+            conversion_mode: New processing mode.
+            keep_property_ordering: New property ordering setting.
+
+        Returns:
+            The updated document type.
+        """
+        body: dict[str, Any] = {}
+        if name is not None:
+            body["name"] = name
+        if description is not None:
+            body["description"] = description
+        if json_schema is not None:
+            body["jsonSchema"] = json_schema
+        if is_draft is not None:
+            body["isDraft"] = is_draft
+        if prompt_hints is not None:
+            body["promptHints"] = prompt_hints
+        if identify_prompt_hints is not None:
+            body["identifyPromptHints"] = identify_prompt_hints
+        if conversion_mode is not None:
+            body["conversionMode"] = conversion_mode
+        if keep_property_ordering is not None:
+            body["keepPropertyOrdering"] = keep_property_ordering
+
+        response = await self._client._request(
+            "PUT",
+            f"/api/document-types/{type_id}",
+            json=body,
+        )
+        return DocumentType.model_validate(response.json().get("data", response.json()))
 
     @cached_property
     def with_raw_response(self) -> AsyncDocumentTypesWithRawResponse:

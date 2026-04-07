@@ -186,6 +186,174 @@ class TestDocumentTypesValidate:
         assert result.warnings.count == 1
 
 
+class TestDocumentTypesCreate:
+    """Tests for DocumentTypes.create()."""
+
+    def test_create_document_type(self, client: Client, mock_api: respx.MockRouter) -> None:
+        """Create a document type with required fields."""
+        route = mock_api.post("/api/document-types").mock(
+            return_value=httpx.Response(
+                201,
+                json={
+                    "data": {
+                        "id": "dt_new",
+                        "name": "Invoice",
+                        "codeType": "invoice",
+                        "description": "Invoice documents",
+                        "isPublic": False,
+                        "isDraft": True,
+                        "status": "draft",
+                        "createdAt": "2024-01-01T00:00:00.000Z",
+                        "updatedAt": "2024-01-01T00:00:00.000Z",
+                    }
+                },
+            )
+        )
+
+        doc_type = client.document_types.create(
+            name="Invoice",
+            code_type="invoice",
+            description="Invoice documents",
+            json_schema={
+                "type": "object",
+                "properties": {"invoice_number": {"type": "string"}},
+            },
+        )
+
+        assert isinstance(doc_type, DocumentType)
+        assert doc_type.id == "dt_new"
+        assert doc_type.name == "Invoice"
+        assert doc_type.codeType == "invoice"
+        assert doc_type.isDraft is True
+        assert doc_type.status == "draft"
+        # Verify request body
+        import json
+
+        body = json.loads(route.calls[0].request.content)
+        assert body["name"] == "Invoice"
+        assert body["codeType"] == "invoice"
+        assert body["jsonSchema"]["type"] == "object"
+
+    def test_create_with_all_optional_fields(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
+        """Create a document type with all optional fields."""
+        route = mock_api.post("/api/document-types").mock(
+            return_value=httpx.Response(
+                201,
+                json={
+                    "data": {
+                        "id": "dt_full",
+                        "name": "Contract",
+                        "codeType": "contract",
+                        "description": "Legal contracts",
+                        "isPublic": False,
+                        "isDraft": False,
+                        "status": "active",
+                        "createdAt": "2024-01-01T00:00:00.000Z",
+                        "updatedAt": "2024-01-01T00:00:00.000Z",
+                    }
+                },
+            )
+        )
+
+        doc_type = client.document_types.create(
+            name="Contract",
+            code_type="contract",
+            description="Legal contracts",
+            json_schema={"type": "object"},
+            is_draft=False,
+            prompt_hints="Extract all clauses",
+            identify_prompt_hints="Look for legal language",
+            conversion_mode="multi_prompt",
+            keep_property_ordering=True,
+        )
+
+        assert doc_type.id == "dt_full"
+        assert doc_type.status == "active"
+        # Verify all optional fields sent
+        import json
+
+        body = json.loads(route.calls[0].request.content)
+        assert body["isDraft"] is False
+        assert body["promptHints"] == "Extract all clauses"
+        assert body["identifyPromptHints"] == "Look for legal language"
+        assert body["conversionMode"] == "multi_prompt"
+        assert body["keepPropertyOrdering"] is True
+
+
+class TestDocumentTypesUpdate:
+    """Tests for DocumentTypes.update()."""
+
+    def test_update_document_type(self, client: Client, mock_api: respx.MockRouter) -> None:
+        """Update a document type with partial fields."""
+        route = mock_api.put("/api/document-types/dt_123").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "data": {
+                        "id": "dt_123",
+                        "name": "Updated Invoice",
+                        "codeType": "invoice",
+                        "description": "Invoice documents",
+                        "isPublic": False,
+                        "isDraft": False,
+                        "status": "active",
+                        "createdAt": "2024-01-01T00:00:00.000Z",
+                        "updatedAt": "2024-06-01T00:00:00.000Z",
+                    }
+                },
+            )
+        )
+
+        doc_type = client.document_types.update(
+            "dt_123",
+            name="Updated Invoice",
+            is_draft=False,
+        )
+
+        assert isinstance(doc_type, DocumentType)
+        assert doc_type.id == "dt_123"
+        assert doc_type.name == "Updated Invoice"
+        assert doc_type.isDraft is False
+        assert doc_type.status == "active"
+        # Verify only provided fields sent
+        import json
+
+        body = json.loads(route.calls[0].request.content)
+        assert body == {"name": "Updated Invoice", "isDraft": False}
+
+    def test_update_json_schema(self, client: Client, mock_api: respx.MockRouter) -> None:
+        """Update a document type's JSON schema."""
+        mock_api.put("/api/document-types/dt_123").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "data": {
+                        "id": "dt_123",
+                        "name": "Invoice",
+                        "codeType": "invoice",
+                        "description": "Invoice documents",
+                        "isPublic": False,
+                        "isDraft": False,
+                        "status": "active",
+                    }
+                },
+            )
+        )
+
+        new_schema = {
+            "type": "object",
+            "properties": {
+                "invoice_number": {"type": "string"},
+                "total": {"type": "number"},
+            },
+        }
+        doc_type = client.document_types.update("dt_123", json_schema=new_schema)
+
+        assert doc_type.id == "dt_123"
+
+
 class TestDocumentTypeModel:
     """Tests for DocumentType model."""
 
@@ -350,3 +518,117 @@ class TestAsyncDocumentTypesValidate:
 
         assert not result.is_valid()
         assert result.errors.count == 2
+
+
+class TestAsyncDocumentTypesCreate:
+    """Tests for AsyncDocumentTypes.create()."""
+
+    async def test_async_create_document_type(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter
+    ) -> None:
+        """Async create a document type with required fields."""
+        mock_api.post("/api/document-types").mock(
+            return_value=httpx.Response(
+                201,
+                json={
+                    "data": {
+                        "id": "dt_new",
+                        "name": "Invoice",
+                        "codeType": "invoice",
+                        "description": "Invoice documents",
+                        "isPublic": False,
+                        "isDraft": True,
+                        "status": "draft",
+                        "createdAt": "2024-01-01T00:00:00.000Z",
+                        "updatedAt": "2024-01-01T00:00:00.000Z",
+                    }
+                },
+            )
+        )
+
+        doc_type = await async_client.document_types.create(
+            name="Invoice",
+            code_type="invoice",
+            description="Invoice documents",
+            json_schema={
+                "type": "object",
+                "properties": {"invoice_number": {"type": "string"}},
+            },
+        )
+
+        assert isinstance(doc_type, DocumentType)
+        assert doc_type.id == "dt_new"
+        assert doc_type.codeType == "invoice"
+        assert doc_type.status == "draft"
+
+    async def test_async_create_with_all_optional_fields(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter
+    ) -> None:
+        """Async create a document type with all optional fields."""
+        mock_api.post("/api/document-types").mock(
+            return_value=httpx.Response(
+                201,
+                json={
+                    "data": {
+                        "id": "dt_full",
+                        "name": "Contract",
+                        "codeType": "contract",
+                        "description": "Legal contracts",
+                        "isPublic": False,
+                        "isDraft": False,
+                        "status": "active",
+                    }
+                },
+            )
+        )
+
+        doc_type = await async_client.document_types.create(
+            name="Contract",
+            code_type="contract",
+            description="Legal contracts",
+            json_schema={"type": "object"},
+            is_draft=False,
+            prompt_hints="Extract all clauses",
+            identify_prompt_hints="Look for legal language",
+            conversion_mode="multi_prompt",
+            keep_property_ordering=True,
+        )
+
+        assert doc_type.id == "dt_full"
+        assert doc_type.status == "active"
+
+
+class TestAsyncDocumentTypesUpdate:
+    """Tests for AsyncDocumentTypes.update()."""
+
+    async def test_async_update_document_type(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter
+    ) -> None:
+        """Async update a document type with partial fields."""
+        mock_api.put("/api/document-types/dt_123").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "data": {
+                        "id": "dt_123",
+                        "name": "Updated Invoice",
+                        "codeType": "invoice",
+                        "description": "Invoice documents",
+                        "isPublic": False,
+                        "isDraft": False,
+                        "status": "active",
+                    }
+                },
+            )
+        )
+
+        doc_type = await async_client.document_types.update(
+            "dt_123",
+            name="Updated Invoice",
+            is_draft=False,
+        )
+
+        assert isinstance(doc_type, DocumentType)
+        assert doc_type.name == "Updated Invoice"
+        assert doc_type.isDraft is False
+        assert doc_type.status == "active"

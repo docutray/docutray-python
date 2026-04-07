@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-04-07
+
+### Added
+
+- `client.document_types.create()` method to create custom document types with JSON schemas
+- `client.document_types.update()` method to update existing document types (partial update support)
+- `ConversionMode` literal type for type-safe conversion mode parameter (`"json"`, `"toon"`, `"multi_prompt"`)
+- `status` field on `DocumentType` model
+- Sync and async support for both new methods
+- Raw response wrappers (`.with_raw_response.create()` / `.with_raw_response.update()`)
+
 ## [0.1.0] - 2026-02-05
 
 ### Added

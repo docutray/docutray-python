@@ -41,6 +41,7 @@ from ._pagination import AsyncPage, Page
 from ._response import RawResponse
 from ._version import __version__
 from .types import (
+    ConversionMode,
     ConversionResult,
     ConversionStatus,
     DocumentType,
@@ -90,6 +91,7 @@ __all__ = [
     "IdentificationStatus",
     "DocumentTypeMatch",
     # Types - Document Types
+    "ConversionMode",
     "DocumentType",
     "ValidationResult",
     # Types - Steps
