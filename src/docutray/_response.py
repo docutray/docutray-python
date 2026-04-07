@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from .resources.knowledge_bases import AsyncKnowledgeBases, KnowledgeBases
     from .resources.steps import AsyncSteps, Steps
     from .types.convert import ConversionResult, ConversionStatus
-    from .types.document_type import DocumentType, ValidationResult
+    from .types.document_type import ConversionMode, DocumentType, ValidationResult
     from .types.identify import IdentificationResult, IdentificationStatus
     from .types.knowledge_base import KnowledgeBase, SearchResult, SyncResult
     from .types.step import StepExecutionStatus
@@ -840,7 +840,7 @@ class DocumentTypesWithRawResponse:
         is_draft: bool | None = None,
         prompt_hints: str | None = None,
         identify_prompt_hints: str | None = None,
-        conversion_mode: str | None = None,
+        conversion_mode: ConversionMode | None = None,
         keep_property_ordering: bool | None = None,
     ) -> RawResponse[DocumentType]:
         """Create a document type and return the raw HTTP response.
@@ -896,7 +896,7 @@ class DocumentTypesWithRawResponse:
         is_draft: bool | None = None,
         prompt_hints: str | None = None,
         identify_prompt_hints: str | None = None,
-        conversion_mode: str | None = None,
+        conversion_mode: ConversionMode | None = None,
         keep_property_ordering: bool | None = None,
     ) -> RawResponse[DocumentType]:
         """Update a document type and return the raw HTTP response.
@@ -1059,7 +1059,7 @@ class AsyncDocumentTypesWithRawResponse:
         is_draft: bool | None = None,
         prompt_hints: str | None = None,
         identify_prompt_hints: str | None = None,
-        conversion_mode: str | None = None,
+        conversion_mode: ConversionMode | None = None,
         keep_property_ordering: bool | None = None,
     ) -> RawResponse[DocumentType]:
         """Create a document type and return the raw HTTP response.
@@ -1115,7 +1115,7 @@ class AsyncDocumentTypesWithRawResponse:
         is_draft: bool | None = None,
         prompt_hints: str | None = None,
         identify_prompt_hints: str | None = None,
-        conversion_mode: str | None = None,
+        conversion_mode: ConversionMode | None = None,
         keep_property_ordering: bool | None = None,
     ) -> RawResponse[DocumentType]:
         """Update a document type and return the raw HTTP response.
