@@ -259,7 +259,7 @@ for alt in result.alternatives:
 
 ### Document Types
 
-List and retrieve document type definitions.
+List, create, update, and manage document type definitions.
 
 ```python
 # List all document types
@@ -273,6 +273,29 @@ page = client.document_types.list(search="invoice")
 # Get a specific document type
 doc_type = client.document_types.get("dt_invoice")
 print(f"Schema: {doc_type.schema_}")
+
+# Create a custom document type
+doc_type = client.document_types.create(
+    name="Invoice",
+    code_type="invoice",
+    description="Invoice documents with line items",
+    json_schema={
+        "type": "object",
+        "properties": {
+            "invoice_number": {"type": "string"},
+            "total": {"type": "number"},
+        },
+    },
+    conversion_mode="json",
+)
+print(f"Created: {doc_type.id}")
+
+# Update a document type
+doc_type = client.document_types.update(
+    "dt_invoice",
+    name="Updated Invoice",
+    is_draft=False,
+)
 
 # Validate data against a document type schema
 validation = client.document_types.validate(

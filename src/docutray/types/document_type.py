@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict
+
+ConversionMode = Literal["json", "toon", "multi_prompt"]
+"""Conversion mode for document type processing."""
 
 
 class DocumentType(BaseModel):
@@ -30,6 +33,9 @@ class DocumentType(BaseModel):
 
     isDraft: bool = False
     """Indicates if the document type is a draft."""
+
+    status: str | None = None
+    """Document type status."""
 
     createdAt: datetime | None = None
     """Creation timestamp."""

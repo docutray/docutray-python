@@ -39,6 +39,7 @@ from .convert import ConversionResult, ConversionStatus, ConversionStatusType
 
 # Document type types
 from .document_type import (
+    ConversionMode,
     DocumentType,
     ValidationErrorInfo,
     ValidationResult,
@@ -85,6 +86,7 @@ __all__ = [
     "IdentificationResult",
     "IdentificationStatus",
     # Document Types
+    "ConversionMode",
     "DocumentType",
     "ValidationErrorInfo",
     "ValidationResult",
