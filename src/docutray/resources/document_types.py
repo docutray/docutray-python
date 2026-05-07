@@ -121,10 +121,10 @@ class DocumentTypes:
         Example:
             >>> doc_type = client.document_types.get("dt_abc123")
             >>> print(f"Name: {doc_type.name}")
-            >>> print(f"Schema: {doc_type.schema_}")
+            >>> print(f"Schema: {doc_type.jsonSchema}")
         """
         response = self._client._request("GET", f"/api/document-types/{type_id}")
-        return DocumentType.model_validate(response.json())
+        return DocumentType.model_validate(response.json().get("data", response.json()))
 
     def validate(
         self,
@@ -173,6 +173,7 @@ class DocumentTypes:
         identify_prompt_hints: str | None = None,
         conversion_mode: ConversionMode | None = None,
         keep_property_ordering: bool | None = None,
+        is_public: bool | None = None,
     ) -> DocumentType:
         """Create a new document type.
 
@@ -186,6 +187,7 @@ class DocumentTypes:
             identify_prompt_hints: Hints for document identification prompt.
             conversion_mode: Processing mode ("json", "toon", or "multi_prompt").
             keep_property_ordering: Preserve property ordering in schema.
+            is_public: Whether the document type is publicly available.
 
         Returns:
             The created document type.
@@ -224,6 +226,8 @@ class DocumentTypes:
             body["conversionMode"] = conversion_mode
         if keep_property_ordering is not None:
             body["keepPropertyOrdering"] = keep_property_ordering
+        if is_public is not None:
+            body["isPublic"] = is_public
 
         response = self._client._request("POST", "/api/document-types", json=body)
         return DocumentType.model_validate(response.json().get("data", response.json()))
@@ -240,6 +244,7 @@ class DocumentTypes:
         identify_prompt_hints: str | None = None,
         conversion_mode: ConversionMode | None = None,
         keep_property_ordering: bool | None = None,
+        is_public: bool | None = None,
     ) -> DocumentType:
         """Update an existing document type.
 
@@ -255,6 +260,7 @@ class DocumentTypes:
             identify_prompt_hints: New identification prompt hints.
             conversion_mode: New processing mode.
             keep_property_ordering: New property ordering setting.
+            is_public: New public/private flag.
 
         Returns:
             The updated document type.
@@ -288,6 +294,8 @@ class DocumentTypes:
             body["conversionMode"] = conversion_mode
         if keep_property_ordering is not None:
             body["keepPropertyOrdering"] = keep_property_ordering
+        if is_public is not None:
+            body["isPublic"] = is_public
 
         response = self._client._request(
             "PUT",
@@ -397,7 +405,7 @@ class AsyncDocumentTypes:
             The document type details including schema.
         """
         response = await self._client._request("GET", f"/api/document-types/{type_id}")
-        return DocumentType.model_validate(response.json())
+        return DocumentType.model_validate(response.json().get("data", response.json()))
 
     async def validate(
         self,
@@ -432,6 +440,7 @@ class AsyncDocumentTypes:
         identify_prompt_hints: str | None = None,
         conversion_mode: ConversionMode | None = None,
         keep_property_ordering: bool | None = None,
+        is_public: bool | None = None,
     ) -> DocumentType:
         """Create a new document type.
 
@@ -445,6 +454,7 @@ class AsyncDocumentTypes:
             identify_prompt_hints: Hints for document identification prompt.
             conversion_mode: Processing mode ("json", "toon", or "multi_prompt").
             keep_property_ordering: Preserve property ordering in schema.
+            is_public: Whether the document type is publicly available.
 
         Returns:
             The created document type.
@@ -465,6 +475,8 @@ class AsyncDocumentTypes:
             body["conversionMode"] = conversion_mode
         if keep_property_ordering is not None:
             body["keepPropertyOrdering"] = keep_property_ordering
+        if is_public is not None:
+            body["isPublic"] = is_public
 
         response = await self._client._request("POST", "/api/document-types", json=body)
         return DocumentType.model_validate(response.json().get("data", response.json()))
@@ -481,6 +493,7 @@ class AsyncDocumentTypes:
         identify_prompt_hints: str | None = None,
         conversion_mode: ConversionMode | None = None,
         keep_property_ordering: bool | None = None,
+        is_public: bool | None = None,
     ) -> DocumentType:
         """Update an existing document type.
 
@@ -496,6 +509,7 @@ class AsyncDocumentTypes:
             identify_prompt_hints: New identification prompt hints.
             conversion_mode: New processing mode.
             keep_property_ordering: New property ordering setting.
+            is_public: New public/private flag.
 
         Returns:
             The updated document type.
@@ -517,6 +531,8 @@ class AsyncDocumentTypes:
             body["conversionMode"] = conversion_mode
         if keep_property_ordering is not None:
             body["keepPropertyOrdering"] = keep_property_ordering
+        if is_public is not None:
+            body["isPublic"] = is_public
 
         response = await self._client._request(
             "PUT",

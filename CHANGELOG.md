@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-05-07
+
+### Fixed
+
+- `client.document_types.get(id)` now correctly unwraps the `{ data }` envelope returned by `GET /api/document-types/{id}`. Previously every typed field (`id`, `name`, `codeType`, …) silently fell back to defaults because the actual fields were nested under `data`. Sync and async, including the `.with_raw_response.get()` variants. (Port of [docutray-node#20](https://github.com/docutray/docutray-node/pull/20).)
+
+### Changed
+
+- **Type-only breaking change:** renamed `DocumentType.schema_` to `DocumentType.jsonSchema` to match the API wire format. The previous name never received a value (the API returns `jsonSchema`), so no real consumer was reading the old attribute. Pre-1.0 patch releases are allowed to carry type-level breaking changes per project policy.
+
+### Added
+
+- `is_public: bool | None` keyword argument on `client.document_types.create()` and `client.document_types.update()` (sync, async, and raw response wrappers). Closes a gap from the [docutray-node#18](https://github.com/docutray/docutray-node/pull/18) port — the Node `DocumentTypeCreateParams` / `DocumentTypeUpdateParams` interfaces have always exposed `isPublic`.
+
 ## [0.2.0] - 2026-04-07
 
 ### Added
