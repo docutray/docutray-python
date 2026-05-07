@@ -11,7 +11,9 @@ from docutray import AsyncClient, Client, DocumentType, ValidationResult
 class TestDocumentTypesList:
     """Tests for DocumentTypes.list()."""
 
-    def test_list_document_types(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_list_document_types(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """List all document types."""
         mock_api.get("/api/document-types").mock(
             return_value=httpx.Response(
@@ -52,13 +54,17 @@ class TestDocumentTypesList:
         assert response.total == 2
         assert response.page == 1
 
-    def test_list_with_pagination(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_list_with_pagination(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """List document types with pagination parameters."""
         mock_api.get("/api/document-types").mock(
             return_value=httpx.Response(
                 200,
                 json={
-                    "data": [{"id": "dt_3", "name": "Contract", "codeType": "contract"}],
+                    "data": [
+                        {"id": "dt_3", "name": "Contract", "codeType": "contract"}
+                    ],
                     "pagination": {"total": 15, "page": 2, "limit": 5},
                 },
             )
@@ -91,19 +97,27 @@ class TestDocumentTypesList:
 class TestDocumentTypesGet:
     """Tests for DocumentTypes.get()."""
 
-    def test_get_document_type(self, client: Client, mock_api: respx.MockRouter) -> None:
-        """Get a specific document type."""
+    def test_get_document_type(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
+        """Get a specific document type unwraps the {data} envelope."""
         mock_api.get("/api/document-types/dt_123").mock(
             return_value=httpx.Response(
                 200,
                 json={
-                    "id": "dt_123",
-                    "name": "Invoice",
-                    "codeType": "invoice",
-                    "description": "Invoice documents with line items",
-                    "isPublic": True,
-                    "isDraft": False,
-                    "createdAt": "2024-01-01T00:00:00.000Z",
+                    "data": {
+                        "id": "dt_123",
+                        "name": "Invoice",
+                        "codeType": "invoice",
+                        "description": "Invoice documents with line items",
+                        "isPublic": True,
+                        "isDraft": False,
+                        "createdAt": "2024-01-01T00:00:00.000Z",
+                        "jsonSchema": {
+                            "type": "object",
+                            "properties": {"invoice_number": {"type": "string"}},
+                        },
+                    }
                 },
             )
         )
@@ -114,12 +128,18 @@ class TestDocumentTypesGet:
         assert doc_type.id == "dt_123"
         assert doc_type.name == "Invoice"
         assert doc_type.codeType == "invoice"
+        assert doc_type.jsonSchema == {
+            "type": "object",
+            "properties": {"invoice_number": {"type": "string"}},
+        }
 
 
 class TestDocumentTypesValidate:
     """Tests for DocumentTypes.validate()."""
 
-    def test_validate_valid_data(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_validate_valid_data(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """Validate data that passes validation."""
         mock_api.post("/api/document-types/dt_123/validate").mock(
             return_value=httpx.Response(
@@ -140,7 +160,9 @@ class TestDocumentTypesValidate:
         assert result.is_valid()
         assert not result.has_warnings()
 
-    def test_validate_invalid_data(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_validate_invalid_data(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """Validate data that fails validation."""
         mock_api.post("/api/document-types/dt_123/validate").mock(
             return_value=httpx.Response(
@@ -164,7 +186,9 @@ class TestDocumentTypesValidate:
         assert result.errors.count == 2
         assert "invoice_number" in result.errors.messages[0]
 
-    def test_validate_with_warnings(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_validate_with_warnings(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """Validate data that has warnings but passes."""
         mock_api.post("/api/document-types/dt_123/validate").mock(
             return_value=httpx.Response(
@@ -189,7 +213,9 @@ class TestDocumentTypesValidate:
 class TestDocumentTypesCreate:
     """Tests for DocumentTypes.create()."""
 
-    def test_create_document_type(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_create_document_type(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """Create a document type with required fields."""
         route = mock_api.post("/api/document-types").mock(
             return_value=httpx.Response(
@@ -281,11 +307,78 @@ class TestDocumentTypesCreate:
         assert body["conversionMode"] == "multi_prompt"
         assert body["keepPropertyOrdering"] is True
 
+    def test_create_forwards_is_public(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
+        """Create forwards is_public to the request body as isPublic."""
+        route = mock_api.post("/api/document-types").mock(
+            return_value=httpx.Response(
+                201,
+                json={
+                    "data": {
+                        "id": "dt_pub",
+                        "name": "Receipt",
+                        "codeType": "receipt",
+                        "description": "Public receipt type",
+                        "isPublic": True,
+                        "isDraft": False,
+                    }
+                },
+            )
+        )
+
+        client.document_types.create(
+            name="Receipt",
+            code_type="receipt",
+            description="Public receipt type",
+            json_schema={"type": "object"},
+            is_public=True,
+        )
+
+        import json
+
+        body = json.loads(route.calls[0].request.content)
+        assert body["isPublic"] is True
+
+    def test_create_omits_is_public_when_none(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
+        """Create does not include isPublic in body when is_public is None."""
+        route = mock_api.post("/api/document-types").mock(
+            return_value=httpx.Response(
+                201,
+                json={
+                    "data": {
+                        "id": "dt_x",
+                        "name": "X",
+                        "codeType": "x",
+                        "description": "X",
+                        "isPublic": False,
+                        "isDraft": True,
+                    }
+                },
+            )
+        )
+
+        client.document_types.create(
+            name="X",
+            code_type="x",
+            description="X",
+            json_schema={"type": "object"},
+        )
+
+        import json
+
+        body = json.loads(route.calls[0].request.content)
+        assert "isPublic" not in body
+
 
 class TestDocumentTypesUpdate:
     """Tests for DocumentTypes.update()."""
 
-    def test_update_document_type(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_update_document_type(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """Update a document type with partial fields."""
         route = mock_api.put("/api/document-types/dt_123").mock(
             return_value=httpx.Response(
@@ -323,7 +416,9 @@ class TestDocumentTypesUpdate:
         body = json.loads(route.calls[0].request.content)
         assert body == {"name": "Updated Invoice", "isDraft": False}
 
-    def test_update_json_schema(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_update_json_schema(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """Update a document type's JSON schema."""
         mock_api.put("/api/document-types/dt_123").mock(
             return_value=httpx.Response(
@@ -352,6 +447,33 @@ class TestDocumentTypesUpdate:
         doc_type = client.document_types.update("dt_123", json_schema=new_schema)
 
         assert doc_type.id == "dt_123"
+
+    def test_update_forwards_is_public(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
+        """Update forwards is_public to the request body as isPublic."""
+        route = mock_api.put("/api/document-types/dt_123").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "data": {
+                        "id": "dt_123",
+                        "name": "Invoice",
+                        "codeType": "invoice",
+                        "description": "Invoice documents",
+                        "isPublic": False,
+                        "isDraft": False,
+                    }
+                },
+            )
+        )
+
+        client.document_types.update("dt_123", is_public=False)
+
+        import json
+
+        body = json.loads(route.calls[0].request.content)
+        assert body == {"isPublic": False}
 
 
 class TestDocumentTypeModel:
@@ -424,7 +546,9 @@ class TestAsyncDocumentTypesList:
             return_value=httpx.Response(
                 200,
                 json={
-                    "data": [{"id": "dt_3", "name": "Contract", "codeType": "contract"}],
+                    "data": [
+                        {"id": "dt_3", "name": "Contract", "codeType": "contract"}
+                    ],
                     "pagination": {"total": 15, "page": 2, "limit": 5},
                 },
             )
@@ -442,18 +566,21 @@ class TestAsyncDocumentTypesGet:
     async def test_async_get_document_type(
         self, async_client: AsyncClient, mock_api: respx.MockRouter
     ) -> None:
-        """Async get a specific document type."""
+        """Async get a specific document type unwraps the {data} envelope."""
         mock_api.get("/api/document-types/dt_123").mock(
             return_value=httpx.Response(
                 200,
                 json={
-                    "id": "dt_123",
-                    "name": "Invoice",
-                    "codeType": "invoice",
-                    "description": "Invoice documents with line items",
-                    "isPublic": True,
-                    "isDraft": False,
-                    "createdAt": "2024-01-01T00:00:00.000Z",
+                    "data": {
+                        "id": "dt_123",
+                        "name": "Invoice",
+                        "codeType": "invoice",
+                        "description": "Invoice documents with line items",
+                        "isPublic": True,
+                        "isDraft": False,
+                        "createdAt": "2024-01-01T00:00:00.000Z",
+                        "jsonSchema": {"type": "object"},
+                    }
                 },
             )
         )
@@ -464,6 +591,7 @@ class TestAsyncDocumentTypesGet:
         assert doc_type.id == "dt_123"
         assert doc_type.name == "Invoice"
         assert doc_type.codeType == "invoice"
+        assert doc_type.jsonSchema == {"type": "object"}
 
 
 class TestAsyncDocumentTypesValidate:

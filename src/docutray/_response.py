@@ -801,7 +801,7 @@ class DocumentTypesWithRawResponse:
         )
         return RawResponse(
             response,
-            lambda r: DocumentType.model_validate(r.json()),
+            lambda r: DocumentType.model_validate(r.json().get("data", r.json())),
         )
 
     def validate(
@@ -842,6 +842,7 @@ class DocumentTypesWithRawResponse:
         identify_prompt_hints: str | None = None,
         conversion_mode: ConversionMode | None = None,
         keep_property_ordering: bool | None = None,
+        is_public: bool | None = None,
     ) -> RawResponse[DocumentType]:
         """Create a document type and return the raw HTTP response.
 
@@ -855,6 +856,7 @@ class DocumentTypesWithRawResponse:
             identify_prompt_hints: Hints for document identification prompt.
             conversion_mode: Processing mode.
             keep_property_ordering: Preserve property ordering in schema.
+            is_public: Whether the document type is publicly available.
 
         Returns:
             RawResponse wrapping the HTTP response.
@@ -877,6 +879,8 @@ class DocumentTypesWithRawResponse:
             body["conversionMode"] = conversion_mode
         if keep_property_ordering is not None:
             body["keepPropertyOrdering"] = keep_property_ordering
+        if is_public is not None:
+            body["isPublic"] = is_public
 
         response = self._document_types._client._request(
             "POST", "/api/document-types", json=body
@@ -898,6 +902,7 @@ class DocumentTypesWithRawResponse:
         identify_prompt_hints: str | None = None,
         conversion_mode: ConversionMode | None = None,
         keep_property_ordering: bool | None = None,
+        is_public: bool | None = None,
     ) -> RawResponse[DocumentType]:
         """Update a document type and return the raw HTTP response.
 
@@ -911,6 +916,7 @@ class DocumentTypesWithRawResponse:
             identify_prompt_hints: New identification prompt hints.
             conversion_mode: New processing mode.
             keep_property_ordering: New property ordering setting.
+            is_public: New public/private flag.
 
         Returns:
             RawResponse wrapping the HTTP response.
@@ -934,6 +940,8 @@ class DocumentTypesWithRawResponse:
             body["conversionMode"] = conversion_mode
         if keep_property_ordering is not None:
             body["keepPropertyOrdering"] = keep_property_ordering
+        if is_public is not None:
+            body["isPublic"] = is_public
 
         response = self._document_types._client._request(
             "PUT",
@@ -1020,7 +1028,7 @@ class AsyncDocumentTypesWithRawResponse:
         )
         return RawResponse(
             response,
-            lambda r: DocumentType.model_validate(r.json()),
+            lambda r: DocumentType.model_validate(r.json().get("data", r.json())),
         )
 
     async def validate(
@@ -1061,6 +1069,7 @@ class AsyncDocumentTypesWithRawResponse:
         identify_prompt_hints: str | None = None,
         conversion_mode: ConversionMode | None = None,
         keep_property_ordering: bool | None = None,
+        is_public: bool | None = None,
     ) -> RawResponse[DocumentType]:
         """Create a document type and return the raw HTTP response.
 
@@ -1074,6 +1083,7 @@ class AsyncDocumentTypesWithRawResponse:
             identify_prompt_hints: Hints for document identification prompt.
             conversion_mode: Processing mode.
             keep_property_ordering: Preserve property ordering in schema.
+            is_public: Whether the document type is publicly available.
 
         Returns:
             RawResponse wrapping the HTTP response.
@@ -1096,6 +1106,8 @@ class AsyncDocumentTypesWithRawResponse:
             body["conversionMode"] = conversion_mode
         if keep_property_ordering is not None:
             body["keepPropertyOrdering"] = keep_property_ordering
+        if is_public is not None:
+            body["isPublic"] = is_public
 
         response = await self._document_types._client._request(
             "POST", "/api/document-types", json=body
@@ -1117,6 +1129,7 @@ class AsyncDocumentTypesWithRawResponse:
         identify_prompt_hints: str | None = None,
         conversion_mode: ConversionMode | None = None,
         keep_property_ordering: bool | None = None,
+        is_public: bool | None = None,
     ) -> RawResponse[DocumentType]:
         """Update a document type and return the raw HTTP response.
 
@@ -1130,6 +1143,7 @@ class AsyncDocumentTypesWithRawResponse:
             identify_prompt_hints: New identification prompt hints.
             conversion_mode: New processing mode.
             keep_property_ordering: New property ordering setting.
+            is_public: New public/private flag.
 
         Returns:
             RawResponse wrapping the HTTP response.
@@ -1153,6 +1167,8 @@ class AsyncDocumentTypesWithRawResponse:
             body["conversionMode"] = conversion_mode
         if keep_property_ordering is not None:
             body["keepPropertyOrdering"] = keep_property_ordering
+        if is_public is not None:
+            body["isPublic"] = is_public
 
         response = await self._document_types._client._request(
             "PUT",

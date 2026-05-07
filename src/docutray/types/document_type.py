@@ -43,8 +43,8 @@ class DocumentType(BaseModel):
     updatedAt: datetime | None = None
     """Last update timestamp."""
 
-    schema_: dict[str, Any] | None = None
-    """JSON schema for the document type (when retrieved by ID)."""
+    jsonSchema: dict[str, Any] | None = None
+    """JSON Schema for the document type (returned by GET /api/document-types/{id})."""
 
 
 class ValidationErrorInfo(BaseModel):

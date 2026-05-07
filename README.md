@@ -272,7 +272,7 @@ page = client.document_types.list(search="invoice")
 
 # Get a specific document type
 doc_type = client.document_types.get("dt_invoice")
-print(f"Schema: {doc_type.schema_}")
+print(f"Schema: {doc_type.jsonSchema}")
 
 # Create a custom document type
 doc_type = client.document_types.create(
