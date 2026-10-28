@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- DSL validation rules on document types ([docutray/docutray#1111](https://github.com/docutray/docutray/issues/1111), #22):
+  - `DocumentType.dslRules`, and `dsl_rules` on `client.document_types.create()` / `update()`. In `update()`, omitting `dsl_rules` keeps the saved rules and `None` or `""` clears them.
+  - `client.document_types.validate(id, data, dsl_rules=...)` dry run: temporary rules replace the saved ones for that call only.
+  - `DSLValidationError` (subclass of `BadRequestError`) with typed `diagnostics` (`DSLDiagnostic`: `line`, `column`, `message`) for invalid DSL.
+- Structured validation results:
+  - `ValidationResult.valid` and `ValidationResult.issues` (`list[ValidationIssue]`).
+  - `ConversionResult.validation` and `ConversionStatus.validation`, typed as `ConversionValidation` (`ValidationOutcome | ValidationSystemFailure | None`).
+  - `StepExecutionStatus.validation` (`StepValidationSummary`, unchanged summary shape).
+- Webhook payload models: `ConversionWebhookPayload` (with `validation`), `IdentificationWebhookPayload`, `StepWebhookPayload` and the `WebhookEventType` literal.
+- `field_locations` (`FieldLocations`) on `ConversionResult` / `ConversionStatus` for document types with bounding boxes enabled.
+- Typed `DocumentType` fields `promptHints`, `identifyPromptHints`, `conversionMode`, `keepPropertyOrdering`, `boundingBoxesEnabled` and `conversionSpec`; `bounding_boxes_enabled` and `conversion_spec` arguments on `create()` / `update()` (`conversion_spec=None` clears the spec in `update()`).
+- `NOT_GIVEN` / `NotGiven` sentinel for arguments where `None` has a meaning.
+
+### Fixed
+
+- API errors whose body is `{"error": "<message>"}` now use that message as `APIError.message` instead of the raw response text.
+
 ## [0.2.1] - 2026-05-07
 
 ### Fixed
