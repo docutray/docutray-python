@@ -144,7 +144,11 @@ def _is_dsl_error_body(body: Any) -> bool:
     if not isinstance(body, dict):
         return False
     errors = body.get("errors")
-    return isinstance(errors, list) and any(_is_dsl_diagnostic(e) for e in errors)
+    return (
+        isinstance(errors, list)
+        and len(errors) > 0
+        and all(_is_dsl_diagnostic(e) for e in errors)
+    )
 
 
 class AuthenticationError(APIError):

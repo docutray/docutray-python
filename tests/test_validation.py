@@ -372,6 +372,41 @@ class TestDSLValidationError:
         assert not isinstance(exc_info.value, DSLValidationError)
         assert exc_info.value.message == "El dry-run solo acepta data y dslRules"
 
+    def test_mixed_errors_are_not_dsl_error(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
+        mock_api.put("/api/document-types/dt_123").mock(
+            return_value=httpx.Response(
+                400,
+                json={
+                    "error": "Invalid request",
+                    "errors": [
+                        {"line": 2, "column": 7, "message": "Se esperaba un operador"},
+                        {"message": "missing line and column"},
+                    ],
+                },
+            )
+        )
+
+        with pytest.raises(BadRequestError) as exc_info:
+            client.document_types.update("dt_123", dsl_rules="field.total >")
+
+        assert not isinstance(exc_info.value, DSLValidationError)
+
+    def test_empty_errors_are_not_dsl_error(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
+        mock_api.put("/api/document-types/dt_123").mock(
+            return_value=httpx.Response(
+                400, json={"error": "Invalid request", "errors": []}
+            )
+        )
+
+        with pytest.raises(BadRequestError) as exc_info:
+            client.document_types.update("dt_123", dsl_rules="")
+
+        assert not isinstance(exc_info.value, DSLValidationError)
+
     def test_string_errors_are_not_dsl_error(
         self, client: Client, mock_api: respx.MockRouter
     ) -> None:
