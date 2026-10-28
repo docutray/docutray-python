@@ -31,6 +31,7 @@ from ._exceptions import (
     BadRequestError,
     ConflictError,
     DocuTrayError,
+    DSLValidationError,
     InternalServerError,
     NotFoundError,
     PermissionDeniedError,
@@ -39,13 +40,17 @@ from ._exceptions import (
 )
 from ._pagination import AsyncPage, Page
 from ._response import RawResponse
+from ._types import NOT_GIVEN, NotGiven
 from ._version import __version__
 from .types import (
     ConversionMode,
     ConversionResult,
     ConversionStatus,
+    ConversionValidation,
+    ConversionWebhookPayload,
     DocumentType,
     DocumentTypeMatch,
+    DSLDiagnostic,
     IdentificationResult,
     IdentificationStatus,
     KnowledgeBase,
@@ -55,7 +60,10 @@ from .types import (
     SearchResultItem,
     StepExecutionStatus,
     SyncResult,
+    ValidationIssue,
+    ValidationOutcome,
     ValidationResult,
+    ValidationSystemFailure,
 )
 
 __all__ = [
@@ -72,6 +80,7 @@ __all__ = [
     "APIError",
     "AuthenticationError",
     "BadRequestError",
+    "DSLValidationError",
     "ConflictError",
     "InternalServerError",
     "NotFoundError",
@@ -83,6 +92,9 @@ __all__ = [
     "AsyncPage",
     # Raw Response
     "RawResponse",
+    # Sentinel
+    "NOT_GIVEN",
+    "NotGiven",
     # Types - Conversion
     "ConversionResult",
     "ConversionStatus",
@@ -94,6 +106,14 @@ __all__ = [
     "ConversionMode",
     "DocumentType",
     "ValidationResult",
+    # Types - Validation
+    "ConversionValidation",
+    "DSLDiagnostic",
+    "ValidationIssue",
+    "ValidationOutcome",
+    "ValidationSystemFailure",
+    # Types - Webhooks
+    "ConversionWebhookPayload",
     # Types - Steps
     "StepExecutionStatus",
     # Types - Knowledge Bases

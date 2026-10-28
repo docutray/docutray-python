@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 import httpx
 
+from ._types import NOT_GIVEN, NotGiven
+
 if TYPE_CHECKING:
     from ._pagination import AsyncPage, Page
     from .resources.convert import AsyncConvert, Convert
@@ -808,22 +810,28 @@ class DocumentTypesWithRawResponse:
         self,
         type_id: str,
         data: dict[str, Any],
+        *,
+        dsl_rules: str | None | NotGiven = NOT_GIVEN,
     ) -> RawResponse[ValidationResult]:
         """Validate data against a document type and return the raw HTTP response.
 
         Args:
             type_id: The document type ID.
             data: The JSON data to validate.
+            dsl_rules: Temporary DSL rules for a dry run. They replace the stored
+                rules for this call only (JSON Schema still runs); ``None`` or
+                ``""`` validates without DSL. Omit to use the stored rules.
 
         Returns:
             RawResponse wrapping the HTTP response.
         """
+        from .resources.document_types import _validate_body
         from .types.document_type import ValidationResult
 
         response = self._document_types._client._request(
             "POST",
             f"/api/document-types/{type_id}/validate",
-            json=data,
+            json=_validate_body(data, dsl_rules),
         )
         return RawResponse(
             response,
@@ -842,6 +850,9 @@ class DocumentTypesWithRawResponse:
         identify_prompt_hints: str | None = None,
         conversion_mode: ConversionMode | None = None,
         keep_property_ordering: bool | None = None,
+        bounding_boxes_enabled: bool | None = None,
+        conversion_spec: dict[str, Any] | None = None,
+        dsl_rules: str | None = None,
         is_public: bool | None = None,
     ) -> RawResponse[DocumentType]:
         """Create a document type and return the raw HTTP response.
@@ -856,31 +867,33 @@ class DocumentTypesWithRawResponse:
             identify_prompt_hints: Hints for document identification prompt.
             conversion_mode: Processing mode.
             keep_property_ordering: Preserve property ordering in schema.
+            bounding_boxes_enabled: Also return per-field locations (admin API keys only).
+            conversion_spec: Spec mapping extracted JSON to CSV/Excel export columns.
+            dsl_rules: DSL validation rules (64 KiB max). Invalid syntax raises
+                DSLValidationError.
             is_public: Whether the document type is publicly available.
 
         Returns:
             RawResponse wrapping the HTTP response.
         """
+        from .resources.document_types import _create_body
         from .types.document_type import DocumentType
 
-        body: dict[str, Any] = {
-            "name": name,
-            "codeType": code_type,
-            "description": description,
-            "jsonSchema": json_schema,
-        }
-        if is_draft is not None:
-            body["isDraft"] = is_draft
-        if prompt_hints is not None:
-            body["promptHints"] = prompt_hints
-        if identify_prompt_hints is not None:
-            body["identifyPromptHints"] = identify_prompt_hints
-        if conversion_mode is not None:
-            body["conversionMode"] = conversion_mode
-        if keep_property_ordering is not None:
-            body["keepPropertyOrdering"] = keep_property_ordering
-        if is_public is not None:
-            body["isPublic"] = is_public
+        body = _create_body(
+            name=name,
+            code_type=code_type,
+            description=description,
+            json_schema=json_schema,
+            is_draft=is_draft,
+            prompt_hints=prompt_hints,
+            identify_prompt_hints=identify_prompt_hints,
+            conversion_mode=conversion_mode,
+            keep_property_ordering=keep_property_ordering,
+            bounding_boxes_enabled=bounding_boxes_enabled,
+            conversion_spec=conversion_spec,
+            dsl_rules=dsl_rules,
+            is_public=is_public,
+        )
 
         response = self._document_types._client._request(
             "POST", "/api/document-types", json=body
@@ -902,6 +915,9 @@ class DocumentTypesWithRawResponse:
         identify_prompt_hints: str | None = None,
         conversion_mode: ConversionMode | None = None,
         keep_property_ordering: bool | None = None,
+        bounding_boxes_enabled: bool | None = None,
+        conversion_spec: dict[str, Any] | None | NotGiven = NOT_GIVEN,
+        dsl_rules: str | None | NotGiven = NOT_GIVEN,
         is_public: bool | None = None,
     ) -> RawResponse[DocumentType]:
         """Update a document type and return the raw HTTP response.
@@ -916,32 +932,33 @@ class DocumentTypesWithRawResponse:
             identify_prompt_hints: New identification prompt hints.
             conversion_mode: New processing mode.
             keep_property_ordering: New property ordering setting.
+            bounding_boxes_enabled: Also return per-field locations (admin API keys only).
+            conversion_spec: New export spec. ``None`` clears it; omit to keep it.
+            dsl_rules: New DSL validation rules (64 KiB max). ``None`` or ``""``
+                clears them; omit to keep the saved rules. Invalid syntax raises
+                DSLValidationError.
             is_public: New public/private flag.
 
         Returns:
             RawResponse wrapping the HTTP response.
         """
+        from .resources.document_types import _update_body
         from .types.document_type import DocumentType
 
-        body: dict[str, Any] = {}
-        if name is not None:
-            body["name"] = name
-        if description is not None:
-            body["description"] = description
-        if json_schema is not None:
-            body["jsonSchema"] = json_schema
-        if is_draft is not None:
-            body["isDraft"] = is_draft
-        if prompt_hints is not None:
-            body["promptHints"] = prompt_hints
-        if identify_prompt_hints is not None:
-            body["identifyPromptHints"] = identify_prompt_hints
-        if conversion_mode is not None:
-            body["conversionMode"] = conversion_mode
-        if keep_property_ordering is not None:
-            body["keepPropertyOrdering"] = keep_property_ordering
-        if is_public is not None:
-            body["isPublic"] = is_public
+        body = _update_body(
+            name=name,
+            description=description,
+            json_schema=json_schema,
+            is_draft=is_draft,
+            prompt_hints=prompt_hints,
+            identify_prompt_hints=identify_prompt_hints,
+            conversion_mode=conversion_mode,
+            keep_property_ordering=keep_property_ordering,
+            bounding_boxes_enabled=bounding_boxes_enabled,
+            conversion_spec=conversion_spec,
+            dsl_rules=dsl_rules,
+            is_public=is_public,
+        )
 
         response = self._document_types._client._request(
             "PUT",
@@ -1035,22 +1052,28 @@ class AsyncDocumentTypesWithRawResponse:
         self,
         type_id: str,
         data: dict[str, Any],
+        *,
+        dsl_rules: str | None | NotGiven = NOT_GIVEN,
     ) -> RawResponse[ValidationResult]:
         """Validate data against a document type and return the raw HTTP response.
 
         Args:
             type_id: The document type ID.
             data: The JSON data to validate.
+            dsl_rules: Temporary DSL rules for a dry run. They replace the stored
+                rules for this call only (JSON Schema still runs); ``None`` or
+                ``""`` validates without DSL. Omit to use the stored rules.
 
         Returns:
             RawResponse wrapping the HTTP response.
         """
+        from .resources.document_types import _validate_body
         from .types.document_type import ValidationResult
 
         response = await self._document_types._client._request(
             "POST",
             f"/api/document-types/{type_id}/validate",
-            json=data,
+            json=_validate_body(data, dsl_rules),
         )
         return RawResponse(
             response,
@@ -1069,6 +1092,9 @@ class AsyncDocumentTypesWithRawResponse:
         identify_prompt_hints: str | None = None,
         conversion_mode: ConversionMode | None = None,
         keep_property_ordering: bool | None = None,
+        bounding_boxes_enabled: bool | None = None,
+        conversion_spec: dict[str, Any] | None = None,
+        dsl_rules: str | None = None,
         is_public: bool | None = None,
     ) -> RawResponse[DocumentType]:
         """Create a document type and return the raw HTTP response.
@@ -1083,31 +1109,33 @@ class AsyncDocumentTypesWithRawResponse:
             identify_prompt_hints: Hints for document identification prompt.
             conversion_mode: Processing mode.
             keep_property_ordering: Preserve property ordering in schema.
+            bounding_boxes_enabled: Also return per-field locations (admin API keys only).
+            conversion_spec: Spec mapping extracted JSON to CSV/Excel export columns.
+            dsl_rules: DSL validation rules (64 KiB max). Invalid syntax raises
+                DSLValidationError.
             is_public: Whether the document type is publicly available.
 
         Returns:
             RawResponse wrapping the HTTP response.
         """
+        from .resources.document_types import _create_body
         from .types.document_type import DocumentType
 
-        body: dict[str, Any] = {
-            "name": name,
-            "codeType": code_type,
-            "description": description,
-            "jsonSchema": json_schema,
-        }
-        if is_draft is not None:
-            body["isDraft"] = is_draft
-        if prompt_hints is not None:
-            body["promptHints"] = prompt_hints
-        if identify_prompt_hints is not None:
-            body["identifyPromptHints"] = identify_prompt_hints
-        if conversion_mode is not None:
-            body["conversionMode"] = conversion_mode
-        if keep_property_ordering is not None:
-            body["keepPropertyOrdering"] = keep_property_ordering
-        if is_public is not None:
-            body["isPublic"] = is_public
+        body = _create_body(
+            name=name,
+            code_type=code_type,
+            description=description,
+            json_schema=json_schema,
+            is_draft=is_draft,
+            prompt_hints=prompt_hints,
+            identify_prompt_hints=identify_prompt_hints,
+            conversion_mode=conversion_mode,
+            keep_property_ordering=keep_property_ordering,
+            bounding_boxes_enabled=bounding_boxes_enabled,
+            conversion_spec=conversion_spec,
+            dsl_rules=dsl_rules,
+            is_public=is_public,
+        )
 
         response = await self._document_types._client._request(
             "POST", "/api/document-types", json=body
@@ -1129,6 +1157,9 @@ class AsyncDocumentTypesWithRawResponse:
         identify_prompt_hints: str | None = None,
         conversion_mode: ConversionMode | None = None,
         keep_property_ordering: bool | None = None,
+        bounding_boxes_enabled: bool | None = None,
+        conversion_spec: dict[str, Any] | None | NotGiven = NOT_GIVEN,
+        dsl_rules: str | None | NotGiven = NOT_GIVEN,
         is_public: bool | None = None,
     ) -> RawResponse[DocumentType]:
         """Update a document type and return the raw HTTP response.
@@ -1143,32 +1174,33 @@ class AsyncDocumentTypesWithRawResponse:
             identify_prompt_hints: New identification prompt hints.
             conversion_mode: New processing mode.
             keep_property_ordering: New property ordering setting.
+            bounding_boxes_enabled: Also return per-field locations (admin API keys only).
+            conversion_spec: New export spec. ``None`` clears it; omit to keep it.
+            dsl_rules: New DSL validation rules (64 KiB max). ``None`` or ``""``
+                clears them; omit to keep the saved rules. Invalid syntax raises
+                DSLValidationError.
             is_public: New public/private flag.
 
         Returns:
             RawResponse wrapping the HTTP response.
         """
+        from .resources.document_types import _update_body
         from .types.document_type import DocumentType
 
-        body: dict[str, Any] = {}
-        if name is not None:
-            body["name"] = name
-        if description is not None:
-            body["description"] = description
-        if json_schema is not None:
-            body["jsonSchema"] = json_schema
-        if is_draft is not None:
-            body["isDraft"] = is_draft
-        if prompt_hints is not None:
-            body["promptHints"] = prompt_hints
-        if identify_prompt_hints is not None:
-            body["identifyPromptHints"] = identify_prompt_hints
-        if conversion_mode is not None:
-            body["conversionMode"] = conversion_mode
-        if keep_property_ordering is not None:
-            body["keepPropertyOrdering"] = keep_property_ordering
-        if is_public is not None:
-            body["isPublic"] = is_public
+        body = _update_body(
+            name=name,
+            description=description,
+            json_schema=json_schema,
+            is_draft=is_draft,
+            prompt_hints=prompt_hints,
+            identify_prompt_hints=identify_prompt_hints,
+            conversion_mode=conversion_mode,
+            keep_property_ordering=keep_property_ordering,
+            bounding_boxes_enabled=bounding_boxes_enabled,
+            conversion_spec=conversion_spec,
+            dsl_rules=dsl_rules,
+            is_public=is_public,
+        )
 
         response = await self._document_types._client._request(
             "PUT",

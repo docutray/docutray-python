@@ -65,6 +65,29 @@ SUPPORTED_CONTENT_TYPES: frozenset[str] = frozenset(
 )
 
 # =============================================================================
+# Sentinel for Omitted Arguments
+# =============================================================================
+
+
+class NotGiven:
+    """Sentinel type for arguments that were not passed.
+
+    Distinguishes "omitted" from an explicit ``None``, which some endpoints
+    interpret as "clear this field" (e.g. ``dsl_rules=None`` in
+    ``document_types.update()``).
+    """
+
+    def __bool__(self) -> bool:
+        return False
+
+    def __repr__(self) -> str:
+        return "NOT_GIVEN"
+
+
+NOT_GIVEN = NotGiven()
+"""Default value for optional arguments that are omitted from the request."""
+
+# =============================================================================
 # Rate Limit Types
 # =============================================================================
 

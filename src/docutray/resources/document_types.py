@@ -6,11 +6,101 @@ from functools import cached_property
 from typing import TYPE_CHECKING, Any
 
 from .._pagination import AsyncPage, Page
+from .._types import NOT_GIVEN, NotGiven
 from ..types.document_type import ConversionMode, DocumentType, ValidationResult
 from ..types.shared import Pagination
 
 if TYPE_CHECKING:
     from .._base_client import BaseAsyncClient, BaseClient
+
+
+def _create_body(
+    *,
+    name: str,
+    code_type: str,
+    description: str,
+    json_schema: dict[str, Any],
+    is_draft: bool | None,
+    prompt_hints: str | None,
+    identify_prompt_hints: str | None,
+    conversion_mode: ConversionMode | None,
+    keep_property_ordering: bool | None,
+    bounding_boxes_enabled: bool | None,
+    conversion_spec: dict[str, Any] | None,
+    dsl_rules: str | None,
+    is_public: bool | None,
+) -> dict[str, Any]:
+    """Build the JSON body for POST /api/document-types."""
+    body: dict[str, Any] = {
+        "name": name,
+        "codeType": code_type,
+        "description": description,
+        "jsonSchema": json_schema,
+    }
+    optional = {
+        "isDraft": is_draft,
+        "promptHints": prompt_hints,
+        "identifyPromptHints": identify_prompt_hints,
+        "conversionMode": conversion_mode,
+        "keepPropertyOrdering": keep_property_ordering,
+        "boundingBoxesEnabled": bounding_boxes_enabled,
+        "conversionSpec": conversion_spec,
+        "dslRules": dsl_rules,
+        "isPublic": is_public,
+    }
+    body.update({key: value for key, value in optional.items() if value is not None})
+    return body
+
+
+def _update_body(
+    *,
+    name: str | None,
+    description: str | None,
+    json_schema: dict[str, Any] | None,
+    is_draft: bool | None,
+    prompt_hints: str | None,
+    identify_prompt_hints: str | None,
+    conversion_mode: ConversionMode | None,
+    keep_property_ordering: bool | None,
+    bounding_boxes_enabled: bool | None,
+    conversion_spec: dict[str, Any] | None | NotGiven,
+    dsl_rules: str | None | NotGiven,
+    is_public: bool | None,
+) -> dict[str, Any]:
+    """Build the JSON body for PUT /api/document-types/{id}.
+
+    ``None`` omits most fields; ``conversion_spec`` and ``dsl_rules`` are
+    omitted only when ``NOT_GIVEN`` so that ``None`` can clear them.
+    """
+    optional = {
+        "name": name,
+        "description": description,
+        "jsonSchema": json_schema,
+        "isDraft": is_draft,
+        "promptHints": prompt_hints,
+        "identifyPromptHints": identify_prompt_hints,
+        "conversionMode": conversion_mode,
+        "keepPropertyOrdering": keep_property_ordering,
+        "boundingBoxesEnabled": bounding_boxes_enabled,
+        "isPublic": is_public,
+    }
+    body: dict[str, Any] = {k: v for k, v in optional.items() if v is not None}
+    if not isinstance(conversion_spec, NotGiven):
+        body["conversionSpec"] = conversion_spec
+    if not isinstance(dsl_rules, NotGiven):
+        body["dslRules"] = dsl_rules
+    return body
+
+
+def _validate_body(data: Any, dsl_rules: str | None | NotGiven) -> Any:
+    """Build the JSON body for POST /api/document-types/{id}/validate.
+
+    With ``dsl_rules`` the dry-run envelope ``{data, dslRules}`` is sent;
+    otherwise the data itself is the body and the stored rules run.
+    """
+    if isinstance(dsl_rules, NotGiven):
+        return data
+    return {"data": data, "dslRules": dsl_rules}
 
 
 class DocumentTypes:
@@ -130,6 +220,8 @@ class DocumentTypes:
         self,
         type_id: str,
         data: dict[str, Any],
+        *,
+        dsl_rules: str | None | NotGiven = NOT_GIVEN,
     ) -> ValidationResult:
         """Validate JSON data against a document type's schema.
 
@@ -139,6 +231,9 @@ class DocumentTypes:
         Args:
             type_id: The document type ID to validate against.
             data: The JSON data to validate.
+            dsl_rules: Temporary DSL rules for a dry run. They replace the stored
+                rules for this call only (JSON Schema still runs); ``None`` or
+                ``""`` validates without DSL. Omit to use the stored rules.
 
         Returns:
             Validation result with errors and warnings.
@@ -157,7 +252,7 @@ class DocumentTypes:
         response = self._client._request(
             "POST",
             f"/api/document-types/{type_id}/validate",
-            json=data,
+            json=_validate_body(data, dsl_rules),
         )
         return ValidationResult.model_validate(response.json())
 
@@ -173,6 +268,9 @@ class DocumentTypes:
         identify_prompt_hints: str | None = None,
         conversion_mode: ConversionMode | None = None,
         keep_property_ordering: bool | None = None,
+        bounding_boxes_enabled: bool | None = None,
+        conversion_spec: dict[str, Any] | None = None,
+        dsl_rules: str | None = None,
         is_public: bool | None = None,
     ) -> DocumentType:
         """Create a new document type.
@@ -187,6 +285,10 @@ class DocumentTypes:
             identify_prompt_hints: Hints for document identification prompt.
             conversion_mode: Processing mode ("json", "toon", or "multi_prompt").
             keep_property_ordering: Preserve property ordering in schema.
+            bounding_boxes_enabled: Also return per-field locations (admin API keys only).
+            conversion_spec: Spec mapping extracted JSON to CSV/Excel export columns.
+            dsl_rules: DSL validation rules (64 KiB max). Invalid syntax raises
+                DSLValidationError.
             is_public: Whether the document type is publicly available.
 
         Returns:
@@ -210,24 +312,21 @@ class DocumentTypes:
             ... )
             >>> print(f"Created: {doc_type.id}")
         """
-        body: dict[str, Any] = {
-            "name": name,
-            "codeType": code_type,
-            "description": description,
-            "jsonSchema": json_schema,
-        }
-        if is_draft is not None:
-            body["isDraft"] = is_draft
-        if prompt_hints is not None:
-            body["promptHints"] = prompt_hints
-        if identify_prompt_hints is not None:
-            body["identifyPromptHints"] = identify_prompt_hints
-        if conversion_mode is not None:
-            body["conversionMode"] = conversion_mode
-        if keep_property_ordering is not None:
-            body["keepPropertyOrdering"] = keep_property_ordering
-        if is_public is not None:
-            body["isPublic"] = is_public
+        body = _create_body(
+            name=name,
+            code_type=code_type,
+            description=description,
+            json_schema=json_schema,
+            is_draft=is_draft,
+            prompt_hints=prompt_hints,
+            identify_prompt_hints=identify_prompt_hints,
+            conversion_mode=conversion_mode,
+            keep_property_ordering=keep_property_ordering,
+            bounding_boxes_enabled=bounding_boxes_enabled,
+            conversion_spec=conversion_spec,
+            dsl_rules=dsl_rules,
+            is_public=is_public,
+        )
 
         response = self._client._request("POST", "/api/document-types", json=body)
         return DocumentType.model_validate(response.json().get("data", response.json()))
@@ -244,6 +343,9 @@ class DocumentTypes:
         identify_prompt_hints: str | None = None,
         conversion_mode: ConversionMode | None = None,
         keep_property_ordering: bool | None = None,
+        bounding_boxes_enabled: bool | None = None,
+        conversion_spec: dict[str, Any] | None | NotGiven = NOT_GIVEN,
+        dsl_rules: str | None | NotGiven = NOT_GIVEN,
         is_public: bool | None = None,
     ) -> DocumentType:
         """Update an existing document type.
@@ -260,6 +362,11 @@ class DocumentTypes:
             identify_prompt_hints: New identification prompt hints.
             conversion_mode: New processing mode.
             keep_property_ordering: New property ordering setting.
+            bounding_boxes_enabled: Also return per-field locations (admin API keys only).
+            conversion_spec: New export spec. ``None`` clears it; omit to keep it.
+            dsl_rules: New DSL validation rules (64 KiB max). ``None`` or ``""``
+                clears them; omit to keep the saved rules. Invalid syntax raises
+                DSLValidationError.
             is_public: New public/private flag.
 
         Returns:
@@ -277,25 +384,20 @@ class DocumentTypes:
             ... )
             >>> print(f"Updated: {doc_type.name}")
         """
-        body: dict[str, Any] = {}
-        if name is not None:
-            body["name"] = name
-        if description is not None:
-            body["description"] = description
-        if json_schema is not None:
-            body["jsonSchema"] = json_schema
-        if is_draft is not None:
-            body["isDraft"] = is_draft
-        if prompt_hints is not None:
-            body["promptHints"] = prompt_hints
-        if identify_prompt_hints is not None:
-            body["identifyPromptHints"] = identify_prompt_hints
-        if conversion_mode is not None:
-            body["conversionMode"] = conversion_mode
-        if keep_property_ordering is not None:
-            body["keepPropertyOrdering"] = keep_property_ordering
-        if is_public is not None:
-            body["isPublic"] = is_public
+        body = _update_body(
+            name=name,
+            description=description,
+            json_schema=json_schema,
+            is_draft=is_draft,
+            prompt_hints=prompt_hints,
+            identify_prompt_hints=identify_prompt_hints,
+            conversion_mode=conversion_mode,
+            keep_property_ordering=keep_property_ordering,
+            bounding_boxes_enabled=bounding_boxes_enabled,
+            conversion_spec=conversion_spec,
+            dsl_rules=dsl_rules,
+            is_public=is_public,
+        )
 
         response = self._client._request(
             "PUT",
@@ -411,12 +513,17 @@ class AsyncDocumentTypes:
         self,
         type_id: str,
         data: dict[str, Any],
+        *,
+        dsl_rules: str | None | NotGiven = NOT_GIVEN,
     ) -> ValidationResult:
         """Validate JSON data against a document type's schema.
 
         Args:
             type_id: The document type ID to validate against.
             data: The JSON data to validate.
+            dsl_rules: Temporary DSL rules for a dry run. They replace the stored
+                rules for this call only (JSON Schema still runs); ``None`` or
+                ``""`` validates without DSL. Omit to use the stored rules.
 
         Returns:
             Validation result with errors and warnings.
@@ -424,7 +531,7 @@ class AsyncDocumentTypes:
         response = await self._client._request(
             "POST",
             f"/api/document-types/{type_id}/validate",
-            json=data,
+            json=_validate_body(data, dsl_rules),
         )
         return ValidationResult.model_validate(response.json())
 
@@ -440,6 +547,9 @@ class AsyncDocumentTypes:
         identify_prompt_hints: str | None = None,
         conversion_mode: ConversionMode | None = None,
         keep_property_ordering: bool | None = None,
+        bounding_boxes_enabled: bool | None = None,
+        conversion_spec: dict[str, Any] | None = None,
+        dsl_rules: str | None = None,
         is_public: bool | None = None,
     ) -> DocumentType:
         """Create a new document type.
@@ -454,29 +564,30 @@ class AsyncDocumentTypes:
             identify_prompt_hints: Hints for document identification prompt.
             conversion_mode: Processing mode ("json", "toon", or "multi_prompt").
             keep_property_ordering: Preserve property ordering in schema.
+            bounding_boxes_enabled: Also return per-field locations (admin API keys only).
+            conversion_spec: Spec mapping extracted JSON to CSV/Excel export columns.
+            dsl_rules: DSL validation rules (64 KiB max). Invalid syntax raises
+                DSLValidationError.
             is_public: Whether the document type is publicly available.
 
         Returns:
             The created document type.
         """
-        body: dict[str, Any] = {
-            "name": name,
-            "codeType": code_type,
-            "description": description,
-            "jsonSchema": json_schema,
-        }
-        if is_draft is not None:
-            body["isDraft"] = is_draft
-        if prompt_hints is not None:
-            body["promptHints"] = prompt_hints
-        if identify_prompt_hints is not None:
-            body["identifyPromptHints"] = identify_prompt_hints
-        if conversion_mode is not None:
-            body["conversionMode"] = conversion_mode
-        if keep_property_ordering is not None:
-            body["keepPropertyOrdering"] = keep_property_ordering
-        if is_public is not None:
-            body["isPublic"] = is_public
+        body = _create_body(
+            name=name,
+            code_type=code_type,
+            description=description,
+            json_schema=json_schema,
+            is_draft=is_draft,
+            prompt_hints=prompt_hints,
+            identify_prompt_hints=identify_prompt_hints,
+            conversion_mode=conversion_mode,
+            keep_property_ordering=keep_property_ordering,
+            bounding_boxes_enabled=bounding_boxes_enabled,
+            conversion_spec=conversion_spec,
+            dsl_rules=dsl_rules,
+            is_public=is_public,
+        )
 
         response = await self._client._request("POST", "/api/document-types", json=body)
         return DocumentType.model_validate(response.json().get("data", response.json()))
@@ -493,6 +604,9 @@ class AsyncDocumentTypes:
         identify_prompt_hints: str | None = None,
         conversion_mode: ConversionMode | None = None,
         keep_property_ordering: bool | None = None,
+        bounding_boxes_enabled: bool | None = None,
+        conversion_spec: dict[str, Any] | None | NotGiven = NOT_GIVEN,
+        dsl_rules: str | None | NotGiven = NOT_GIVEN,
         is_public: bool | None = None,
     ) -> DocumentType:
         """Update an existing document type.
@@ -509,30 +623,30 @@ class AsyncDocumentTypes:
             identify_prompt_hints: New identification prompt hints.
             conversion_mode: New processing mode.
             keep_property_ordering: New property ordering setting.
+            bounding_boxes_enabled: Also return per-field locations (admin API keys only).
+            conversion_spec: New export spec. ``None`` clears it; omit to keep it.
+            dsl_rules: New DSL validation rules (64 KiB max). ``None`` or ``""``
+                clears them; omit to keep the saved rules. Invalid syntax raises
+                DSLValidationError.
             is_public: New public/private flag.
 
         Returns:
             The updated document type.
         """
-        body: dict[str, Any] = {}
-        if name is not None:
-            body["name"] = name
-        if description is not None:
-            body["description"] = description
-        if json_schema is not None:
-            body["jsonSchema"] = json_schema
-        if is_draft is not None:
-            body["isDraft"] = is_draft
-        if prompt_hints is not None:
-            body["promptHints"] = prompt_hints
-        if identify_prompt_hints is not None:
-            body["identifyPromptHints"] = identify_prompt_hints
-        if conversion_mode is not None:
-            body["conversionMode"] = conversion_mode
-        if keep_property_ordering is not None:
-            body["keepPropertyOrdering"] = keep_property_ordering
-        if is_public is not None:
-            body["isPublic"] = is_public
+        body = _update_body(
+            name=name,
+            description=description,
+            json_schema=json_schema,
+            is_draft=is_draft,
+            prompt_hints=prompt_hints,
+            identify_prompt_hints=identify_prompt_hints,
+            conversion_mode=conversion_mode,
+            keep_property_ordering=keep_property_ordering,
+            bounding_boxes_enabled=bounding_boxes_enabled,
+            conversion_spec=conversion_spec,
+            dsl_rules=dsl_rules,
+            is_public=is_public,
+        )
 
         response = await self._client._request(
             "PUT",

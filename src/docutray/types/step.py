@@ -8,12 +8,29 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
+from .document_type import ValidationErrorInfo, ValidationWarningInfo
+
 if TYPE_CHECKING:
     from collections.abc import Awaitable
 
     from ..resources.steps import AsyncSteps, Steps
 
 StepExecutionStatusType = Literal["ENQUEUED", "PROCESSING", "SUCCESS", "ERROR"]
+
+
+class StepValidationSummary(BaseModel):
+    """Summarized validation of a step's conversion (informational only).
+
+    Never changes step success. Empty summaries mean validation was skipped.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    errors: ValidationErrorInfo
+    """Validation errors summary."""
+
+    warnings: ValidationWarningInfo
+    """Validation warnings summary."""
 
 
 class StepExecutionStatus(BaseModel):
@@ -44,6 +61,9 @@ class StepExecutionStatus(BaseModel):
 
     error: str | dict[str, Any] | None = None
     """Error message or details (only present when status is ERROR)."""
+
+    validation: StepValidationSummary | None = None
+    """Validation summary (only present when status is SUCCESS)."""
 
     # Internal reference to the resource for polling
     _resource: Steps | AsyncSteps | None = None
