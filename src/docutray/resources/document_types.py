@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from functools import cached_property
 from typing import TYPE_CHECKING, Any
+from urllib.parse import quote
 
+from .._exceptions import NotFoundError
 from .._pagination import AsyncPage, Page
 from .._types import NOT_GIVEN, NotGiven
 from ..types.document_type import ConversionMode, DocumentType, ValidationResult
@@ -67,7 +69,7 @@ def _update_body(
     dsl_rules: str | None | NotGiven,
     is_public: bool | None,
 ) -> dict[str, Any]:
-    """Build the JSON body for PUT /api/document-types/{id}.
+    """Build the JSON body for ``PUT /api/document-types/{id}``.
 
     ``None`` omits most fields; ``conversion_spec`` and ``dsl_rules`` are
     omitted only when ``NOT_GIVEN`` so that ``None`` can clear them.
@@ -93,7 +95,7 @@ def _update_body(
 
 
 def _validate_body(data: Any, dsl_rules: str | None | NotGiven) -> Any:
-    """Build the JSON body for POST /api/document-types/{id}/validate.
+    """Build the JSON body for ``POST /api/document-types/{id}/validate``.
 
     With ``dsl_rules`` the dry-run envelope ``{data, dslRules}`` is sent;
     otherwise the data itself is the body and the stored rules run.
@@ -213,8 +215,38 @@ class DocumentTypes:
             >>> print(f"Name: {doc_type.name}")
             >>> print(f"Schema: {doc_type.jsonSchema}")
         """
-        response = self._client._request("GET", f"/api/document-types/{type_id}")
+        response = self._client._request(
+            "GET", f"/api/document-types/{quote(type_id, safe='')}"
+        )
         return DocumentType.model_validate(response.json().get("data", response.json()))
+
+    def get_by_code(self, code: str) -> DocumentType:
+        """Get a document type by its ``codeType``.
+
+        Looks the code up with ``list(search=code)`` across all pages (100 per
+        request) and fetches the match with ``get()``, which includes the schema. Codes of your organization's own types carry its
+        slug as a prefix, so pass the full code (e.g. ``"acme_invoice"``).
+
+        Args:
+            code: The exact ``codeType`` of the document type.
+
+        Returns:
+            The document type details including schema.
+
+        Raises:
+            NotFoundError: If no accessible document type has this exact code.
+
+        Example:
+            >>> doc_type = client.document_types.get_by_code("acme_invoice")
+            >>> print(doc_type.id)
+        """
+        page = self.list(search=code, limit=100)
+        for doc_type in page.auto_paging_iter():
+            if doc_type.codeType == code:
+                return self.get(doc_type.id)
+        raise NotFoundError(
+            f"Document type with code {code!r} not found", status_code=404
+        )
 
     def validate(
         self,
@@ -251,7 +283,7 @@ class DocumentTypes:
         """
         response = self._client._request(
             "POST",
-            f"/api/document-types/{type_id}/validate",
+            f"/api/document-types/{quote(type_id, safe='')}/validate",
             json=_validate_body(data, dsl_rules),
         )
         return ValidationResult.model_validate(response.json())
@@ -403,7 +435,7 @@ class DocumentTypes:
 
         response = self._client._request(
             "PUT",
-            f"/api/document-types/{type_id}",
+            f"/api/document-types/{quote(type_id, safe='')}",
             json=body,
         )
         return DocumentType.model_validate(response.json().get("data", response.json()))
@@ -508,8 +540,38 @@ class AsyncDocumentTypes:
         Returns:
             The document type details including schema.
         """
-        response = await self._client._request("GET", f"/api/document-types/{type_id}")
+        response = await self._client._request(
+            "GET", f"/api/document-types/{quote(type_id, safe='')}"
+        )
         return DocumentType.model_validate(response.json().get("data", response.json()))
+
+    async def get_by_code(self, code: str) -> DocumentType:
+        """Get a document type by its ``codeType``.
+
+        Looks the code up with ``list(search=code)`` across all pages (100 per
+        request) and fetches the match with ``get()``, which includes the schema. Codes of your organization's own types carry its
+        slug as a prefix, so pass the full code (e.g. ``"acme_invoice"``).
+
+        Args:
+            code: The exact ``codeType`` of the document type.
+
+        Returns:
+            The document type details including schema.
+
+        Raises:
+            NotFoundError: If no accessible document type has this exact code.
+
+        Example:
+            >>> doc_type = await client.document_types.get_by_code("acme_invoice")
+            >>> print(doc_type.id)
+        """
+        page = await self.list(search=code, limit=100)
+        async for doc_type in page.auto_paging_iter_async():
+            if doc_type.codeType == code:
+                return await self.get(doc_type.id)
+        raise NotFoundError(
+            f"Document type with code {code!r} not found", status_code=404
+        )
 
     async def validate(
         self,
@@ -532,7 +594,7 @@ class AsyncDocumentTypes:
         """
         response = await self._client._request(
             "POST",
-            f"/api/document-types/{type_id}/validate",
+            f"/api/document-types/{quote(type_id, safe='')}/validate",
             json=_validate_body(data, dsl_rules),
         )
         return ValidationResult.model_validate(response.json())
@@ -654,7 +716,7 @@ class AsyncDocumentTypes:
 
         response = await self._client._request(
             "PUT",
-            f"/api/document-types/{type_id}",
+            f"/api/document-types/{quote(type_id, safe='')}",
             json=body,
         )
         return DocumentType.model_validate(response.json().get("data", response.json()))

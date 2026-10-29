@@ -124,6 +124,9 @@ class ConversionStatus(BaseModel):
     original_filename: str | None = None
     """Original filename of the processed file."""
 
+    document_metadata: dict[str, Any] | None = None
+    """Metadata sent with the original request."""
+
     data: dict[str, Any] | None = None
     """Extracted data (only present when status is SUCCESS)."""
 
@@ -170,7 +173,9 @@ class ConversionStatus(BaseModel):
                 Called with the current status after each poll for progress tracking.
 
         Returns:
-            The final conversion status with data or error.
+            The final conversion status with data or error. A failed
+            conversion is returned with ``status == "ERROR"`` (check
+            ``is_error()``); it is not raised as an exception.
 
         Raises:
             APITimeoutError: If the conversion doesn't complete within timeout.
@@ -210,7 +215,9 @@ class ConversionStatus(BaseModel):
                 Can be sync or async. Called with the current status after each poll.
 
         Returns:
-            The final conversion status with data or error.
+            The final conversion status with data or error. A failed
+            conversion is returned with ``status == "ERROR"`` (check
+            ``is_error()``); it is not raised as an exception.
 
         Raises:
             APITimeoutError: If the conversion doesn't complete within timeout.

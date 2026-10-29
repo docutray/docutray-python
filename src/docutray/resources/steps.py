@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from functools import cached_property
 from typing import TYPE_CHECKING, Any
+from urllib.parse import quote
 
 from .._files import prepare_base64_upload, prepare_file_upload, prepare_url_upload
 from .._types import FileInput
@@ -84,7 +85,7 @@ class Steps:
 
             response = self._client._request(
                 "POST",
-                f"/api/steps-async/{step_id}",
+                f"/api/steps-async/{quote(step_id, safe='')}",
                 files=upload.files,
                 data=data if data else None,
             )
@@ -94,7 +95,7 @@ class Steps:
                 body["document_metadata"] = document_metadata
 
             response = self._client._request(
-                "POST", f"/api/steps-async/{step_id}", json=body
+                "POST", f"/api/steps-async/{quote(step_id, safe='')}", json=body
             )
         elif file_base64 is not None:
             body = prepare_base64_upload(file_base64, content_type=content_type)
@@ -102,7 +103,7 @@ class Steps:
                 body["document_metadata"] = document_metadata
 
             response = self._client._request(
-                "POST", f"/api/steps-async/{step_id}", json=body
+                "POST", f"/api/steps-async/{quote(step_id, safe='')}", json=body
             )
         else:
             raise ValueError("Must provide one of: file, url, or file_base64")
@@ -126,7 +127,7 @@ class Steps:
             ...     print(status.data)
         """
         response = self._client._request(
-            "GET", f"/api/steps-async/status/{execution_id}"
+            "GET", f"/api/steps-async/status/{quote(execution_id, safe='')}"
         )
         status = StepExecutionStatus.model_validate(response.json())
         object.__setattr__(status, "_resource", self)
@@ -201,7 +202,7 @@ class AsyncSteps:
 
             response = await self._client._request(
                 "POST",
-                f"/api/steps-async/{step_id}",
+                f"/api/steps-async/{quote(step_id, safe='')}",
                 files=upload.files,
                 data=data if data else None,
             )
@@ -211,7 +212,7 @@ class AsyncSteps:
                 body["document_metadata"] = document_metadata
 
             response = await self._client._request(
-                "POST", f"/api/steps-async/{step_id}", json=body
+                "POST", f"/api/steps-async/{quote(step_id, safe='')}", json=body
             )
         elif file_base64 is not None:
             body = prepare_base64_upload(file_base64, content_type=content_type)
@@ -219,7 +220,7 @@ class AsyncSteps:
                 body["document_metadata"] = document_metadata
 
             response = await self._client._request(
-                "POST", f"/api/steps-async/{step_id}", json=body
+                "POST", f"/api/steps-async/{quote(step_id, safe='')}", json=body
             )
         else:
             raise ValueError("Must provide one of: file, url, or file_base64")
@@ -238,7 +239,7 @@ class AsyncSteps:
             The current execution status.
         """
         response = await self._client._request(
-            "GET", f"/api/steps-async/status/{execution_id}"
+            "GET", f"/api/steps-async/status/{quote(execution_id, safe='')}"
         )
         status = StepExecutionStatus.model_validate(response.json())
         object.__setattr__(status, "_resource", self)

@@ -35,7 +35,9 @@ class TestConvertRun:
         assert result.data["invoice_number"] == "INV-001"
         assert result.data["total"] == 1500.00
 
-    def test_convert_with_bytes(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_convert_with_bytes(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """Convert document from bytes."""
         mock_api.post("/api/convert").mock(
             return_value=httpx.Response(
@@ -53,7 +55,9 @@ class TestConvertRun:
         assert isinstance(result, ConversionResult)
         assert result.data["field"] == "value"
 
-    def test_convert_with_metadata(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_convert_with_metadata(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """Convert document with metadata."""
         mock_api.post("/api/convert").mock(
             return_value=httpx.Response(
@@ -79,7 +83,9 @@ class TestConvertRun:
 class TestConvertRunAsync:
     """Tests for Convert.run_async() asynchronous conversion."""
 
-    def test_run_async_returns_status(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_run_async_returns_status(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """run_async returns ConversionStatus with conversion_id."""
         mock_api.post("/api/convert-async").mock(
             return_value=httpx.Response(
@@ -106,7 +112,9 @@ class TestConvertRunAsync:
 class TestConvertGetStatus:
     """Tests for Convert.get_status() polling."""
 
-    def test_get_status_processing(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_get_status_processing(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """Get status returns PROCESSING state."""
         mock_api.get("/api/convert-async/status/conv_123").mock(
             return_value=httpx.Response(
@@ -125,7 +133,9 @@ class TestConvertGetStatus:
         assert not status.is_complete()
         assert not status.is_success()
 
-    def test_get_status_success(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_get_status_success(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """Get status returns SUCCESS state with data."""
         mock_api.get("/api/convert-async/status/conv_123").mock(
             return_value=httpx.Response(

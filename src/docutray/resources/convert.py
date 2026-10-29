@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from functools import cached_property
 from typing import TYPE_CHECKING, Any
+from urllib.parse import quote
 
 from .._files import prepare_base64_upload, prepare_file_upload, prepare_url_upload
 from .._types import FileInput
@@ -189,7 +190,7 @@ class Convert:
             ...     print(status.data)
         """
         response = self._client._request(
-            "GET", f"/api/convert-async/status/{conversion_id}"
+            "GET", f"/api/convert-async/status/{quote(conversion_id, safe='')}"
         )
         status = ConversionStatus.model_validate(response.json())
         object.__setattr__(status, "_resource", self)
@@ -351,7 +352,7 @@ class AsyncConvert:
             The current conversion status.
         """
         response = await self._client._request(
-            "GET", f"/api/convert-async/status/{conversion_id}"
+            "GET", f"/api/convert-async/status/{quote(conversion_id, safe='')}"
         )
         status = ConversionStatus.model_validate(response.json())
         object.__setattr__(status, "_resource", self)

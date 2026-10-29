@@ -75,7 +75,12 @@ from .knowledge_base import (
 from .shared import APIResponse, ErrorDetail, PaginatedResponse, Pagination
 
 # Step types
-from .step import StepExecutionStatus, StepExecutionStatusType, StepValidationSummary
+from .step import (
+    StepExecutionStatus,
+    StepExecutionStatusType,
+    StepIdentification,
+    StepValidationSummary,
+)
 
 # Validation types
 from .validation import (
@@ -134,6 +139,7 @@ __all__ = [
     "ValidationWarningInfo",
     # Steps
     "StepExecutionStatus",
+    "StepIdentification",
     "StepValidationSummary",
     # Knowledge Bases
     "KnowledgeBase",

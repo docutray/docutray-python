@@ -49,7 +49,7 @@ class DocumentType(BaseModel):
     """Last update timestamp."""
 
     jsonSchema: dict[str, Any] | None = None
-    """JSON Schema for the document type (returned by GET /api/document-types/{id})."""
+    """JSON Schema for the document type (returned by ``GET /api/document-types/{id}``)."""
 
     promptHints: str | None = None
     """Hints for the OCR extraction prompt."""
@@ -123,10 +123,15 @@ class ValidationResult(BaseModel):
     """Validation warnings summary."""
 
     def is_valid(self) -> bool:
-        """Check if validation passed with no errors."""
+        """Check if validation passed with no errors.
+
+        Uses ``valid`` when the API sends it. Otherwise the data is valid only
+        when the API reported an error ``count`` of zero; a summary without a
+        ``count`` is not treated as valid.
+        """
         if self.valid is not None:
             return self.valid
-        return self.errors.count == 0
+        return "count" in self.errors.model_fields_set and self.errors.count == 0
 
     def has_warnings(self) -> bool:
         """Check if there are any warnings."""

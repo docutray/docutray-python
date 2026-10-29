@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from urllib.parse import quote
 
 import httpx
 
@@ -246,7 +247,7 @@ class ConvertWithRawResponse:
         from .types.convert import ConversionStatus
 
         response = self._convert._client._request(
-            "GET", f"/api/convert-async/status/{conversion_id}"
+            "GET", f"/api/convert-async/status/{quote(conversion_id, safe='')}"
         )
         return RawResponse(
             response,
@@ -403,7 +404,7 @@ class AsyncConvertWithRawResponse:
         from .types.convert import ConversionStatus
 
         response = await self._convert._client._request(
-            "GET", f"/api/convert-async/status/{conversion_id}"
+            "GET", f"/api/convert-async/status/{quote(conversion_id, safe='')}"
         )
         return RawResponse(
             response,
@@ -434,7 +435,8 @@ class IdentifyWithRawResponse:
         url: str | None = None,
         file_base64: str | None = None,
         content_type: str | None = None,
-        document_type_code_options: list[str] | None = None,
+        document_type_code_options: list[str],
+        document_metadata: dict[str, Any] | None = None,
     ) -> RawResponse[IdentificationResult]:
         """Identify a document and return the raw HTTP response.
 
@@ -443,8 +445,9 @@ class IdentifyWithRawResponse:
             url: URL of the document to identify.
             file_base64: Base64-encoded document.
             content_type: Content type of the file.
-            document_type_code_options: List of document type codes to limit
-                identification to.
+            document_type_code_options: Document type codes to choose from. Required
+                by the API; must contain at least one code.
+            document_metadata: Additional metadata to attach to the identification.
 
         Returns:
             RawResponse wrapping the HTTP response.
@@ -456,27 +459,33 @@ class IdentifyWithRawResponse:
         )
         from .types.identify import IdentificationResult
 
+        if not document_type_code_options:
+            raise ValueError(
+                "Must provide document_type_code_options with at least one "
+                "document type code"
+            )
         if file is not None:
             upload = prepare_file_upload(file, content_type=content_type)
             data: dict[str, Any] = {"image_content_type": upload.content_type}
-            if document_type_code_options:
-                data["document_type_code_options"] = json.dumps(
-                    document_type_code_options
-                )
+            data["document_type_code_options"] = json.dumps(document_type_code_options)
+            if document_metadata:
+                data["document_metadata"] = json.dumps(document_metadata)
             response = self._identify._client._request(
                 "POST", "/api/identify", files=upload.files, data=data
             )
         elif url is not None:
             body = prepare_url_upload(url, content_type=content_type)
-            if document_type_code_options:
-                body["document_type_code_options"] = document_type_code_options
+            body["document_type_code_options"] = document_type_code_options
+            if document_metadata:
+                body["document_metadata"] = document_metadata
             response = self._identify._client._request(
                 "POST", "/api/identify", json=body
             )
         elif file_base64 is not None:
             body = prepare_base64_upload(file_base64, content_type=content_type)
-            if document_type_code_options:
-                body["document_type_code_options"] = document_type_code_options
+            body["document_type_code_options"] = document_type_code_options
+            if document_metadata:
+                body["document_metadata"] = document_metadata
             response = self._identify._client._request(
                 "POST", "/api/identify", json=body
             )
@@ -495,7 +504,8 @@ class IdentifyWithRawResponse:
         url: str | None = None,
         file_base64: str | None = None,
         content_type: str | None = None,
-        document_type_code_options: list[str] | None = None,
+        document_type_code_options: list[str],
+        document_metadata: dict[str, Any] | None = None,
     ) -> RawResponse[IdentificationStatus]:
         """Start async identification and return the raw HTTP response.
 
@@ -504,8 +514,9 @@ class IdentifyWithRawResponse:
             url: URL of the document to identify.
             file_base64: Base64-encoded document.
             content_type: Content type of the file.
-            document_type_code_options: List of document type codes to limit
-                identification to.
+            document_type_code_options: Document type codes to choose from. Required
+                by the API; must contain at least one code.
+            document_metadata: Additional metadata to attach to the identification.
 
         Returns:
             RawResponse wrapping the HTTP response.
@@ -517,27 +528,33 @@ class IdentifyWithRawResponse:
         )
         from .types.identify import IdentificationStatus
 
+        if not document_type_code_options:
+            raise ValueError(
+                "Must provide document_type_code_options with at least one "
+                "document type code"
+            )
         if file is not None:
             upload = prepare_file_upload(file, content_type=content_type)
             data: dict[str, Any] = {"image_content_type": upload.content_type}
-            if document_type_code_options:
-                data["document_type_code_options"] = json.dumps(
-                    document_type_code_options
-                )
+            data["document_type_code_options"] = json.dumps(document_type_code_options)
+            if document_metadata:
+                data["document_metadata"] = json.dumps(document_metadata)
             response = self._identify._client._request(
                 "POST", "/api/identify-async", files=upload.files, data=data
             )
         elif url is not None:
             body = prepare_url_upload(url, content_type=content_type)
-            if document_type_code_options:
-                body["document_type_code_options"] = document_type_code_options
+            body["document_type_code_options"] = document_type_code_options
+            if document_metadata:
+                body["document_metadata"] = document_metadata
             response = self._identify._client._request(
                 "POST", "/api/identify-async", json=body
             )
         elif file_base64 is not None:
             body = prepare_base64_upload(file_base64, content_type=content_type)
-            if document_type_code_options:
-                body["document_type_code_options"] = document_type_code_options
+            body["document_type_code_options"] = document_type_code_options
+            if document_metadata:
+                body["document_metadata"] = document_metadata
             response = self._identify._client._request(
                 "POST", "/api/identify-async", json=body
             )
@@ -561,7 +578,7 @@ class IdentifyWithRawResponse:
         from .types.identify import IdentificationStatus
 
         response = self._identify._client._request(
-            "GET", f"/api/identify-async/status/{identification_id}"
+            "GET", f"/api/identify-async/status/{quote(identification_id, safe='')}"
         )
         return RawResponse(
             response,
@@ -587,7 +604,8 @@ class AsyncIdentifyWithRawResponse:
         url: str | None = None,
         file_base64: str | None = None,
         content_type: str | None = None,
-        document_type_code_options: list[str] | None = None,
+        document_type_code_options: list[str],
+        document_metadata: dict[str, Any] | None = None,
     ) -> RawResponse[IdentificationResult]:
         """Identify a document and return the raw HTTP response.
 
@@ -596,8 +614,9 @@ class AsyncIdentifyWithRawResponse:
             url: URL of the document to identify.
             file_base64: Base64-encoded document.
             content_type: Content type of the file.
-            document_type_code_options: List of document type codes to limit
-                identification to.
+            document_type_code_options: Document type codes to choose from. Required
+                by the API; must contain at least one code.
+            document_metadata: Additional metadata to attach to the identification.
 
         Returns:
             RawResponse wrapping the HTTP response.
@@ -609,27 +628,33 @@ class AsyncIdentifyWithRawResponse:
         )
         from .types.identify import IdentificationResult
 
+        if not document_type_code_options:
+            raise ValueError(
+                "Must provide document_type_code_options with at least one "
+                "document type code"
+            )
         if file is not None:
             upload = prepare_file_upload(file, content_type=content_type)
             data: dict[str, Any] = {"image_content_type": upload.content_type}
-            if document_type_code_options:
-                data["document_type_code_options"] = json.dumps(
-                    document_type_code_options
-                )
+            data["document_type_code_options"] = json.dumps(document_type_code_options)
+            if document_metadata:
+                data["document_metadata"] = json.dumps(document_metadata)
             response = await self._identify._client._request(
                 "POST", "/api/identify", files=upload.files, data=data
             )
         elif url is not None:
             body = prepare_url_upload(url, content_type=content_type)
-            if document_type_code_options:
-                body["document_type_code_options"] = document_type_code_options
+            body["document_type_code_options"] = document_type_code_options
+            if document_metadata:
+                body["document_metadata"] = document_metadata
             response = await self._identify._client._request(
                 "POST", "/api/identify", json=body
             )
         elif file_base64 is not None:
             body = prepare_base64_upload(file_base64, content_type=content_type)
-            if document_type_code_options:
-                body["document_type_code_options"] = document_type_code_options
+            body["document_type_code_options"] = document_type_code_options
+            if document_metadata:
+                body["document_metadata"] = document_metadata
             response = await self._identify._client._request(
                 "POST", "/api/identify", json=body
             )
@@ -648,7 +673,8 @@ class AsyncIdentifyWithRawResponse:
         url: str | None = None,
         file_base64: str | None = None,
         content_type: str | None = None,
-        document_type_code_options: list[str] | None = None,
+        document_type_code_options: list[str],
+        document_metadata: dict[str, Any] | None = None,
     ) -> RawResponse[IdentificationStatus]:
         """Start async identification and return the raw HTTP response.
 
@@ -657,8 +683,9 @@ class AsyncIdentifyWithRawResponse:
             url: URL of the document to identify.
             file_base64: Base64-encoded document.
             content_type: Content type of the file.
-            document_type_code_options: List of document type codes to limit
-                identification to.
+            document_type_code_options: Document type codes to choose from. Required
+                by the API; must contain at least one code.
+            document_metadata: Additional metadata to attach to the identification.
 
         Returns:
             RawResponse wrapping the HTTP response.
@@ -670,27 +697,33 @@ class AsyncIdentifyWithRawResponse:
         )
         from .types.identify import IdentificationStatus
 
+        if not document_type_code_options:
+            raise ValueError(
+                "Must provide document_type_code_options with at least one "
+                "document type code"
+            )
         if file is not None:
             upload = prepare_file_upload(file, content_type=content_type)
             data: dict[str, Any] = {"image_content_type": upload.content_type}
-            if document_type_code_options:
-                data["document_type_code_options"] = json.dumps(
-                    document_type_code_options
-                )
+            data["document_type_code_options"] = json.dumps(document_type_code_options)
+            if document_metadata:
+                data["document_metadata"] = json.dumps(document_metadata)
             response = await self._identify._client._request(
                 "POST", "/api/identify-async", files=upload.files, data=data
             )
         elif url is not None:
             body = prepare_url_upload(url, content_type=content_type)
-            if document_type_code_options:
-                body["document_type_code_options"] = document_type_code_options
+            body["document_type_code_options"] = document_type_code_options
+            if document_metadata:
+                body["document_metadata"] = document_metadata
             response = await self._identify._client._request(
                 "POST", "/api/identify-async", json=body
             )
         elif file_base64 is not None:
             body = prepare_base64_upload(file_base64, content_type=content_type)
-            if document_type_code_options:
-                body["document_type_code_options"] = document_type_code_options
+            body["document_type_code_options"] = document_type_code_options
+            if document_metadata:
+                body["document_metadata"] = document_metadata
             response = await self._identify._client._request(
                 "POST", "/api/identify-async", json=body
             )
@@ -716,7 +749,7 @@ class AsyncIdentifyWithRawResponse:
         from .types.identify import IdentificationStatus
 
         response = await self._identify._client._request(
-            "GET", f"/api/identify-async/status/{identification_id}"
+            "GET", f"/api/identify-async/status/{quote(identification_id, safe='')}"
         )
         return RawResponse(
             response,
@@ -799,7 +832,7 @@ class DocumentTypesWithRawResponse:
         from .types.document_type import DocumentType
 
         response = self._document_types._client._request(
-            "GET", f"/api/document-types/{type_id}"
+            "GET", f"/api/document-types/{quote(type_id, safe='')}"
         )
         return RawResponse(
             response,
@@ -830,7 +863,7 @@ class DocumentTypesWithRawResponse:
 
         response = self._document_types._client._request(
             "POST",
-            f"/api/document-types/{type_id}/validate",
+            f"/api/document-types/{quote(type_id, safe='')}/validate",
             json=_validate_body(data, dsl_rules),
         )
         return RawResponse(
@@ -963,7 +996,7 @@ class DocumentTypesWithRawResponse:
 
         response = self._document_types._client._request(
             "PUT",
-            f"/api/document-types/{type_id}",
+            f"/api/document-types/{quote(type_id, safe='')}",
             json=body,
         )
         return RawResponse(
@@ -1042,7 +1075,7 @@ class AsyncDocumentTypesWithRawResponse:
         from .types.document_type import DocumentType
 
         response = await self._document_types._client._request(
-            "GET", f"/api/document-types/{type_id}"
+            "GET", f"/api/document-types/{quote(type_id, safe='')}"
         )
         return RawResponse(
             response,
@@ -1073,7 +1106,7 @@ class AsyncDocumentTypesWithRawResponse:
 
         response = await self._document_types._client._request(
             "POST",
-            f"/api/document-types/{type_id}/validate",
+            f"/api/document-types/{quote(type_id, safe='')}/validate",
             json=_validate_body(data, dsl_rules),
         )
         return RawResponse(
@@ -1206,7 +1239,7 @@ class AsyncDocumentTypesWithRawResponse:
 
         response = await self._document_types._client._request(
             "PUT",
-            f"/api/document-types/{type_id}",
+            f"/api/document-types/{quote(type_id, safe='')}",
             json=body,
         )
         return RawResponse(
@@ -1269,7 +1302,7 @@ class StepsWithRawResponse:
                 data["input_data"] = json.dumps(input_data)
             response = self._steps._client._request(
                 "POST",
-                f"/api/steps-async/{step_id}",
+                f"/api/steps-async/{quote(step_id, safe='')}",
                 files=upload.files,
                 data=data if data else None,
             )
@@ -1278,14 +1311,14 @@ class StepsWithRawResponse:
             if input_data:
                 body["input_data"] = input_data
             response = self._steps._client._request(
-                "POST", f"/api/steps-async/{step_id}", json=body
+                "POST", f"/api/steps-async/{quote(step_id, safe='')}", json=body
             )
         elif file_base64 is not None:
             body = prepare_base64_upload(file_base64, content_type=content_type)
             if input_data:
                 body["input_data"] = input_data
             response = self._steps._client._request(
-                "POST", f"/api/steps-async/{step_id}", json=body
+                "POST", f"/api/steps-async/{quote(step_id, safe='')}", json=body
             )
         else:
             raise ValueError("Must provide one of: file, url, or file_base64")
@@ -1307,7 +1340,7 @@ class StepsWithRawResponse:
         from .types.step import StepExecutionStatus
 
         response = self._steps._client._request(
-            "GET", f"/api/steps-async/status/{execution_id}"
+            "GET", f"/api/steps-async/status/{quote(execution_id, safe='')}"
         )
         return RawResponse(
             response,
@@ -1364,7 +1397,7 @@ class AsyncStepsWithRawResponse:
                 data["input_data"] = json.dumps(input_data)
             response = await self._steps._client._request(
                 "POST",
-                f"/api/steps-async/{step_id}",
+                f"/api/steps-async/{quote(step_id, safe='')}",
                 files=upload.files,
                 data=data if data else None,
             )
@@ -1373,14 +1406,14 @@ class AsyncStepsWithRawResponse:
             if input_data:
                 body["input_data"] = input_data
             response = await self._steps._client._request(
-                "POST", f"/api/steps-async/{step_id}", json=body
+                "POST", f"/api/steps-async/{quote(step_id, safe='')}", json=body
             )
         elif file_base64 is not None:
             body = prepare_base64_upload(file_base64, content_type=content_type)
             if input_data:
                 body["input_data"] = input_data
             response = await self._steps._client._request(
-                "POST", f"/api/steps-async/{step_id}", json=body
+                "POST", f"/api/steps-async/{quote(step_id, safe='')}", json=body
             )
         else:
             raise ValueError("Must provide one of: file, url, or file_base64")
@@ -1402,7 +1435,7 @@ class AsyncStepsWithRawResponse:
         from .types.step import StepExecutionStatus
 
         response = await self._steps._client._request(
-            "GET", f"/api/steps-async/status/{execution_id}"
+            "GET", f"/api/steps-async/status/{quote(execution_id, safe='')}"
         )
         return RawResponse(
             response,
@@ -1491,7 +1524,7 @@ class KnowledgeBasesWithRawResponse:
         from .types.knowledge_base import KnowledgeBase
 
         response = self._knowledge_bases._client._request(
-            "GET", f"/api/knowledge-bases/{knowledge_base_id}"
+            "GET", f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}"
         )
         return RawResponse(
             response,
@@ -1535,7 +1568,7 @@ class KnowledgeBasesWithRawResponse:
 
         response = self._knowledge_bases._client._request(
             "POST",
-            f"/api/knowledge-bases/{knowledge_base_id}/search",
+            f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}/search",
             json=body,
         )
 
@@ -1564,12 +1597,19 @@ class KnowledgeBasesWithRawResponse:
         knowledge_base_id: str,
         *,
         regenerate_embeddings: bool | None = None,
+        force: bool | None = None,
+        max_retries: int = 0,
     ) -> RawResponse[SyncResult]:
         """Sync a knowledge base and return the raw HTTP response.
 
         Args:
             knowledge_base_id: The knowledge base ID.
-            regenerate_embeddings: Whether to regenerate all embeddings.
+            regenerate_embeddings: Whether to regenerate existing embeddings.
+            force: Force regeneration of all embeddings. The server defaults to ``False``.
+            max_retries: Retries for this request. Defaults to ``0``: a timed-out
+                sync may still be running on the server, and each retry starts the
+                whole sync again (and is billed). For large knowledge bases, create
+                the client with a larger ``timeout`` instead of retrying.
 
         Returns:
             RawResponse wrapping the HTTP response.
@@ -1579,11 +1619,14 @@ class KnowledgeBasesWithRawResponse:
         body: dict[str, Any] = {}
         if regenerate_embeddings is not None:
             body["regenerateEmbeddings"] = regenerate_embeddings
+        if force is not None:
+            body["force"] = force
 
         response = self._knowledge_bases._client._request(
             "POST",
-            f"/api/knowledge-bases/{knowledge_base_id}/sync",
+            f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}/sync",
             json=body if body else None,
+            max_retries=max_retries,
         )
         return RawResponse(
             response,
@@ -1667,7 +1710,7 @@ class AsyncKnowledgeBasesWithRawResponse:
         from .types.knowledge_base import KnowledgeBase
 
         response = await self._knowledge_bases._client._request(
-            "GET", f"/api/knowledge-bases/{knowledge_base_id}"
+            "GET", f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}"
         )
         return RawResponse(
             response,
@@ -1711,7 +1754,7 @@ class AsyncKnowledgeBasesWithRawResponse:
 
         response = await self._knowledge_bases._client._request(
             "POST",
-            f"/api/knowledge-bases/{knowledge_base_id}/search",
+            f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}/search",
             json=body,
         )
 
@@ -1740,12 +1783,19 @@ class AsyncKnowledgeBasesWithRawResponse:
         knowledge_base_id: str,
         *,
         regenerate_embeddings: bool | None = None,
+        force: bool | None = None,
+        max_retries: int = 0,
     ) -> RawResponse[SyncResult]:
         """Sync a knowledge base and return the raw HTTP response.
 
         Args:
             knowledge_base_id: The knowledge base ID.
-            regenerate_embeddings: Whether to regenerate all embeddings.
+            regenerate_embeddings: Whether to regenerate existing embeddings.
+            force: Force regeneration of all embeddings. The server defaults to ``False``.
+            max_retries: Retries for this request. Defaults to ``0``: a timed-out
+                sync may still be running on the server, and each retry starts the
+                whole sync again (and is billed). For large knowledge bases, create
+                the client with a larger ``timeout`` instead of retrying.
 
         Returns:
             RawResponse wrapping the HTTP response.
@@ -1755,11 +1805,14 @@ class AsyncKnowledgeBasesWithRawResponse:
         body: dict[str, Any] = {}
         if regenerate_embeddings is not None:
             body["regenerateEmbeddings"] = regenerate_embeddings
+        if force is not None:
+            body["force"] = force
 
         response = await self._knowledge_bases._client._request(
             "POST",
-            f"/api/knowledge-bases/{knowledge_base_id}/sync",
+            f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}/sync",
             json=body if body else None,
+            max_retries=max_retries,
         )
         return RawResponse(
             response,

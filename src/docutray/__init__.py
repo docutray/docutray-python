@@ -18,7 +18,9 @@ Example:
     >>> print(result.data)
     >>>
     >>> # Identify document type
-    >>> ident = client.identify.run(file=Path("unknown.pdf"))
+    >>> ident = client.identify.run(
+    ...     file=Path("unknown.pdf"), document_type_code_options=["invoice", "receipt"]
+    ... )
     >>> print(f"Type: {ident.document_type.name}")
 """
 

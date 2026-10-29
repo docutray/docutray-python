@@ -68,6 +68,9 @@ class IdentificationStatus(BaseModel):
     original_filename: str | None = None
     """Original filename of the processed file."""
 
+    document_type_code_options: list[str] | None = None
+    """Document type codes the identification chose from."""
+
     document_type: DocumentTypeMatch | None = None
     """Primary identified document type (only present when status is SUCCESS)."""
 
@@ -108,14 +111,18 @@ class IdentificationStatus(BaseModel):
                 Called with the current status after each poll for progress tracking.
 
         Returns:
-            The final identification status with results or error.
+            The final identification status with results or error. A failed
+            identification is returned with ``status == "ERROR"`` (check
+            ``is_error()``); it is not raised as an exception.
 
         Raises:
             APITimeoutError: If the identification doesn't complete within timeout.
             ValueError: If this status wasn't created by run_async().
 
         Example:
-            >>> status = client.identify.run_async(file=path)
+            >>> status = client.identify.run_async(
+            ...     file=path, document_type_code_options=["invoice", "receipt"]
+            ... )
             >>> final = status.wait(timeout=60, on_status=lambda s: print(s.status))
             >>> if final.is_success():
             ...     print(final.document_type.name)
@@ -148,7 +155,9 @@ class IdentificationStatus(BaseModel):
                 Can be sync or async. Called with the current status after each poll.
 
         Returns:
-            The final identification status with results or error.
+            The final identification status with results or error. A failed
+            identification is returned with ``status == "ERROR"`` (check
+            ``is_error()``); it is not raised as an exception.
 
         Raises:
             APITimeoutError: If the identification doesn't complete within timeout.

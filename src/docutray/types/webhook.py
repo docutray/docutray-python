@@ -18,7 +18,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict
 
 from .identify import DocumentTypeMatch
-from .step import StepValidationSummary
+from .step import StepIdentification, StepValidationSummary
 from .validation import ConversionValidation
 
 WebhookEventType = Literal[
@@ -123,7 +123,7 @@ class StepWebhookPayload(BaseModel):
     data: dict[str, Any] | None = None
     """Extracted data (``STEP_COMPLETED`` only)."""
 
-    identification: dict[str, Any] | None = None
+    identification: StepIdentification | None = None
     """Identification result (``STEP_COMPLETED`` only)."""
 
     validation: StepValidationSummary | None = None

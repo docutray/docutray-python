@@ -18,7 +18,9 @@ from docutray import (
 class TestKnowledgeBasesList:
     """Tests for KnowledgeBases.list()."""
 
-    def test_list_knowledge_bases(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_list_knowledge_bases(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """List all knowledge bases."""
         mock_api.get("/api/knowledge-bases").mock(
             return_value=httpx.Response(
@@ -78,7 +80,9 @@ class TestKnowledgeBasesList:
 class TestKnowledgeBasesGet:
     """Tests for KnowledgeBases.get()."""
 
-    def test_get_knowledge_base(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_get_knowledge_base(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """Get a specific knowledge base."""
         mock_api.get("/api/knowledge-bases/kb_123").mock(
             return_value=httpx.Response(
@@ -107,7 +111,9 @@ class TestKnowledgeBasesGet:
 class TestKnowledgeBasesCreate:
     """Tests for KnowledgeBases.create()."""
 
-    def test_create_knowledge_base(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_create_knowledge_base(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """Create a new knowledge base."""
         mock_api.post("/api/knowledge-bases").mock(
             return_value=httpx.Response(
@@ -137,7 +143,9 @@ class TestKnowledgeBasesCreate:
 class TestKnowledgeBasesUpdate:
     """Tests for KnowledgeBases.update()."""
 
-    def test_update_knowledge_base(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_update_knowledge_base(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """Update a knowledge base."""
         mock_api.put("/api/knowledge-bases/kb_123").mock(
             return_value=httpx.Response(
@@ -164,7 +172,9 @@ class TestKnowledgeBasesUpdate:
 class TestKnowledgeBasesDelete:
     """Tests for KnowledgeBases.delete()."""
 
-    def test_delete_knowledge_base(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_delete_knowledge_base(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """Delete a knowledge base."""
         mock_api.delete("/api/knowledge-bases/kb_123").mock(
             return_value=httpx.Response(200, json={"success": True})
@@ -326,7 +336,9 @@ class TestKnowledgeBasesSearch:
         assert results.data[0].similarity == 0.92
         assert results.data[0].document.content["title"] == "Authentication Guide"
 
-    def test_search_with_threshold(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_search_with_threshold(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """Search with similarity threshold."""
         route = mock_api.post("/api/knowledge-bases/kb_123/search").mock(
             return_value=httpx.Response(
@@ -373,7 +385,9 @@ class TestKnowledgeBasesSync:
         assert result.status == "started"
         assert result.syncId == "sync_abc"
 
-    def test_sync_with_regenerate(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_sync_with_regenerate(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """Sync with embedding regeneration."""
         route = mock_api.post("/api/knowledge-bases/kb_123/sync").mock(
             return_value=httpx.Response(

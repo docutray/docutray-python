@@ -21,16 +21,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `field_locations` (`FieldLocations`) on `ConversionResult` / `ConversionStatus` for document types with bounding boxes enabled.
 - Typed `DocumentType` fields `promptHints`, `identifyPromptHints`, `conversionMode`, `keepPropertyOrdering`, `boundingBoxesEnabled` and `conversionSpec`; `bounding_boxes_enabled` and `conversion_spec` arguments on `create()` / `update()` (`conversion_spec=None` clears the spec in `update()`).
 - `NOT_GIVEN` / `NotGiven` sentinel for arguments where `None` has a meaning.
+- API parameters and fields the SDK did not expose (#27):
+  - `document_metadata` on `client.identify.run()` / `run_async()` (sync, async and raw).
+  - `schema` and `indexing_preferences` on `client.knowledge_bases.update()`.
+  - `force` on `client.knowledge_bases.sync()`.
+  - `document_id` filter on `client.knowledge_bases.documents(kb_id).list()` (case-insensitive substring match, as the API applies it).
+  - Typed `ConversionStatus.document_metadata`, `IdentificationStatus.document_type_code_options`, and `StepExecutionStatus.step_name`, `identification` (`StepIdentification`) and `document_metadata`. `StepWebhookPayload.identification` uses the same `StepIdentification` model.
+  - `KnowledgeBaseDocument.documentId` typed as `str`: it is the ID that `documents(kb_id).get()` / `update()` / `delete()` take.
+- `client.document_types.get_by_code(code)` (sync and async): resolves an exact `codeType` to its document type across all pages, raising `NotFoundError` when no accessible type has that code.
+- CI workflow running ruff, mypy and pytest (Python 3.10 to 3.13) on pull requests and pushes to `main` (#25).
 
 ### Changed
 
+- **Breaking:** `document_type_code_options` is now required on `client.identify.run()` / `run_async()` (sync, async and raw), as in the API and docutray-node 0.2.0 (#29). Omitting it raises `TypeError`; passing `None` or an empty list raises `ValueError` before any request is sent. The API always rejected requests without it (`400 Validation error`), so such calls already failed at runtime.
+- **Breaking:** `client.knowledge_bases.documents(kb_id).create()` now requires `document_id`. The API always rejected documents without it (400), so code that omitted it already failed at runtime; it now fails with `TypeError` before the request.
+- **Breaking:** `StepExecutionStatus.identification` used to be a plain dict (passed through by `extra="allow"`) and is now a `StepIdentification` model, so `status.identification["documentTypeCode"]` raises `TypeError`. Use `status.identification.documentTypeCode` or `.model_dump()`. (`StepWebhookPayload` is new in this release.)
+- `ValidationResult.is_valid()` without a `valid` flag only returns `True` when the API sent an error `count` of zero; an empty `errors` summary no longer reads as valid.
+- `StepExecutionStatus.execution_id` is read from `execution_id` first, then `id` and the deprecated `conversion_id`, so it keeps working when the API drops `conversion_id`.
+- `wait()` / `wait_async()` docstrings state that a failed operation is returned with `status == "ERROR"`, not raised.
 - **Breaking:** `ConversionResult.validation`, `ConversionResult.field_locations`, `ConversionStatus.validation`, `ConversionStatus.field_locations` and `StepExecutionStatus.validation` used to be plain dicts (passed through by `extra="allow"`). They are now Pydantic models, so dict access such as `result.validation["valid"]` raises `TypeError`. To migrate, use attribute access (`result.validation.valid`, `result.field_locations.fields`, `status.validation.errors.count`) or call `.model_dump()` to get the previous dict. `result.validation` can be a `ValidationOutcome`, a `ValidationSystemFailure` (`status == "error"`), a `dict` (unrecognized shape) or `None`, so check its type before reading `.valid`.
-- Validation models are lenient so off-spec values never break parsing of a conversion, status, document type or webhook: `ValidationIssue.field` accepts `None`; `code` and `message` default to `""`; `severity` and `source` keep unknown values as plain strings; `ValidationOutcome.errors`/`warnings` and `StepValidationSummary.errors`/`warnings` (including `count`/`messages`) default to empty; `DocumentType.conversionMode` keeps unknown modes as plain strings.
+- Validation models are lenient so off-spec values never break parsing of a conversion, status, document type or webhook: `ValidationIssue.field` accepts `None` and normalizes list paths (`["items", 0, "total"]` → `items[0].total`) and other non-string values to strings; `code` and `message` default to `""`, read `null` as `""` and other non-string values as strings; `severity`, `source` and `rule` also read non-string values as strings; `details` accepts any JSON value; `severity` and `source` keep unknown values as plain strings; `ValidationOutcome.errors`/`warnings` and `StepValidationSummary.errors`/`warnings` (including `count`/`messages`) default to empty; `DocumentType.conversionMode` keeps unknown modes as plain strings. One malformed issue no longer turns the whole `ValidationOutcome` into a `dict`.
 - `DSLValidationError` is raised only when every entry of the 400 response's `errors` has an integer `line` and `column` and a string `message`. Any other 400 stays a plain `BadRequestError`.
 
 ### Fixed
 
-- Docs: document types are fetched, updated and validated by internal `id`, not `codeType` (#21). The README resolves the id from the full (org-prefixed) `codeType` across all pages with `list().auto_paging_iter()`, and explains the camelCase model fields. The `type_id` docstrings say it is the internal id, examples use cuid-shaped ids, and the `search` docstring now says it matches name, `codeType` and description.
+- `client.knowledge_bases.sync()` (sync, async and raw) is no longer retried by default (`max_retries=0`), matching docutray-node 0.2.0. A timeout used to resend the request while the first sync could still be running on the server, and every attempt is billed. Pass `max_retries=` to opt in per call; for large knowledge bases use a client with a larger `timeout`.
+- Ids are percent-encoded as a single path segment (`urllib.parse.quote(id, safe="")`) in every resource path (document types, knowledge bases and their documents, steps and async status endpoints), matching docutray-node. An id containing `/`, `?` or `#` can no longer change the requested route.
+- Docs: document types are fetched, updated and validated by internal `id`, not `codeType` (#21). The README resolves the id from the full (org-prefixed) `codeType` with the new `get_by_code()`, and explains the camelCase model fields. The `type_id` docstrings say it is the internal id, examples use cuid-shaped ids, and the `search` docstring now says it matches name, `codeType` and description.
+- README: knowledge base documents are fetched, updated and deleted by their `documentId` (given on create), not by `id`; the `document_id` docstrings say so.
+- Docstrings quote API paths with `{id}` placeholders in backticks.
 - API errors whose body is `{"error": "<message>"}` now use that message as `APIError.message` instead of the raw response text.
 
 ## [0.2.1] - 2026-05-07

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from functools import cached_property
 from typing import TYPE_CHECKING, Any
+from urllib.parse import quote
 
 from .._pagination import AsyncPage, Page
 from ..types.knowledge_base import (
@@ -38,6 +39,7 @@ class KnowledgeBaseDocuments:
         *,
         limit: int | None = None,
         search: str | None = None,
+        document_id: str | None = None,
     ) -> Page[KnowledgeBaseDocument]:
         """Fetch a specific page of documents."""
         params: dict[str, Any] = {"page": page_num}
@@ -45,10 +47,12 @@ class KnowledgeBaseDocuments:
             params["limit"] = limit
         if search is not None:
             params["search"] = search
+        if document_id is not None:
+            params["documentId"] = document_id
 
         response = self._client._request(
             "GET",
-            f"/api/knowledge-bases/{self._knowledge_base_id}/documents",
+            f"/api/knowledge-bases/{quote(self._knowledge_base_id, safe='')}/documents",
             params=params,
         )
         data = response.json()
@@ -61,7 +65,9 @@ class KnowledgeBaseDocuments:
         return Page(
             data=items,
             pagination=pagination,
-            fetch_page=lambda p: self._fetch_page(p, limit=limit, search=search),
+            fetch_page=lambda p: self._fetch_page(
+                p, limit=limit, search=search, document_id=document_id
+            ),
         )
 
     def list(
@@ -70,6 +76,7 @@ class KnowledgeBaseDocuments:
         page: int | None = None,
         limit: int | None = None,
         search: str | None = None,
+        document_id: str | None = None,
     ) -> Page[KnowledgeBaseDocument]:
         """List documents in the knowledge base.
 
@@ -77,6 +84,8 @@ class KnowledgeBaseDocuments:
             page: Page number (1-indexed). Defaults to 1.
             limit: Number of items per page.
             search: Search term to filter documents.
+            document_id: Only return documents whose ``documentId`` contains this
+                value (case-insensitive). Use ``get()`` for an exact match.
 
         Returns:
             A Page of documents with pagination support.
@@ -86,13 +95,15 @@ class KnowledgeBaseDocuments:
             >>> for doc in docs.auto_paging_iter():
             ...     print(doc.id)
         """
-        return self._fetch_page(page or 1, limit=limit, search=search)
+        return self._fetch_page(
+            page or 1, limit=limit, search=search, document_id=document_id
+        )
 
     def get(self, document_id: str) -> KnowledgeBaseDocument:
         """Get a specific document by ID.
 
         Args:
-            document_id: The document ID.
+            document_id: The document's ``documentId`` (the ID given on create, not ``id``).
 
         Returns:
             The document details.
@@ -106,7 +117,7 @@ class KnowledgeBaseDocuments:
         """
         response = self._client._request(
             "GET",
-            f"/api/knowledge-bases/{self._knowledge_base_id}/documents/{document_id}",
+            f"/api/knowledge-bases/{quote(self._knowledge_base_id, safe='')}/documents/{quote(document_id, safe='')}",
         )
         return KnowledgeBaseDocument.model_validate(
             response.json().get("data", response.json())
@@ -115,16 +126,18 @@ class KnowledgeBaseDocuments:
     def create(
         self,
         *,
+        document_id: str,
         content: dict[str, Any],
-        document_id: str | None = None,
         metadata: dict[str, Any] | None = None,
         generate_embedding: bool = True,
     ) -> KnowledgeBaseDocument:
         """Add a document to the knowledge base.
 
         Args:
+            document_id: Your own unique ID for the document (letters, numbers,
+                ``-`` and ``_``; up to 100 characters). Required by the API; it is
+                the ID that ``get()``, ``update()`` and ``delete()`` take.
             content: Document content matching the knowledge base schema.
-            document_id: Optional external document reference ID.
             metadata: Optional additional metadata.
             generate_embedding: Whether to automatically generate embedding. Defaults to True.
 
@@ -133,23 +146,23 @@ class KnowledgeBaseDocuments:
 
         Example:
             >>> doc = client.knowledge_bases.documents("kb_123").create(
+            ...     document_id="user-guide",
             ...     content={"title": "User Guide", "text": "..."},
             ...     metadata={"source": "manual"}
             ... )
             >>> print(f"Created: {doc.id}")
         """
         body: dict[str, Any] = {
+            "documentId": document_id,
             "content": content,
             "generateEmbedding": generate_embedding,
         }
-        if document_id is not None:
-            body["documentId"] = document_id
         if metadata is not None:
             body["metadata"] = metadata
 
         response = self._client._request(
             "POST",
-            f"/api/knowledge-bases/{self._knowledge_base_id}/documents",
+            f"/api/knowledge-bases/{quote(self._knowledge_base_id, safe='')}/documents",
             json=body,
         )
         return KnowledgeBaseDocument.model_validate(
@@ -167,7 +180,7 @@ class KnowledgeBaseDocuments:
         """Update a document in the knowledge base.
 
         Args:
-            document_id: The document ID to update.
+            document_id: The document's ``documentId`` (the ID given on create, not ``id``) to update.
             content: Updated document content.
             metadata: Updated metadata.
             regenerate_embedding: Whether to force embedding regeneration. Defaults to False.
@@ -189,7 +202,7 @@ class KnowledgeBaseDocuments:
 
         response = self._client._request(
             "PUT",
-            f"/api/knowledge-bases/{self._knowledge_base_id}/documents/{document_id}",
+            f"/api/knowledge-bases/{quote(self._knowledge_base_id, safe='')}/documents/{quote(document_id, safe='')}",
             json=body,
         )
         return KnowledgeBaseDocument.model_validate(
@@ -200,7 +213,7 @@ class KnowledgeBaseDocuments:
         """Delete a document from the knowledge base.
 
         Args:
-            document_id: The document ID to delete.
+            document_id: The document's ``documentId`` (the ID given on create, not ``id``) to delete.
 
         Raises:
             NotFoundError: If the document doesn't exist.
@@ -210,7 +223,7 @@ class KnowledgeBaseDocuments:
         """
         self._client._request(
             "DELETE",
-            f"/api/knowledge-bases/{self._knowledge_base_id}/documents/{document_id}",
+            f"/api/knowledge-bases/{quote(self._knowledge_base_id, safe='')}/documents/{quote(document_id, safe='')}",
         )
 
 
@@ -233,6 +246,7 @@ class AsyncKnowledgeBaseDocuments:
         *,
         limit: int | None = None,
         search: str | None = None,
+        document_id: str | None = None,
     ) -> AsyncPage[KnowledgeBaseDocument]:
         """Fetch a specific page of documents."""
         params: dict[str, Any] = {"page": page_num}
@@ -240,10 +254,12 @@ class AsyncKnowledgeBaseDocuments:
             params["limit"] = limit
         if search is not None:
             params["search"] = search
+        if document_id is not None:
+            params["documentId"] = document_id
 
         response = await self._client._request(
             "GET",
-            f"/api/knowledge-bases/{self._knowledge_base_id}/documents",
+            f"/api/knowledge-bases/{quote(self._knowledge_base_id, safe='')}/documents",
             params=params,
         )
         data = response.json()
@@ -256,7 +272,9 @@ class AsyncKnowledgeBaseDocuments:
         return AsyncPage(
             data=items,
             pagination=pagination,
-            fetch_page=lambda p: self._fetch_page(p, limit=limit, search=search),
+            fetch_page=lambda p: self._fetch_page(
+                p, limit=limit, search=search, document_id=document_id
+            ),
         )
 
     async def list(
@@ -265,6 +283,7 @@ class AsyncKnowledgeBaseDocuments:
         page: int | None = None,
         limit: int | None = None,
         search: str | None = None,
+        document_id: str | None = None,
     ) -> AsyncPage[KnowledgeBaseDocument]:
         """List documents in the knowledge base.
 
@@ -272,24 +291,28 @@ class AsyncKnowledgeBaseDocuments:
             page: Page number (1-indexed). Defaults to 1.
             limit: Number of items per page.
             search: Search term to filter documents.
+            document_id: Only return documents whose ``documentId`` contains this
+                value (case-insensitive). Use ``get()`` for an exact match.
 
         Returns:
             An AsyncPage of documents with pagination support.
         """
-        return await self._fetch_page(page or 1, limit=limit, search=search)
+        return await self._fetch_page(
+            page or 1, limit=limit, search=search, document_id=document_id
+        )
 
     async def get(self, document_id: str) -> KnowledgeBaseDocument:
         """Get a specific document by ID.
 
         Args:
-            document_id: The document ID.
+            document_id: The document's ``documentId`` (the ID given on create, not ``id``).
 
         Returns:
             The document details.
         """
         response = await self._client._request(
             "GET",
-            f"/api/knowledge-bases/{self._knowledge_base_id}/documents/{document_id}",
+            f"/api/knowledge-bases/{quote(self._knowledge_base_id, safe='')}/documents/{quote(document_id, safe='')}",
         )
         return KnowledgeBaseDocument.model_validate(
             response.json().get("data", response.json())
@@ -298,16 +321,18 @@ class AsyncKnowledgeBaseDocuments:
     async def create(
         self,
         *,
+        document_id: str,
         content: dict[str, Any],
-        document_id: str | None = None,
         metadata: dict[str, Any] | None = None,
         generate_embedding: bool = True,
     ) -> KnowledgeBaseDocument:
         """Add a document to the knowledge base.
 
         Args:
+            document_id: Your own unique ID for the document (letters, numbers,
+                ``-`` and ``_``; up to 100 characters). Required by the API; it is
+                the ID that ``get()``, ``update()`` and ``delete()`` take.
             content: Document content matching the knowledge base schema.
-            document_id: Optional external document reference ID.
             metadata: Optional additional metadata.
             generate_embedding: Whether to automatically generate embedding. Defaults to True.
 
@@ -315,17 +340,16 @@ class AsyncKnowledgeBaseDocuments:
             The created document.
         """
         body: dict[str, Any] = {
+            "documentId": document_id,
             "content": content,
             "generateEmbedding": generate_embedding,
         }
-        if document_id is not None:
-            body["documentId"] = document_id
         if metadata is not None:
             body["metadata"] = metadata
 
         response = await self._client._request(
             "POST",
-            f"/api/knowledge-bases/{self._knowledge_base_id}/documents",
+            f"/api/knowledge-bases/{quote(self._knowledge_base_id, safe='')}/documents",
             json=body,
         )
         return KnowledgeBaseDocument.model_validate(
@@ -343,7 +367,7 @@ class AsyncKnowledgeBaseDocuments:
         """Update a document in the knowledge base.
 
         Args:
-            document_id: The document ID to update.
+            document_id: The document's ``documentId`` (the ID given on create, not ``id``) to update.
             content: Updated document content.
             metadata: Updated metadata.
             regenerate_embedding: Whether to force embedding regeneration. Defaults to False.
@@ -359,7 +383,7 @@ class AsyncKnowledgeBaseDocuments:
 
         response = await self._client._request(
             "PUT",
-            f"/api/knowledge-bases/{self._knowledge_base_id}/documents/{document_id}",
+            f"/api/knowledge-bases/{quote(self._knowledge_base_id, safe='')}/documents/{quote(document_id, safe='')}",
             json=body,
         )
         return KnowledgeBaseDocument.model_validate(
@@ -370,11 +394,11 @@ class AsyncKnowledgeBaseDocuments:
         """Delete a document from the knowledge base.
 
         Args:
-            document_id: The document ID to delete.
+            document_id: The document's ``documentId`` (the ID given on create, not ``id``) to delete.
         """
         await self._client._request(
             "DELETE",
-            f"/api/knowledge-bases/{self._knowledge_base_id}/documents/{document_id}",
+            f"/api/knowledge-bases/{quote(self._knowledge_base_id, safe='')}/documents/{quote(document_id, safe='')}",
         )
 
 
@@ -476,7 +500,7 @@ class KnowledgeBases:
             >>> print(f"{kb.name}: {kb.description}")
         """
         response = self._client._request(
-            "GET", f"/api/knowledge-bases/{knowledge_base_id}"
+            "GET", f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}"
         )
         return KnowledgeBase.model_validate(
             response.json().get("data", response.json())
@@ -531,6 +555,8 @@ class KnowledgeBases:
         *,
         name: str | None = None,
         description: str | None = None,
+        schema: dict[str, Any] | None = None,
+        indexing_preferences: dict[str, Any] | None = None,
         is_active: bool | None = None,
     ) -> KnowledgeBase:
         """Update a knowledge base.
@@ -539,6 +565,8 @@ class KnowledgeBases:
             knowledge_base_id: The knowledge base ID to update.
             name: New name for the knowledge base.
             description: New description.
+            schema: Updated JSON Schema for the knowledge base's documents.
+            indexing_preferences: Updated indexing preferences.
             is_active: Active status.
 
         Returns:
@@ -555,12 +583,16 @@ class KnowledgeBases:
             body["name"] = name
         if description is not None:
             body["description"] = description
+        if schema is not None:
+            body["schema"] = schema
+        if indexing_preferences is not None:
+            body["indexingPreferences"] = indexing_preferences
         if is_active is not None:
             body["isActive"] = is_active
 
         response = self._client._request(
             "PUT",
-            f"/api/knowledge-bases/{knowledge_base_id}",
+            f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}",
             json=body,
         )
         return KnowledgeBase.model_validate(
@@ -579,7 +611,9 @@ class KnowledgeBases:
         Example:
             >>> client.knowledge_bases.delete("kb_123")
         """
-        self._client._request("DELETE", f"/api/knowledge-bases/{knowledge_base_id}")
+        self._client._request(
+            "DELETE", f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}"
+        )
 
     def documents(self, knowledge_base_id: str) -> KnowledgeBaseDocuments:
         """Access document operations for a knowledge base.
@@ -637,7 +671,7 @@ class KnowledgeBases:
 
         response = self._client._request(
             "POST",
-            f"/api/knowledge-bases/{knowledge_base_id}/search",
+            f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}/search",
             json=body,
         )
         data = response.json()
@@ -663,12 +697,19 @@ class KnowledgeBases:
         knowledge_base_id: str,
         *,
         regenerate_embeddings: bool | None = None,
+        force: bool | None = None,
+        max_retries: int = 0,
     ) -> SyncResult:
         """Trigger manual synchronization of a knowledge base.
 
         Args:
             knowledge_base_id: The knowledge base ID to sync.
-            regenerate_embeddings: Whether to regenerate all embeddings.
+            regenerate_embeddings: Whether to regenerate existing embeddings.
+            force: Force regeneration of all embeddings. The server defaults to ``False``.
+            max_retries: Retries for this request. Defaults to ``0``: a timed-out
+                sync may still be running on the server, and each retry starts the
+                whole sync again (and is billed). For large knowledge bases, create
+                the client with a larger ``timeout`` instead of retrying.
 
         Returns:
             The sync operation result.
@@ -680,11 +721,14 @@ class KnowledgeBases:
         body: dict[str, Any] = {}
         if regenerate_embeddings is not None:
             body["regenerateEmbeddings"] = regenerate_embeddings
+        if force is not None:
+            body["force"] = force
 
         response = self._client._request(
             "POST",
-            f"/api/knowledge-bases/{knowledge_base_id}/sync",
+            f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}/sync",
             json=body if body else None,
+            max_retries=max_retries,
         )
         return SyncResult.model_validate(response.json().get("data", response.json()))
 
@@ -783,7 +827,7 @@ class AsyncKnowledgeBases:
             The knowledge base details.
         """
         response = await self._client._request(
-            "GET", f"/api/knowledge-bases/{knowledge_base_id}"
+            "GET", f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}"
         )
         return KnowledgeBase.model_validate(
             response.json().get("data", response.json())
@@ -829,6 +873,8 @@ class AsyncKnowledgeBases:
         *,
         name: str | None = None,
         description: str | None = None,
+        schema: dict[str, Any] | None = None,
+        indexing_preferences: dict[str, Any] | None = None,
         is_active: bool | None = None,
     ) -> KnowledgeBase:
         """Update a knowledge base.
@@ -837,6 +883,8 @@ class AsyncKnowledgeBases:
             knowledge_base_id: The knowledge base ID to update.
             name: New name for the knowledge base.
             description: New description.
+            schema: Updated JSON Schema for the knowledge base's documents.
+            indexing_preferences: Updated indexing preferences.
             is_active: Active status.
 
         Returns:
@@ -847,12 +895,16 @@ class AsyncKnowledgeBases:
             body["name"] = name
         if description is not None:
             body["description"] = description
+        if schema is not None:
+            body["schema"] = schema
+        if indexing_preferences is not None:
+            body["indexingPreferences"] = indexing_preferences
         if is_active is not None:
             body["isActive"] = is_active
 
         response = await self._client._request(
             "PUT",
-            f"/api/knowledge-bases/{knowledge_base_id}",
+            f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}",
             json=body,
         )
         return KnowledgeBase.model_validate(
@@ -866,7 +918,7 @@ class AsyncKnowledgeBases:
             knowledge_base_id: The knowledge base ID to delete.
         """
         await self._client._request(
-            "DELETE", f"/api/knowledge-bases/{knowledge_base_id}"
+            "DELETE", f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}"
         )
 
     def documents(self, knowledge_base_id: str) -> AsyncKnowledgeBaseDocuments:
@@ -911,7 +963,7 @@ class AsyncKnowledgeBases:
 
         response = await self._client._request(
             "POST",
-            f"/api/knowledge-bases/{knowledge_base_id}/search",
+            f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}/search",
             json=body,
         )
         data = response.json()
@@ -937,12 +989,19 @@ class AsyncKnowledgeBases:
         knowledge_base_id: str,
         *,
         regenerate_embeddings: bool | None = None,
+        force: bool | None = None,
+        max_retries: int = 0,
     ) -> SyncResult:
         """Trigger manual synchronization of a knowledge base.
 
         Args:
             knowledge_base_id: The knowledge base ID to sync.
-            regenerate_embeddings: Whether to regenerate all embeddings.
+            regenerate_embeddings: Whether to regenerate existing embeddings.
+            force: Force regeneration of all embeddings. The server defaults to ``False``.
+            max_retries: Retries for this request. Defaults to ``0``: a timed-out
+                sync may still be running on the server, and each retry starts the
+                whole sync again (and is billed). For large knowledge bases, create
+                the client with a larger ``timeout`` instead of retrying.
 
         Returns:
             The sync operation result.
@@ -950,11 +1009,14 @@ class AsyncKnowledgeBases:
         body: dict[str, Any] = {}
         if regenerate_embeddings is not None:
             body["regenerateEmbeddings"] = regenerate_embeddings
+        if force is not None:
+            body["force"] = force
 
         response = await self._client._request(
             "POST",
-            f"/api/knowledge-bases/{knowledge_base_id}/sync",
+            f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}/sync",
             json=body if body else None,
+            max_retries=max_retries,
         )
         return SyncResult.model_validate(response.json().get("data", response.json()))
 

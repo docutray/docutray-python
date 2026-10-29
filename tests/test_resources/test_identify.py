@@ -18,7 +18,9 @@ from docutray import (
 class TestIdentifyRun:
     """Tests for Identify.run() synchronous identification."""
 
-    def test_identify_with_url(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_identify_with_url(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """Identify document from URL."""
         mock_api.post("/api/identify").mock(
             return_value=httpx.Response(
@@ -36,7 +38,10 @@ class TestIdentifyRun:
             )
         )
 
-        result = client.identify.run(url="https://example.com/document.pdf")
+        result = client.identify.run(
+            document_type_code_options=["invoice"],
+            url="https://example.com/document.pdf",
+        )
 
         assert isinstance(result, IdentificationResult)
         assert result.document_type.code == "invoice"
@@ -44,7 +49,9 @@ class TestIdentifyRun:
         assert len(result.alternatives) == 1
         assert result.alternatives[0].code == "receipt"
 
-    def test_identify_with_bytes(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_identify_with_bytes(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """Identify document from bytes."""
         mock_api.post("/api/identify").mock(
             return_value=httpx.Response(
@@ -61,6 +68,7 @@ class TestIdentifyRun:
         )
 
         result = client.identify.run(
+            document_type_code_options=["invoice"],
             file=b"fake pdf content",
             content_type="application/pdf",
         )
@@ -71,7 +79,9 @@ class TestIdentifyRun:
     def test_identify_requires_input(self, client: Client) -> None:
         """Identify raises error when no input provided."""
         with pytest.raises(ValueError, match="Must provide one of"):
-            client.identify.run()
+            client.identify.run(
+                document_type_code_options=["invoice"],
+            )
 
     def test_identify_with_document_type_code_options_url(
         self, client: Client, mock_api: respx.MockRouter
@@ -173,7 +183,9 @@ class TestIdentifyRun:
 class TestIdentifyRunAsync:
     """Tests for Identify.run_async() asynchronous identification."""
 
-    def test_run_async_returns_status(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_run_async_returns_status(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """run_async returns IdentificationStatus with identification_id."""
         mock_api.post("/api/identify-async").mock(
             return_value=httpx.Response(
@@ -185,7 +197,9 @@ class TestIdentifyRunAsync:
             )
         )
 
-        status = client.identify.run_async(url="https://example.com/doc.pdf")
+        status = client.identify.run_async(
+            document_type_code_options=["invoice"], url="https://example.com/doc.pdf"
+        )
 
         assert isinstance(status, IdentificationStatus)
         assert status.identification_id == "id_xyz789"
@@ -205,7 +219,9 @@ class TestIdentifyRunAsync:
             )
         )
 
-        status = client.identify.run_async(url="https://example.com/doc.pdf")
+        status = client.identify.run_async(
+            document_type_code_options=["invoice"], url="https://example.com/doc.pdf"
+        )
 
         assert status.identification_id == "id_from_api"
 
@@ -239,7 +255,9 @@ class TestIdentifyRunAsync:
 class TestIdentifyGetStatus:
     """Tests for Identify.get_status() polling."""
 
-    def test_get_status_success(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_get_status_success(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """Get status returns SUCCESS state with results."""
         mock_api.get("/api/identify-async/status/id_123").mock(
             return_value=httpx.Response(
@@ -316,7 +334,10 @@ class TestAsyncIdentifyRun:
             )
         )
 
-        result = await async_client.identify.run(url="https://example.com/document.pdf")
+        result = await async_client.identify.run(
+            document_type_code_options=["invoice"],
+            url="https://example.com/document.pdf",
+        )
 
         assert isinstance(result, IdentificationResult)
         assert result.document_type.code == "invoice"
@@ -342,6 +363,7 @@ class TestAsyncIdentifyRun:
         )
 
         result = await async_client.identify.run(
+            document_type_code_options=["invoice"],
             file=b"fake pdf content",
             content_type="application/pdf",
         )
@@ -354,7 +376,9 @@ class TestAsyncIdentifyRun:
     ) -> None:
         """Async identify raises error when no input provided."""
         with pytest.raises(ValueError, match="Must provide one of"):
-            await async_client.identify.run()
+            await async_client.identify.run(
+                document_type_code_options=["invoice"],
+            )
 
     async def test_async_identify_with_document_type_code_options_url(
         self, async_client: AsyncClient, mock_api: respx.MockRouter
@@ -434,7 +458,7 @@ class TestAsyncIdentifyRunAsync:
         )
 
         status = await async_client.identify.run_async(
-            url="https://example.com/doc.pdf"
+            document_type_code_options=["invoice"], url="https://example.com/doc.pdf"
         )
 
         assert isinstance(status, IdentificationStatus)

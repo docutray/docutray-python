@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Annotated, Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field
 
 
 class KnowledgeBase(BaseModel):
@@ -46,8 +46,11 @@ class KnowledgeBaseDocument(BaseModel):
     id: str
     """Unique document ID within the knowledge base."""
 
-    documentId: str | None = None
-    """External document reference ID."""
+    documentId: Annotated[str, BeforeValidator(lambda v: "" if v is None else v)] = ""
+    """Your own unique ID for the document, given on create.
+
+    This is the ID that ``documents(kb_id).get()``, ``update()`` and ``delete()`` take.
+    """
 
     content: dict[str, Any]
     """Document content matching the knowledge base schema."""
