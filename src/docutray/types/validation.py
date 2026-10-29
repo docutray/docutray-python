@@ -14,10 +14,27 @@ ValidationSource = Literal["schema", "rule"]
 
 
 def _field_path(value: Any) -> Any:
-    """Keep non-string field paths (e.g. a numeric index) as strings."""
+    """Normalize a field path to the canonical ``items[0].total`` form.
+
+    A list of segments (``["items", 0, "total"]``) is joined; any other
+    non-string value is converted with ``str()``.
+    """
     if value is None or isinstance(value, str):
         return value
+    if isinstance(value, (list, tuple)):
+        path = ""
+        for segment in value:
+            if isinstance(segment, int) and not isinstance(segment, bool):
+                path += f"[{segment}]"
+            else:
+                path += f".{segment}" if path else str(segment)
+        return path
     return str(value)
+
+
+def _none_to_empty(value: Any) -> Any:
+    """Read a ``null`` string field as ``""``."""
+    return "" if value is None else value
 
 
 class ValidationIssue(BaseModel):
@@ -28,10 +45,10 @@ class ValidationIssue(BaseModel):
     field: Annotated[str | None, BeforeValidator(_field_path)] = ""
     """Canonical path of the field (e.g. ``"items[0].total"``); empty or ``None`` for the document root."""
 
-    code: str | None = ""
+    code: Annotated[str, BeforeValidator(_none_to_empty)] = ""
     """Machine-readable issue code (e.g. ``"VALIDATION_ERROR"``)."""
 
-    message: str | None = ""
+    message: Annotated[str, BeforeValidator(_none_to_empty)] = ""
     """Human-readable description of the issue."""
 
     severity: ValidationSeverity | str | None = None

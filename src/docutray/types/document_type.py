@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from .validation import ValidationIssue
 
@@ -78,10 +78,10 @@ class ValidationErrorInfo(BaseModel):
 
     model_config = ConfigDict(extra="allow")
 
-    count: int
+    count: int = 0
     """Total number of errors found."""
 
-    messages: list[str]
+    messages: list[str] = Field(default_factory=list)
     """List of descriptive error messages."""
 
 
@@ -90,10 +90,10 @@ class ValidationWarningInfo(BaseModel):
 
     model_config = ConfigDict(extra="allow")
 
-    count: int
+    count: int = 0
     """Total number of warnings found."""
 
-    messages: list[str]
+    messages: list[str] = Field(default_factory=list)
     """List of descriptive warning messages."""
 
 
@@ -123,10 +123,15 @@ class ValidationResult(BaseModel):
     """Validation warnings summary."""
 
     def is_valid(self) -> bool:
-        """Check if validation passed with no errors."""
+        """Check if validation passed with no errors.
+
+        Uses ``valid`` when the API sends it. Otherwise the data is valid only
+        when the API reported an error ``count`` of zero; a summary without a
+        ``count`` is not treated as valid.
+        """
         if self.valid is not None:
             return self.valid
-        return self.errors.count == 0
+        return "count" in self.errors.model_fields_set and self.errors.count == 0
 
     def has_warnings(self) -> bool:
         """Check if there are any warnings."""

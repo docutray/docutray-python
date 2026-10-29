@@ -441,16 +441,51 @@ class TestValidationHardening:
         assert result.validation.valid is False
         issue = result.validation.errors[0]
         assert issue.field == "3"
-        assert issue.code is None
-        assert issue.message is None
+        assert issue.code == ""
+        assert issue.message == ""
         assert issue.details == ["a", "b"]
 
-    def test_validation_result_requires_summary_counts(self) -> None:
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [
+            (["items", 0, "total"], "items[0].total"),
+            (["total"], "total"),
+            ([0, "name"], "[0].name"),
+            ("items[0].total", "items[0].total"),
+            (None, None),
+        ],
+    )
+    def test_field_path_is_canonical(self, raw: object, expected: str | None) -> None:
+        issue = ValidationOutcome.model_validate(
+            {"valid": False, "errors": [{"field": raw, "code": "X", "message": "m"}]}
+        ).errors[0]
+
+        assert issue.field == expected
+
+    def test_empty_summary_parses_but_is_not_valid(self) -> None:
         # An empty summary must not read as "no errors" when valid is unknown.
-        with pytest.raises(ValueError):
-            ValidationResult.model_validate(
-                {"valid": None, "errors": {}, "warnings": {}}
-            )
+        result = ValidationResult.model_validate(
+            {"valid": None, "errors": {}, "warnings": {}}
+        )
+
+        assert result.is_valid() is False
+
+    def test_valid_flag_wins_over_empty_summary(self) -> None:
+        result = ValidationResult.model_validate(
+            {"valid": True, "issues": [], "errors": {}, "warnings": {}}
+        )
+
+        assert result.is_valid() is True
+
+    def test_legacy_zero_count_is_valid(self) -> None:
+        result = ValidationResult.model_validate(
+            {
+                "errors": {"count": 0, "messages": []},
+                "warnings": {"count": 0, "messages": []},
+            }
+        )
+
+        assert result.is_valid() is True
 
     def test_validation_result_legacy_shape(self) -> None:
         result = ValidationResult.model_validate(
@@ -476,3 +511,17 @@ class TestValidationHardening:
         assert payload.validation.errors.count == 1
         assert payload.validation.errors.messages == []
         assert payload.validation.warnings.count == 0
+
+
+def test_step_webhook_identification_is_typed() -> None:
+    payload = StepWebhookPayload.model_validate(
+        {
+            "step_execution_id": "se_1",
+            "step_id": "st_1",
+            "status": "completed",
+            "identification": {"documentTypeCode": "invoice"},
+        }
+    )
+
+    assert payload.identification is not None
+    assert payload.identification.documentTypeCode == "invoice"

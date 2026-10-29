@@ -79,7 +79,6 @@ from .step import (
     StepExecutionStatus,
     StepExecutionStatusType,
     StepIdentification,
-    StepValidationCounts,
     StepValidationSummary,
 )
 
@@ -141,7 +140,6 @@ __all__ = [
     # Steps
     "StepExecutionStatus",
     "StepIdentification",
-    "StepValidationCounts",
     "StepValidationSummary",
     # Knowledge Bases
     "KnowledgeBase",

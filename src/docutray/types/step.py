@@ -8,27 +8,14 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
+from .document_type import ValidationErrorInfo, ValidationWarningInfo
+
 if TYPE_CHECKING:
     from collections.abc import Awaitable
 
     from ..resources.steps import AsyncSteps, Steps
 
 StepExecutionStatusType = Literal["ENQUEUED", "PROCESSING", "SUCCESS", "ERROR"]
-
-
-class StepValidationCounts(BaseModel):
-    """Count and messages of one half (errors or warnings) of a step validation summary.
-
-    Both fields default to empty so a partial or skipped summary still parses.
-    """
-
-    model_config = ConfigDict(extra="allow")
-
-    count: int = 0
-    """Number of issues."""
-
-    messages: list[str] = Field(default_factory=list)
-    """Descriptive issue messages."""
 
 
 class StepIdentification(BaseModel):
@@ -54,10 +41,10 @@ class StepValidationSummary(BaseModel):
 
     model_config = ConfigDict(extra="allow")
 
-    errors: StepValidationCounts = Field(default_factory=StepValidationCounts)
+    errors: ValidationErrorInfo = Field(default_factory=ValidationErrorInfo)
     """Validation errors summary."""
 
-    warnings: StepValidationCounts = Field(default_factory=StepValidationCounts)
+    warnings: ValidationWarningInfo = Field(default_factory=ValidationWarningInfo)
     """Validation warnings summary."""
 
 
