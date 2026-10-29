@@ -289,28 +289,49 @@ for alt in result.alternatives:
 
 List, create, update, and manage document type definitions.
 
+Model fields keep the API's camelCase names (`codeType`, `jsonSchema`, `isDraft`),
+while method arguments are snake_case (`code_type=`, `json_schema=`, `is_draft=`).
+
+`get()`, `update()` and `validate()` take the document type's internal `id` (a cuid
+such as `"cm0example0000000000000id"`), not its `codeType`; passing a code returns 404.
+Resolve a code to its id with `list()` first. The API prefixes the codes of your
+organization's types with its slug (`code_type="invoice"` is stored as `acme_invoice`),
+so compare against the full `codeType`. Use that full code wherever a code is expected,
+such as `document_type_code=` in `convert`.
+
 ```python
 # List all document types
 page = client.document_types.list()
 for doc_type in page.data:
     print(f"{doc_type.codeType}: {doc_type.name}")
 
-# Search document types
+# Search document types (matches name, codeType or description)
 page = client.document_types.list(search="invoice")
 
-# Get a specific document type
-doc_type = client.document_types.get("dt_invoice")
+# Resolve a codeType to its id (across all pages), then get the document type
+code = "acme_invoice"
+type_id = next(
+    (
+        d.id
+        for d in client.document_types.list(search=code).auto_paging_iter()
+        if d.codeType == code
+    ),
+    None,
+)
+if type_id is None:
+    raise LookupError(f"Document type {code!r} not found")
+doc_type = client.document_types.get(type_id)
 print(f"Schema: {doc_type.jsonSchema}")
 
 # Create a custom document type
 doc_type = client.document_types.create(
-    name="Invoice",
-    code_type="invoice",
-    description="Invoice documents with line items",
+    name="Purchase Order",
+    code_type="purchase_order",  # stored as "<org-slug>_purchase_order"
+    description="Purchase orders with line items",
     json_schema={
         "type": "object",
         "properties": {
-            "invoice_number": {"type": "string"},
+            "po_number": {"type": "string"},
             "total": {"type": "number"},
         },
     },
@@ -320,14 +341,14 @@ print(f"Created: {doc_type.id}")
 
 # Update a document type
 doc_type = client.document_types.update(
-    "dt_invoice",
+    type_id,
     name="Updated Invoice",
     is_draft=False,
 )
 
 # Validate data against a document type (JSON Schema + saved DSL rules)
 validation = client.document_types.validate(
-    "dt_invoice",
+    type_id,
     {"invoice_number": "INV-001", "total": 100.00}
 )
 if validation.is_valid():
@@ -345,6 +366,8 @@ that run after extraction, in addition to the JSON Schema.
 ```python
 from docutray import DSLValidationError
 
+# type_id: the document type's id, resolved from its codeType as in Document Types above
+
 rules = """
 # The total must be the subtotal plus tax
 define expected sum field.subtotal field.tax
@@ -354,7 +377,7 @@ field.currency in("CLP", "USD")
 
 # Try rules without saving them (dry run): they replace the saved rules for this call only
 result = client.document_types.validate(
-    "dt_invoice",
+    type_id,
     {"subtotal": 1000, "tax": 190, "total": 1290, "currency": "CLP"},
     dsl_rules=rules,
 )
@@ -362,14 +385,14 @@ print(result.valid, [issue.message for issue in result.issues])
 
 # Save rules on the document type (also accepted by create())
 try:
-    doc_type = client.document_types.update("dt_invoice", dsl_rules=rules)
+    doc_type = client.document_types.update(type_id, dsl_rules=rules)
     print(doc_type.dslRules)
 except DSLValidationError as e:
     for d in e.diagnostics:
         print(f"line {d.line}, column {d.column}: {d.message}")
 
 # Omitting dsl_rules keeps the saved rules; None or "" clears them
-client.document_types.update("dt_invoice", dsl_rules=None)
+client.document_types.update(type_id, dsl_rules=None)
 ```
 
 ### Steps

@@ -752,7 +752,7 @@ class DocumentTypesWithRawResponse:
         Args:
             page: Page number (1-indexed).
             limit: Number of items per page.
-            search: Search term to filter document types.
+            search: Search term matched against name, ``codeType`` and description.
 
         Returns:
             RawResponse wrapping the HTTP response.
@@ -791,7 +791,7 @@ class DocumentTypesWithRawResponse:
         """Get a document type and return the raw HTTP response.
 
         Args:
-            type_id: The document type ID.
+            type_id: The document type's internal ID (not its ``codeType``).
 
         Returns:
             RawResponse wrapping the HTTP response.
@@ -816,7 +816,7 @@ class DocumentTypesWithRawResponse:
         """Validate data against a document type and return the raw HTTP response.
 
         Args:
-            type_id: The document type ID.
+            type_id: The document type's internal ID (not its ``codeType``).
             data: The JSON data to validate.
             dsl_rules: Temporary DSL rules for a dry run. They replace the stored
                 rules for this call only (JSON Schema still runs); ``None`` or
@@ -859,7 +859,8 @@ class DocumentTypesWithRawResponse:
 
         Args:
             name: Document type name.
-            code_type: Unique code identifier.
+            code_type: Unique code identifier, prefixed by the API with the
+                organization slug when missing.
             description: Document type description.
             json_schema: JSON Schema for document validation.
             is_draft: Whether the document type is a draft.
@@ -923,7 +924,7 @@ class DocumentTypesWithRawResponse:
         """Update a document type and return the raw HTTP response.
 
         Args:
-            type_id: The document type ID.
+            type_id: The document type's internal ID (not its ``codeType``).
             name: New document type name.
             description: New description.
             json_schema: New JSON Schema.
@@ -994,7 +995,7 @@ class AsyncDocumentTypesWithRawResponse:
         Args:
             page: Page number (1-indexed).
             limit: Number of items per page.
-            search: Search term to filter document types.
+            search: Search term matched against name, ``codeType`` and description.
 
         Returns:
             RawResponse wrapping the HTTP response.
@@ -1033,7 +1034,7 @@ class AsyncDocumentTypesWithRawResponse:
         """Get a document type and return the raw HTTP response.
 
         Args:
-            type_id: The document type ID.
+            type_id: The document type's internal ID (not its ``codeType``).
 
         Returns:
             RawResponse wrapping the HTTP response.
@@ -1058,7 +1059,7 @@ class AsyncDocumentTypesWithRawResponse:
         """Validate data against a document type and return the raw HTTP response.
 
         Args:
-            type_id: The document type ID.
+            type_id: The document type's internal ID (not its ``codeType``).
             data: The JSON data to validate.
             dsl_rules: Temporary DSL rules for a dry run. They replace the stored
                 rules for this call only (JSON Schema still runs); ``None`` or
@@ -1101,7 +1102,8 @@ class AsyncDocumentTypesWithRawResponse:
 
         Args:
             name: Document type name.
-            code_type: Unique code identifier.
+            code_type: Unique code identifier, prefixed by the API with the
+                organization slug when missing.
             description: Document type description.
             json_schema: JSON Schema for document validation.
             is_draft: Whether the document type is a draft.
@@ -1165,7 +1167,7 @@ class AsyncDocumentTypesWithRawResponse:
         """Update a document type and return the raw HTTP response.
 
         Args:
-            type_id: The document type ID.
+            type_id: The document type's internal ID (not its ``codeType``).
             name: New document type name.
             description: New description.
             json_schema: New JSON Schema.

@@ -168,7 +168,7 @@ class DocumentTypesListParams(TypedDict, total=False):
     """Number of items per page."""
 
     search: NotRequired[str]
-    """Search term to filter document types."""
+    """Search term matched against name, ``codeType`` and description."""
 
 
 class StepsRunParams(TypedDict, total=False):

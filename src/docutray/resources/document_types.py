@@ -137,7 +137,7 @@ class DocumentTypes:
         Args:
             page_num: The page number to fetch.
             limit: Number of items per page.
-            search: Search term to filter document types.
+            search: Search term matched against name, ``codeType`` and description.
 
         Returns:
             The requested page of document types.
@@ -172,7 +172,7 @@ class DocumentTypes:
         Args:
             page: Page number (1-indexed). Defaults to 1.
             limit: Number of items per page. Defaults to server default.
-            search: Search term to filter document types by name.
+            search: Search term matched against name, ``codeType`` and description.
 
         Returns:
             A Page of document types with pagination support.
@@ -200,7 +200,7 @@ class DocumentTypes:
         """Get a specific document type by ID.
 
         Args:
-            type_id: The document type ID.
+            type_id: The document type's internal ID (not its ``codeType``).
 
         Returns:
             The document type details including schema.
@@ -209,7 +209,7 @@ class DocumentTypes:
             NotFoundError: If the document type doesn't exist.
 
         Example:
-            >>> doc_type = client.document_types.get("dt_abc123")
+            >>> doc_type = client.document_types.get("cm0example0000000000000id")
             >>> print(f"Name: {doc_type.name}")
             >>> print(f"Schema: {doc_type.jsonSchema}")
         """
@@ -229,7 +229,7 @@ class DocumentTypes:
         document type's expected structure and requirements.
 
         Args:
-            type_id: The document type ID to validate against.
+            type_id: The document type's internal ID (not its ``codeType``) to validate against.
             data: The JSON data to validate.
             dsl_rules: Temporary DSL rules for a dry run. They replace the stored
                 rules for this call only (JSON Schema still runs); ``None`` or
@@ -240,7 +240,7 @@ class DocumentTypes:
 
         Example:
             >>> result = client.document_types.validate(
-            ...     "dt_invoice",
+            ...     "cm0example0000000000000id",
             ...     {"invoice_number": "INV-001", "total": 100}
             ... )
             >>> if result.is_valid():
@@ -278,6 +278,8 @@ class DocumentTypes:
         Args:
             name: Document type name (min 2 characters).
             code_type: Unique code identifier (lowercase alphanumeric and underscores).
+                The API prefixes it with the organization slug when missing
+                (``"invoice"`` is stored as ``"acme_invoice"``).
             description: Document type description (min 1 character).
             json_schema: JSON Schema for document validation.
             is_draft: Whether the document type is a draft. Defaults to True.
@@ -353,7 +355,7 @@ class DocumentTypes:
         All fields are optional; only provided fields will be updated.
 
         Args:
-            type_id: The document type ID to update.
+            type_id: The document type's internal ID (not its ``codeType``) to update.
             name: New document type name.
             description: New description.
             json_schema: New JSON Schema for document validation.
@@ -378,7 +380,7 @@ class DocumentTypes:
 
         Example:
             >>> doc_type = client.document_types.update(
-            ...     "dt_123",
+            ...     "cm0example0000000000000id",
             ...     name="Updated Invoice",
             ...     is_draft=False,
             ... )
@@ -453,7 +455,7 @@ class AsyncDocumentTypes:
         Args:
             page_num: The page number to fetch.
             limit: Number of items per page.
-            search: Search term to filter document types.
+            search: Search term matched against name, ``codeType`` and description.
 
         Returns:
             The requested page of document types.
@@ -490,7 +492,7 @@ class AsyncDocumentTypes:
         Args:
             page: Page number (1-indexed). Defaults to 1.
             limit: Number of items per page. Defaults to server default.
-            search: Search term to filter document types by name.
+            search: Search term matched against name, ``codeType`` and description.
 
         Returns:
             An AsyncPage of document types with pagination support.
@@ -501,7 +503,7 @@ class AsyncDocumentTypes:
         """Get a specific document type by ID.
 
         Args:
-            type_id: The document type ID.
+            type_id: The document type's internal ID (not its ``codeType``).
 
         Returns:
             The document type details including schema.
@@ -519,7 +521,7 @@ class AsyncDocumentTypes:
         """Validate JSON data against a document type's schema.
 
         Args:
-            type_id: The document type ID to validate against.
+            type_id: The document type's internal ID (not its ``codeType``) to validate against.
             data: The JSON data to validate.
             dsl_rules: Temporary DSL rules for a dry run. They replace the stored
                 rules for this call only (JSON Schema still runs); ``None`` or
@@ -557,6 +559,8 @@ class AsyncDocumentTypes:
         Args:
             name: Document type name (min 2 characters).
             code_type: Unique code identifier (lowercase alphanumeric and underscores).
+                The API prefixes it with the organization slug when missing
+                (``"invoice"`` is stored as ``"acme_invoice"``).
             description: Document type description (min 1 character).
             json_schema: JSON Schema for document validation.
             is_draft: Whether the document type is a draft. Defaults to True.
@@ -614,7 +618,7 @@ class AsyncDocumentTypes:
         All fields are optional; only provided fields will be updated.
 
         Args:
-            type_id: The document type ID to update.
+            type_id: The document type's internal ID (not its ``codeType``) to update.
             name: New document type name.
             description: New description.
             json_schema: New JSON Schema for document validation.

@@ -111,7 +111,7 @@ class DSLValidationError(BadRequestError):
 
     Example:
         >>> try:
-        ...     client.document_types.update("dt_123", dsl_rules="field.total >")
+        ...     client.document_types.update("cm0example0000000000000id", dsl_rules="field.total >")
         ... except DSLValidationError as e:
         ...     for d in e.diagnostics:
         ...         print(f"{d.line}:{d.column} {d.message}")
