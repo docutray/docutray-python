@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from functools import cached_property
 from typing import TYPE_CHECKING, Any
+from urllib.parse import quote
 
 from .._files import prepare_base64_upload, prepare_file_upload, prepare_url_upload
 from .._types import FileInput
@@ -191,7 +192,7 @@ class Identify:
             ...     print(status.document_type.name)
         """
         response = self._client._request(
-            "GET", f"/api/identify-async/status/{identification_id}"
+            "GET", f"/api/identify-async/status/{quote(identification_id, safe='')}"
         )
         status = IdentificationStatus.model_validate(response.json())
         object.__setattr__(status, "_resource", self)
@@ -360,7 +361,7 @@ class AsyncIdentify:
             The current identification status.
         """
         response = await self._client._request(
-            "GET", f"/api/identify-async/status/{identification_id}"
+            "GET", f"/api/identify-async/status/{quote(identification_id, safe='')}"
         )
         status = IdentificationStatus.model_validate(response.json())
         object.__setattr__(status, "_resource", self)

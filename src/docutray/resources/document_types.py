@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from functools import cached_property
 from typing import TYPE_CHECKING, Any
+from urllib.parse import quote
 
 from .._exceptions import NotFoundError
 from .._pagination import AsyncPage, Page
@@ -214,7 +215,9 @@ class DocumentTypes:
             >>> print(f"Name: {doc_type.name}")
             >>> print(f"Schema: {doc_type.jsonSchema}")
         """
-        response = self._client._request("GET", f"/api/document-types/{type_id}")
+        response = self._client._request(
+            "GET", f"/api/document-types/{quote(type_id, safe='')}"
+        )
         return DocumentType.model_validate(response.json().get("data", response.json()))
 
     def get_by_code(self, code: str) -> DocumentType:
@@ -280,7 +283,7 @@ class DocumentTypes:
         """
         response = self._client._request(
             "POST",
-            f"/api/document-types/{type_id}/validate",
+            f"/api/document-types/{quote(type_id, safe='')}/validate",
             json=_validate_body(data, dsl_rules),
         )
         return ValidationResult.model_validate(response.json())
@@ -432,7 +435,7 @@ class DocumentTypes:
 
         response = self._client._request(
             "PUT",
-            f"/api/document-types/{type_id}",
+            f"/api/document-types/{quote(type_id, safe='')}",
             json=body,
         )
         return DocumentType.model_validate(response.json().get("data", response.json()))
@@ -537,7 +540,9 @@ class AsyncDocumentTypes:
         Returns:
             The document type details including schema.
         """
-        response = await self._client._request("GET", f"/api/document-types/{type_id}")
+        response = await self._client._request(
+            "GET", f"/api/document-types/{quote(type_id, safe='')}"
+        )
         return DocumentType.model_validate(response.json().get("data", response.json()))
 
     async def get_by_code(self, code: str) -> DocumentType:
@@ -589,7 +594,7 @@ class AsyncDocumentTypes:
         """
         response = await self._client._request(
             "POST",
-            f"/api/document-types/{type_id}/validate",
+            f"/api/document-types/{quote(type_id, safe='')}/validate",
             json=_validate_body(data, dsl_rules),
         )
         return ValidationResult.model_validate(response.json())
@@ -711,7 +716,7 @@ class AsyncDocumentTypes:
 
         response = await self._client._request(
             "PUT",
-            f"/api/document-types/{type_id}",
+            f"/api/document-types/{quote(type_id, safe='')}",
             json=body,
         )
         return DocumentType.model_validate(response.json().get("data", response.json()))

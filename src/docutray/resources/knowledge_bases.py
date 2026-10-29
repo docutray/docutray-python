@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from functools import cached_property
 from typing import TYPE_CHECKING, Any
+from urllib.parse import quote
 
 from .._pagination import AsyncPage, Page
 from ..types.knowledge_base import (
@@ -51,7 +52,7 @@ class KnowledgeBaseDocuments:
 
         response = self._client._request(
             "GET",
-            f"/api/knowledge-bases/{self._knowledge_base_id}/documents",
+            f"/api/knowledge-bases/{quote(self._knowledge_base_id, safe='')}/documents",
             params=params,
         )
         data = response.json()
@@ -116,7 +117,7 @@ class KnowledgeBaseDocuments:
         """
         response = self._client._request(
             "GET",
-            f"/api/knowledge-bases/{self._knowledge_base_id}/documents/{document_id}",
+            f"/api/knowledge-bases/{quote(self._knowledge_base_id, safe='')}/documents/{quote(document_id, safe='')}",
         )
         return KnowledgeBaseDocument.model_validate(
             response.json().get("data", response.json())
@@ -161,7 +162,7 @@ class KnowledgeBaseDocuments:
 
         response = self._client._request(
             "POST",
-            f"/api/knowledge-bases/{self._knowledge_base_id}/documents",
+            f"/api/knowledge-bases/{quote(self._knowledge_base_id, safe='')}/documents",
             json=body,
         )
         return KnowledgeBaseDocument.model_validate(
@@ -201,7 +202,7 @@ class KnowledgeBaseDocuments:
 
         response = self._client._request(
             "PUT",
-            f"/api/knowledge-bases/{self._knowledge_base_id}/documents/{document_id}",
+            f"/api/knowledge-bases/{quote(self._knowledge_base_id, safe='')}/documents/{quote(document_id, safe='')}",
             json=body,
         )
         return KnowledgeBaseDocument.model_validate(
@@ -222,7 +223,7 @@ class KnowledgeBaseDocuments:
         """
         self._client._request(
             "DELETE",
-            f"/api/knowledge-bases/{self._knowledge_base_id}/documents/{document_id}",
+            f"/api/knowledge-bases/{quote(self._knowledge_base_id, safe='')}/documents/{quote(document_id, safe='')}",
         )
 
 
@@ -258,7 +259,7 @@ class AsyncKnowledgeBaseDocuments:
 
         response = await self._client._request(
             "GET",
-            f"/api/knowledge-bases/{self._knowledge_base_id}/documents",
+            f"/api/knowledge-bases/{quote(self._knowledge_base_id, safe='')}/documents",
             params=params,
         )
         data = response.json()
@@ -311,7 +312,7 @@ class AsyncKnowledgeBaseDocuments:
         """
         response = await self._client._request(
             "GET",
-            f"/api/knowledge-bases/{self._knowledge_base_id}/documents/{document_id}",
+            f"/api/knowledge-bases/{quote(self._knowledge_base_id, safe='')}/documents/{quote(document_id, safe='')}",
         )
         return KnowledgeBaseDocument.model_validate(
             response.json().get("data", response.json())
@@ -348,7 +349,7 @@ class AsyncKnowledgeBaseDocuments:
 
         response = await self._client._request(
             "POST",
-            f"/api/knowledge-bases/{self._knowledge_base_id}/documents",
+            f"/api/knowledge-bases/{quote(self._knowledge_base_id, safe='')}/documents",
             json=body,
         )
         return KnowledgeBaseDocument.model_validate(
@@ -382,7 +383,7 @@ class AsyncKnowledgeBaseDocuments:
 
         response = await self._client._request(
             "PUT",
-            f"/api/knowledge-bases/{self._knowledge_base_id}/documents/{document_id}",
+            f"/api/knowledge-bases/{quote(self._knowledge_base_id, safe='')}/documents/{quote(document_id, safe='')}",
             json=body,
         )
         return KnowledgeBaseDocument.model_validate(
@@ -397,7 +398,7 @@ class AsyncKnowledgeBaseDocuments:
         """
         await self._client._request(
             "DELETE",
-            f"/api/knowledge-bases/{self._knowledge_base_id}/documents/{document_id}",
+            f"/api/knowledge-bases/{quote(self._knowledge_base_id, safe='')}/documents/{quote(document_id, safe='')}",
         )
 
 
@@ -499,7 +500,7 @@ class KnowledgeBases:
             >>> print(f"{kb.name}: {kb.description}")
         """
         response = self._client._request(
-            "GET", f"/api/knowledge-bases/{knowledge_base_id}"
+            "GET", f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}"
         )
         return KnowledgeBase.model_validate(
             response.json().get("data", response.json())
@@ -591,7 +592,7 @@ class KnowledgeBases:
 
         response = self._client._request(
             "PUT",
-            f"/api/knowledge-bases/{knowledge_base_id}",
+            f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}",
             json=body,
         )
         return KnowledgeBase.model_validate(
@@ -610,7 +611,9 @@ class KnowledgeBases:
         Example:
             >>> client.knowledge_bases.delete("kb_123")
         """
-        self._client._request("DELETE", f"/api/knowledge-bases/{knowledge_base_id}")
+        self._client._request(
+            "DELETE", f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}"
+        )
 
     def documents(self, knowledge_base_id: str) -> KnowledgeBaseDocuments:
         """Access document operations for a knowledge base.
@@ -668,7 +671,7 @@ class KnowledgeBases:
 
         response = self._client._request(
             "POST",
-            f"/api/knowledge-bases/{knowledge_base_id}/search",
+            f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}/search",
             json=body,
         )
         data = response.json()
@@ -695,7 +698,7 @@ class KnowledgeBases:
         *,
         regenerate_embeddings: bool | None = None,
         force: bool | None = None,
-        sync_external_sources: bool | None = None,
+        max_retries: int = 0,
     ) -> SyncResult:
         """Trigger manual synchronization of a knowledge base.
 
@@ -703,8 +706,10 @@ class KnowledgeBases:
             knowledge_base_id: The knowledge base ID to sync.
             regenerate_embeddings: Whether to regenerate existing embeddings.
             force: Force regeneration of all embeddings. The server defaults to ``False``.
-            sync_external_sources: Sync with configured external sources. The server
-                defaults to ``True``; pass ``False`` to skip them.
+            max_retries: Retries for this request. Defaults to ``0``: a timed-out
+                sync may still be running on the server, and each retry starts the
+                whole sync again (and is billed). For large knowledge bases, create
+                the client with a larger ``timeout`` instead of retrying.
 
         Returns:
             The sync operation result.
@@ -718,13 +723,12 @@ class KnowledgeBases:
             body["regenerateEmbeddings"] = regenerate_embeddings
         if force is not None:
             body["force"] = force
-        if sync_external_sources is not None:
-            body["syncExternalSources"] = sync_external_sources
 
         response = self._client._request(
             "POST",
-            f"/api/knowledge-bases/{knowledge_base_id}/sync",
+            f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}/sync",
             json=body if body else None,
+            max_retries=max_retries,
         )
         return SyncResult.model_validate(response.json().get("data", response.json()))
 
@@ -823,7 +827,7 @@ class AsyncKnowledgeBases:
             The knowledge base details.
         """
         response = await self._client._request(
-            "GET", f"/api/knowledge-bases/{knowledge_base_id}"
+            "GET", f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}"
         )
         return KnowledgeBase.model_validate(
             response.json().get("data", response.json())
@@ -900,7 +904,7 @@ class AsyncKnowledgeBases:
 
         response = await self._client._request(
             "PUT",
-            f"/api/knowledge-bases/{knowledge_base_id}",
+            f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}",
             json=body,
         )
         return KnowledgeBase.model_validate(
@@ -914,7 +918,7 @@ class AsyncKnowledgeBases:
             knowledge_base_id: The knowledge base ID to delete.
         """
         await self._client._request(
-            "DELETE", f"/api/knowledge-bases/{knowledge_base_id}"
+            "DELETE", f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}"
         )
 
     def documents(self, knowledge_base_id: str) -> AsyncKnowledgeBaseDocuments:
@@ -959,7 +963,7 @@ class AsyncKnowledgeBases:
 
         response = await self._client._request(
             "POST",
-            f"/api/knowledge-bases/{knowledge_base_id}/search",
+            f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}/search",
             json=body,
         )
         data = response.json()
@@ -986,7 +990,7 @@ class AsyncKnowledgeBases:
         *,
         regenerate_embeddings: bool | None = None,
         force: bool | None = None,
-        sync_external_sources: bool | None = None,
+        max_retries: int = 0,
     ) -> SyncResult:
         """Trigger manual synchronization of a knowledge base.
 
@@ -994,8 +998,10 @@ class AsyncKnowledgeBases:
             knowledge_base_id: The knowledge base ID to sync.
             regenerate_embeddings: Whether to regenerate existing embeddings.
             force: Force regeneration of all embeddings. The server defaults to ``False``.
-            sync_external_sources: Sync with configured external sources. The server
-                defaults to ``True``; pass ``False`` to skip them.
+            max_retries: Retries for this request. Defaults to ``0``: a timed-out
+                sync may still be running on the server, and each retry starts the
+                whole sync again (and is billed). For large knowledge bases, create
+                the client with a larger ``timeout`` instead of retrying.
 
         Returns:
             The sync operation result.
@@ -1005,13 +1011,12 @@ class AsyncKnowledgeBases:
             body["regenerateEmbeddings"] = regenerate_embeddings
         if force is not None:
             body["force"] = force
-        if sync_external_sources is not None:
-            body["syncExternalSources"] = sync_external_sources
 
         response = await self._client._request(
             "POST",
-            f"/api/knowledge-bases/{knowledge_base_id}/sync",
+            f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}/sync",
             json=body if body else None,
+            max_retries=max_retries,
         )
         return SyncResult.model_validate(response.json().get("data", response.json()))
 

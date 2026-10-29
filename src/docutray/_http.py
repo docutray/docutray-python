@@ -198,6 +198,8 @@ class SyncHTTPClient:
         self,
         method: str,
         path: str,
+        *,
+        max_retries: int | None = None,
         **kwargs: Any,
     ) -> httpx.Response:
         """Make an HTTP request with automatic retry.
@@ -205,6 +207,8 @@ class SyncHTTPClient:
         Args:
             method: The HTTP method.
             path: The request path.
+            max_retries: Retry limit for this request only. Defaults to the
+                client's configured limit.
             **kwargs: Additional arguments to pass to httpx.
 
         Returns:
@@ -218,8 +222,13 @@ class SyncHTTPClient:
         client = self._ensure_client()
         last_exception: Exception | None = None
         logging_enabled = _is_logging_enabled()
+        retry_config = (
+            self._retry_config
+            if max_retries is None
+            else self._retry_config.with_max_retries(max_retries)
+        )
 
-        for attempt in range(self._retry_config.max_retries + 1):
+        for attempt in range(retry_config.max_retries + 1):
             try:
                 response = client.request(method, path, **kwargs)
 
@@ -228,13 +237,9 @@ class SyncHTTPClient:
                     status_code = response.status_code
 
                     # Check if we should retry
-                    if should_retry(
-                        attempt, self._retry_config, status_code=status_code
-                    ):
+                    if should_retry(attempt, retry_config, status_code=status_code):
                         retry_after = _get_retry_after(response)
-                        delay = calculate_delay(
-                            attempt, self._retry_config, retry_after
-                        )
+                        delay = calculate_delay(attempt, retry_config, retry_after)
 
                         if logging_enabled:
                             logger.warning(
@@ -242,7 +247,7 @@ class SyncHTTPClient:
                                 status_code,
                                 delay,
                                 attempt + 1,
-                                self._retry_config.max_retries + 1,
+                                retry_config.max_retries + 1,
                             )
 
                         time.sleep(delay)
@@ -256,15 +261,15 @@ class SyncHTTPClient:
             except httpx.TimeoutException as e:
                 last_exception = APITimeoutError(str(e))
 
-                if should_retry(attempt, self._retry_config, exception=last_exception):
-                    delay = calculate_delay(attempt, self._retry_config)
+                if should_retry(attempt, retry_config, exception=last_exception):
+                    delay = calculate_delay(attempt, retry_config)
 
                     if logging_enabled:
                         logger.warning(
                             "Request timed out, retrying in %.2fs (attempt %d/%d)",
                             delay,
                             attempt + 1,
-                            self._retry_config.max_retries + 1,
+                            retry_config.max_retries + 1,
                         )
 
                     time.sleep(delay)
@@ -275,8 +280,8 @@ class SyncHTTPClient:
             except httpx.RequestError as e:
                 last_exception = APIConnectionError(str(e))
 
-                if should_retry(attempt, self._retry_config, exception=last_exception):
-                    delay = calculate_delay(attempt, self._retry_config)
+                if should_retry(attempt, retry_config, exception=last_exception):
+                    delay = calculate_delay(attempt, retry_config)
 
                     if logging_enabled:
                         logger.warning(
@@ -284,7 +289,7 @@ class SyncHTTPClient:
                             str(e),
                             delay,
                             attempt + 1,
-                            self._retry_config.max_retries + 1,
+                            retry_config.max_retries + 1,
                         )
 
                     time.sleep(delay)
@@ -350,6 +355,8 @@ class AsyncHTTPClient:
         self,
         method: str,
         path: str,
+        *,
+        max_retries: int | None = None,
         **kwargs: Any,
     ) -> httpx.Response:
         """Make an async HTTP request with automatic retry.
@@ -357,6 +364,8 @@ class AsyncHTTPClient:
         Args:
             method: The HTTP method.
             path: The request path.
+            max_retries: Retry limit for this request only. Defaults to the
+                client's configured limit.
             **kwargs: Additional arguments to pass to httpx.
 
         Returns:
@@ -370,8 +379,13 @@ class AsyncHTTPClient:
         client = self._ensure_client()
         last_exception: Exception | None = None
         logging_enabled = _is_logging_enabled()
+        retry_config = (
+            self._retry_config
+            if max_retries is None
+            else self._retry_config.with_max_retries(max_retries)
+        )
 
-        for attempt in range(self._retry_config.max_retries + 1):
+        for attempt in range(retry_config.max_retries + 1):
             try:
                 response = await client.request(method, path, **kwargs)
 
@@ -380,13 +394,9 @@ class AsyncHTTPClient:
                     status_code = response.status_code
 
                     # Check if we should retry
-                    if should_retry(
-                        attempt, self._retry_config, status_code=status_code
-                    ):
+                    if should_retry(attempt, retry_config, status_code=status_code):
                         retry_after = _get_retry_after(response)
-                        delay = calculate_delay(
-                            attempt, self._retry_config, retry_after
-                        )
+                        delay = calculate_delay(attempt, retry_config, retry_after)
 
                         if logging_enabled:
                             logger.warning(
@@ -394,7 +404,7 @@ class AsyncHTTPClient:
                                 status_code,
                                 delay,
                                 attempt + 1,
-                                self._retry_config.max_retries + 1,
+                                retry_config.max_retries + 1,
                             )
 
                         await asyncio.sleep(delay)
@@ -408,15 +418,15 @@ class AsyncHTTPClient:
             except httpx.TimeoutException as e:
                 last_exception = APITimeoutError(str(e))
 
-                if should_retry(attempt, self._retry_config, exception=last_exception):
-                    delay = calculate_delay(attempt, self._retry_config)
+                if should_retry(attempt, retry_config, exception=last_exception):
+                    delay = calculate_delay(attempt, retry_config)
 
                     if logging_enabled:
                         logger.warning(
                             "Request timed out, retrying in %.2fs (attempt %d/%d)",
                             delay,
                             attempt + 1,
-                            self._retry_config.max_retries + 1,
+                            retry_config.max_retries + 1,
                         )
 
                     await asyncio.sleep(delay)
@@ -427,8 +437,8 @@ class AsyncHTTPClient:
             except httpx.RequestError as e:
                 last_exception = APIConnectionError(str(e))
 
-                if should_retry(attempt, self._retry_config, exception=last_exception):
-                    delay = calculate_delay(attempt, self._retry_config)
+                if should_retry(attempt, retry_config, exception=last_exception):
+                    delay = calculate_delay(attempt, retry_config)
 
                     if logging_enabled:
                         logger.warning(
@@ -436,7 +446,7 @@ class AsyncHTTPClient:
                             str(e),
                             delay,
                             attempt + 1,
-                            self._retry_config.max_retries + 1,
+                            retry_config.max_retries + 1,
                         )
 
                     await asyncio.sleep(delay)

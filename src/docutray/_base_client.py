@@ -84,6 +84,7 @@ class BaseClient(ABC):
         files: dict[str, Any] | None = None,
         params: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
+        max_retries: int | None = None,
     ) -> httpx.Response:
         """Make an HTTP request to the API.
 
@@ -94,10 +95,14 @@ class BaseClient(ABC):
             files: Files for multipart upload.
             params: Query parameters.
             data: Form data for multipart requests.
+            max_retries: Retry limit for this request only. Defaults to the
+                client's ``max_retries``.
 
         Returns:
             The HTTP response.
         """
+        if max_retries is not None and max_retries < 0:
+            raise ValueError("max_retries must be >= 0")
         kwargs: dict[str, Any] = {}
 
         if params:
@@ -112,7 +117,7 @@ class BaseClient(ABC):
         elif json is not None:
             kwargs["json"] = json
 
-        return self._http.request(method, path, **kwargs)
+        return self._http.request(method, path, max_retries=max_retries, **kwargs)
 
     def close(self) -> None:
         """Close the client and release resources."""
@@ -209,6 +214,7 @@ class BaseAsyncClient(ABC):
         files: dict[str, Any] | None = None,
         params: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
+        max_retries: int | None = None,
     ) -> httpx.Response:
         """Make an async HTTP request to the API.
 
@@ -219,10 +225,14 @@ class BaseAsyncClient(ABC):
             files: Files for multipart upload.
             params: Query parameters.
             data: Form data for multipart requests.
+            max_retries: Retry limit for this request only. Defaults to the
+                client's ``max_retries``.
 
         Returns:
             The HTTP response.
         """
+        if max_retries is not None and max_retries < 0:
+            raise ValueError("max_retries must be >= 0")
         kwargs: dict[str, Any] = {}
 
         if params:
@@ -237,7 +247,7 @@ class BaseAsyncClient(ABC):
         elif json is not None:
             kwargs["json"] = json
 
-        return await self._http.request(method, path, **kwargs)
+        return await self._http.request(method, path, max_retries=max_retries, **kwargs)
 
     async def close(self) -> None:
         """Close the client and release resources."""

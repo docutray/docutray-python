@@ -11,7 +11,14 @@ import httpx
 import pytest
 import respx
 
-from docutray import AsyncClient, Client, NotFoundError, ValidationOutcome
+from docutray import (
+    APITimeoutError,
+    AsyncClient,
+    Client,
+    InternalServerError,
+    NotFoundError,
+    ValidationOutcome,
+)
 from docutray.types import (
     ConversionResult,
     ConversionStatus,
@@ -314,11 +321,11 @@ class TestKnowledgeBaseParams:
             return_value=httpx.Response(200, json={"data": {"status": "completed"}})
         )
 
-        client.knowledge_bases.sync("kb_1", force=True, sync_external_sources=False)
+        client.knowledge_bases.sync("kb_1", force=True, regenerate_embeddings=True)
 
         assert json.loads(route.calls[0].request.content) == {
             "force": True,
-            "syncExternalSources": False,
+            "regenerateEmbeddings": True,
         }
 
     def test_sync_without_options_sends_no_body(
@@ -354,13 +361,9 @@ class TestKnowledgeBaseParams:
             return_value=httpx.Response(200, json={"data": {"status": "completed"}})
         )
 
-        client.knowledge_bases.with_raw_response.sync(
-            "kb_1", sync_external_sources=False
-        )
+        client.knowledge_bases.with_raw_response.sync("kb_1", force=False)
 
-        assert json.loads(route.calls[0].request.content) == {
-            "syncExternalSources": False
-        }
+        assert json.loads(route.calls[0].request.content) == {"force": False}
 
     def test_documents_list_document_id(
         self, client: Client, mock_api: respx.MockRouter
@@ -746,3 +749,188 @@ class TestIdentifyRequiresCodeOptions:
 
         sent = _form_field(route.calls[0].request, "document_type_code_options")
         assert json.loads(sent) == ["acme_invoice"]
+
+
+SYNC_OK = httpx.Response(200, json={"data": {"status": "completed"}})
+
+
+@pytest.fixture
+def no_retry_sleep(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Skip backoff delays between retries."""
+    import docutray._http as http_module
+
+    async def _no_sleep(_delay: float) -> None:
+        return None
+
+    monkeypatch.setattr(http_module.time, "sleep", lambda _delay: None)
+    monkeypatch.setattr(http_module.asyncio, "sleep", _no_sleep)
+
+
+@pytest.mark.usefixtures("no_retry_sleep")
+class TestSyncRetries:
+    """knowledge_bases.sync() is not retried by default: every attempt is billed."""
+
+    PATH = "/api/knowledge-bases/kb_1/sync"
+
+    @pytest.mark.parametrize("raw", [False, True])
+    def test_sync_is_not_retried_by_default(
+        self, client: Client, mock_api: respx.MockRouter, raw: bool
+    ) -> None:
+        route = mock_api.post(self.PATH).mock(return_value=httpx.Response(503))
+        resource = (
+            client.knowledge_bases.with_raw_response if raw else client.knowledge_bases
+        )
+
+        with pytest.raises(InternalServerError):
+            resource.sync("kb_1")
+
+        assert route.call_count == 1
+
+    def test_sync_timeout_is_not_retried(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
+        route = mock_api.post(self.PATH).mock(
+            side_effect=httpx.ReadTimeout("timed out")
+        )
+
+        with pytest.raises(APITimeoutError):
+            client.knowledge_bases.sync("kb_1")
+
+        assert route.call_count == 1
+
+    def test_sync_max_retries_override(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
+        route = mock_api.post(self.PATH).mock(
+            side_effect=[httpx.Response(503), httpx.Response(503), SYNC_OK]
+        )
+
+        result = client.knowledge_bases.sync("kb_1", max_retries=2)
+
+        assert result.status == "completed"
+        assert route.call_count == 3
+
+    @pytest.mark.parametrize("raw", [False, True])
+    async def test_async_sync_is_not_retried_by_default(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter, raw: bool
+    ) -> None:
+        route = mock_api.post(self.PATH).mock(
+            side_effect=httpx.ReadTimeout("timed out")
+        )
+        resource = (
+            async_client.knowledge_bases.with_raw_response
+            if raw
+            else async_client.knowledge_bases
+        )
+
+        with pytest.raises(APITimeoutError):
+            await resource.sync("kb_1")
+
+        assert route.call_count == 1
+
+    async def test_async_sync_max_retries_override(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter
+    ) -> None:
+        route = mock_api.post(self.PATH).mock(
+            side_effect=[httpx.Response(503), SYNC_OK]
+        )
+
+        result = await async_client.knowledge_bases.sync("kb_1", max_retries=1)
+
+        assert result.status == "completed"
+        assert route.call_count == 2
+
+    def test_other_requests_keep_client_retries(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
+        route = mock_api.get("/api/knowledge-bases/kb_1").mock(
+            side_effect=[
+                httpx.Response(503),
+                httpx.Response(200, json={"data": TestKnowledgeBaseParams.KB}),
+            ]
+        )
+
+        client.knowledge_bases.get("kb_1")
+
+        assert route.call_count == 2
+
+    def test_negative_max_retries_is_rejected(self, client: Client) -> None:
+        with pytest.raises(ValueError, match="max_retries"):
+            client.knowledge_bases.sync("kb_1", max_retries=-1)
+
+
+class TestPathEncoding:
+    """Ids are percent-encoded as single path segments, as in docutray-node."""
+
+    RAW_ID = "a/b c?d#e"
+    ENCODED = "a%2Fb%20c%3Fd%23e"
+
+    def _capture(self, mock_api: respx.MockRouter) -> list[str]:
+        paths: list[str] = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            paths.append(request.url.raw_path.decode())
+            return httpx.Response(404, json={"error": "not found"})
+
+        mock_api.route().mock(side_effect=handler)
+        return paths
+
+    def test_sync_resources(self, client: Client, mock_api: respx.MockRouter) -> None:
+        paths = self._capture(mock_api)
+        calls = [
+            lambda: client.document_types.get(self.RAW_ID),
+            lambda: client.document_types.update(self.RAW_ID, name="x"),
+            lambda: client.document_types.validate(self.RAW_ID, {}),
+            lambda: client.knowledge_bases.get(self.RAW_ID),
+            lambda: client.knowledge_bases.sync(self.RAW_ID),
+            lambda: client.knowledge_bases.search(self.RAW_ID, query="q"),
+            lambda: client.knowledge_bases.documents(self.RAW_ID).get(self.RAW_ID),
+            lambda: client.knowledge_bases.documents(self.RAW_ID).list(),
+            lambda: client.convert.get_status(self.RAW_ID),
+            lambda: client.identify.get_status(self.RAW_ID),
+            lambda: client.steps.get_status(self.RAW_ID),
+            lambda: client.document_types.with_raw_response.get(self.RAW_ID),
+        ]
+        for call in calls:
+            try:
+                call()
+            except NotFoundError:
+                pass
+
+        assert paths == [
+            f"/api/document-types/{self.ENCODED}",
+            f"/api/document-types/{self.ENCODED}",
+            f"/api/document-types/{self.ENCODED}/validate",
+            f"/api/knowledge-bases/{self.ENCODED}",
+            f"/api/knowledge-bases/{self.ENCODED}/sync",
+            f"/api/knowledge-bases/{self.ENCODED}/search",
+            f"/api/knowledge-bases/{self.ENCODED}/documents/{self.ENCODED}",
+            f"/api/knowledge-bases/{self.ENCODED}/documents?page=1",
+            f"/api/convert-async/status/{self.ENCODED}",
+            f"/api/identify-async/status/{self.ENCODED}",
+            f"/api/steps-async/status/{self.ENCODED}",
+            f"/api/document-types/{self.ENCODED}",
+        ]
+
+    async def test_async_resources(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter
+    ) -> None:
+        paths = self._capture(mock_api)
+
+        for call in (
+            lambda: async_client.document_types.get(self.RAW_ID),
+            lambda: async_client.knowledge_bases.documents(self.RAW_ID).delete(
+                self.RAW_ID
+            ),
+            lambda: async_client.steps.run_async(
+                self.RAW_ID, url="https://e.com/a.pdf"
+            ),
+        ):
+            with pytest.raises(NotFoundError):
+                await call()
+
+        assert paths == [
+            f"/api/document-types/{self.ENCODED}",
+            f"/api/knowledge-bases/{self.ENCODED}/documents/{self.ENCODED}",
+            f"/api/steps-async/{self.ENCODED}",
+        ]

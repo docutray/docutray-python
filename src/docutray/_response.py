@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from urllib.parse import quote
 
 import httpx
 
@@ -246,7 +247,7 @@ class ConvertWithRawResponse:
         from .types.convert import ConversionStatus
 
         response = self._convert._client._request(
-            "GET", f"/api/convert-async/status/{conversion_id}"
+            "GET", f"/api/convert-async/status/{quote(conversion_id, safe='')}"
         )
         return RawResponse(
             response,
@@ -403,7 +404,7 @@ class AsyncConvertWithRawResponse:
         from .types.convert import ConversionStatus
 
         response = await self._convert._client._request(
-            "GET", f"/api/convert-async/status/{conversion_id}"
+            "GET", f"/api/convert-async/status/{quote(conversion_id, safe='')}"
         )
         return RawResponse(
             response,
@@ -577,7 +578,7 @@ class IdentifyWithRawResponse:
         from .types.identify import IdentificationStatus
 
         response = self._identify._client._request(
-            "GET", f"/api/identify-async/status/{identification_id}"
+            "GET", f"/api/identify-async/status/{quote(identification_id, safe='')}"
         )
         return RawResponse(
             response,
@@ -748,7 +749,7 @@ class AsyncIdentifyWithRawResponse:
         from .types.identify import IdentificationStatus
 
         response = await self._identify._client._request(
-            "GET", f"/api/identify-async/status/{identification_id}"
+            "GET", f"/api/identify-async/status/{quote(identification_id, safe='')}"
         )
         return RawResponse(
             response,
@@ -831,7 +832,7 @@ class DocumentTypesWithRawResponse:
         from .types.document_type import DocumentType
 
         response = self._document_types._client._request(
-            "GET", f"/api/document-types/{type_id}"
+            "GET", f"/api/document-types/{quote(type_id, safe='')}"
         )
         return RawResponse(
             response,
@@ -862,7 +863,7 @@ class DocumentTypesWithRawResponse:
 
         response = self._document_types._client._request(
             "POST",
-            f"/api/document-types/{type_id}/validate",
+            f"/api/document-types/{quote(type_id, safe='')}/validate",
             json=_validate_body(data, dsl_rules),
         )
         return RawResponse(
@@ -995,7 +996,7 @@ class DocumentTypesWithRawResponse:
 
         response = self._document_types._client._request(
             "PUT",
-            f"/api/document-types/{type_id}",
+            f"/api/document-types/{quote(type_id, safe='')}",
             json=body,
         )
         return RawResponse(
@@ -1074,7 +1075,7 @@ class AsyncDocumentTypesWithRawResponse:
         from .types.document_type import DocumentType
 
         response = await self._document_types._client._request(
-            "GET", f"/api/document-types/{type_id}"
+            "GET", f"/api/document-types/{quote(type_id, safe='')}"
         )
         return RawResponse(
             response,
@@ -1105,7 +1106,7 @@ class AsyncDocumentTypesWithRawResponse:
 
         response = await self._document_types._client._request(
             "POST",
-            f"/api/document-types/{type_id}/validate",
+            f"/api/document-types/{quote(type_id, safe='')}/validate",
             json=_validate_body(data, dsl_rules),
         )
         return RawResponse(
@@ -1238,7 +1239,7 @@ class AsyncDocumentTypesWithRawResponse:
 
         response = await self._document_types._client._request(
             "PUT",
-            f"/api/document-types/{type_id}",
+            f"/api/document-types/{quote(type_id, safe='')}",
             json=body,
         )
         return RawResponse(
@@ -1301,7 +1302,7 @@ class StepsWithRawResponse:
                 data["input_data"] = json.dumps(input_data)
             response = self._steps._client._request(
                 "POST",
-                f"/api/steps-async/{step_id}",
+                f"/api/steps-async/{quote(step_id, safe='')}",
                 files=upload.files,
                 data=data if data else None,
             )
@@ -1310,14 +1311,14 @@ class StepsWithRawResponse:
             if input_data:
                 body["input_data"] = input_data
             response = self._steps._client._request(
-                "POST", f"/api/steps-async/{step_id}", json=body
+                "POST", f"/api/steps-async/{quote(step_id, safe='')}", json=body
             )
         elif file_base64 is not None:
             body = prepare_base64_upload(file_base64, content_type=content_type)
             if input_data:
                 body["input_data"] = input_data
             response = self._steps._client._request(
-                "POST", f"/api/steps-async/{step_id}", json=body
+                "POST", f"/api/steps-async/{quote(step_id, safe='')}", json=body
             )
         else:
             raise ValueError("Must provide one of: file, url, or file_base64")
@@ -1339,7 +1340,7 @@ class StepsWithRawResponse:
         from .types.step import StepExecutionStatus
 
         response = self._steps._client._request(
-            "GET", f"/api/steps-async/status/{execution_id}"
+            "GET", f"/api/steps-async/status/{quote(execution_id, safe='')}"
         )
         return RawResponse(
             response,
@@ -1396,7 +1397,7 @@ class AsyncStepsWithRawResponse:
                 data["input_data"] = json.dumps(input_data)
             response = await self._steps._client._request(
                 "POST",
-                f"/api/steps-async/{step_id}",
+                f"/api/steps-async/{quote(step_id, safe='')}",
                 files=upload.files,
                 data=data if data else None,
             )
@@ -1405,14 +1406,14 @@ class AsyncStepsWithRawResponse:
             if input_data:
                 body["input_data"] = input_data
             response = await self._steps._client._request(
-                "POST", f"/api/steps-async/{step_id}", json=body
+                "POST", f"/api/steps-async/{quote(step_id, safe='')}", json=body
             )
         elif file_base64 is not None:
             body = prepare_base64_upload(file_base64, content_type=content_type)
             if input_data:
                 body["input_data"] = input_data
             response = await self._steps._client._request(
-                "POST", f"/api/steps-async/{step_id}", json=body
+                "POST", f"/api/steps-async/{quote(step_id, safe='')}", json=body
             )
         else:
             raise ValueError("Must provide one of: file, url, or file_base64")
@@ -1434,7 +1435,7 @@ class AsyncStepsWithRawResponse:
         from .types.step import StepExecutionStatus
 
         response = await self._steps._client._request(
-            "GET", f"/api/steps-async/status/{execution_id}"
+            "GET", f"/api/steps-async/status/{quote(execution_id, safe='')}"
         )
         return RawResponse(
             response,
@@ -1523,7 +1524,7 @@ class KnowledgeBasesWithRawResponse:
         from .types.knowledge_base import KnowledgeBase
 
         response = self._knowledge_bases._client._request(
-            "GET", f"/api/knowledge-bases/{knowledge_base_id}"
+            "GET", f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}"
         )
         return RawResponse(
             response,
@@ -1567,7 +1568,7 @@ class KnowledgeBasesWithRawResponse:
 
         response = self._knowledge_bases._client._request(
             "POST",
-            f"/api/knowledge-bases/{knowledge_base_id}/search",
+            f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}/search",
             json=body,
         )
 
@@ -1597,7 +1598,7 @@ class KnowledgeBasesWithRawResponse:
         *,
         regenerate_embeddings: bool | None = None,
         force: bool | None = None,
-        sync_external_sources: bool | None = None,
+        max_retries: int = 0,
     ) -> RawResponse[SyncResult]:
         """Sync a knowledge base and return the raw HTTP response.
 
@@ -1605,8 +1606,10 @@ class KnowledgeBasesWithRawResponse:
             knowledge_base_id: The knowledge base ID.
             regenerate_embeddings: Whether to regenerate existing embeddings.
             force: Force regeneration of all embeddings. The server defaults to ``False``.
-            sync_external_sources: Sync with configured external sources. The server
-                defaults to ``True``; pass ``False`` to skip them.
+            max_retries: Retries for this request. Defaults to ``0``: a timed-out
+                sync may still be running on the server, and each retry starts the
+                whole sync again (and is billed). For large knowledge bases, create
+                the client with a larger ``timeout`` instead of retrying.
 
         Returns:
             RawResponse wrapping the HTTP response.
@@ -1618,13 +1621,12 @@ class KnowledgeBasesWithRawResponse:
             body["regenerateEmbeddings"] = regenerate_embeddings
         if force is not None:
             body["force"] = force
-        if sync_external_sources is not None:
-            body["syncExternalSources"] = sync_external_sources
 
         response = self._knowledge_bases._client._request(
             "POST",
-            f"/api/knowledge-bases/{knowledge_base_id}/sync",
+            f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}/sync",
             json=body if body else None,
+            max_retries=max_retries,
         )
         return RawResponse(
             response,
@@ -1708,7 +1710,7 @@ class AsyncKnowledgeBasesWithRawResponse:
         from .types.knowledge_base import KnowledgeBase
 
         response = await self._knowledge_bases._client._request(
-            "GET", f"/api/knowledge-bases/{knowledge_base_id}"
+            "GET", f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}"
         )
         return RawResponse(
             response,
@@ -1752,7 +1754,7 @@ class AsyncKnowledgeBasesWithRawResponse:
 
         response = await self._knowledge_bases._client._request(
             "POST",
-            f"/api/knowledge-bases/{knowledge_base_id}/search",
+            f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}/search",
             json=body,
         )
 
@@ -1782,7 +1784,7 @@ class AsyncKnowledgeBasesWithRawResponse:
         *,
         regenerate_embeddings: bool | None = None,
         force: bool | None = None,
-        sync_external_sources: bool | None = None,
+        max_retries: int = 0,
     ) -> RawResponse[SyncResult]:
         """Sync a knowledge base and return the raw HTTP response.
 
@@ -1790,8 +1792,10 @@ class AsyncKnowledgeBasesWithRawResponse:
             knowledge_base_id: The knowledge base ID.
             regenerate_embeddings: Whether to regenerate existing embeddings.
             force: Force regeneration of all embeddings. The server defaults to ``False``.
-            sync_external_sources: Sync with configured external sources. The server
-                defaults to ``True``; pass ``False`` to skip them.
+            max_retries: Retries for this request. Defaults to ``0``: a timed-out
+                sync may still be running on the server, and each retry starts the
+                whole sync again (and is billed). For large knowledge bases, create
+                the client with a larger ``timeout`` instead of retrying.
 
         Returns:
             RawResponse wrapping the HTTP response.
@@ -1803,13 +1807,12 @@ class AsyncKnowledgeBasesWithRawResponse:
             body["regenerateEmbeddings"] = regenerate_embeddings
         if force is not None:
             body["force"] = force
-        if sync_external_sources is not None:
-            body["syncExternalSources"] = sync_external_sources
 
         response = await self._knowledge_bases._client._request(
             "POST",
-            f"/api/knowledge-bases/{knowledge_base_id}/sync",
+            f"/api/knowledge-bases/{quote(knowledge_base_id, safe='')}/sync",
             json=body if body else None,
+            max_retries=max_retries,
         )
         return RawResponse(
             response,
