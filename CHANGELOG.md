@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `document_id` filter on `client.knowledge_bases.documents(kb_id).list()` (case-insensitive substring match, as the API applies it).
   - Typed `ConversionStatus.document_metadata`, `IdentificationStatus.document_type_code_options`, and `StepExecutionStatus.step_name`, `identification` (`StepIdentification`) and `document_metadata`. `StepWebhookPayload.identification` uses the same `StepIdentification` model.
   - `KnowledgeBaseDocument.documentId` typed as `str`: it is the ID that `documents(kb_id).get()` / `update()` / `delete()` take.
+- `client.document_types.get_by_code(code)` (sync and async): resolves an exact `codeType` to its document type across all pages, raising `NotFoundError` when no accessible type has that code.
 - CI workflow running ruff, mypy and pytest (Python 3.10 to 3.13) on pull requests and pushes to `main` (#25).
 
 ### Changed

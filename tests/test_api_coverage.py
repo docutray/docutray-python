@@ -11,7 +11,7 @@ import httpx
 import pytest
 import respx
 
-from docutray import AsyncClient, Client, ValidationOutcome
+from docutray import AsyncClient, Client, NotFoundError, ValidationOutcome
 from docutray.types import (
     ConversionResult,
     ConversionStatus,
@@ -525,3 +525,100 @@ def test_step_webhook_identification_is_typed() -> None:
 
     assert payload.identification is not None
     assert payload.identification.documentTypeCode == "invoice"
+
+
+class TestGetByCode:
+    """document_types.get_by_code() resolves a codeType to the full type."""
+
+    @staticmethod
+    def _mock_pages(mock_api: respx.MockRouter) -> respx.Route:
+        pages = {
+            "1": [
+                {"id": "dt_1", "name": "Invoice v2", "codeType": "acme_invoice_v2"},
+            ],
+            "2": [
+                {"id": "dt_2", "name": "Invoice", "codeType": "acme_invoice"},
+            ],
+        }
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            page = request.url.params["page"]
+            return httpx.Response(
+                200,
+                json={
+                    "data": pages[page],
+                    "pagination": {"total": 2, "page": int(page), "limit": 1},
+                },
+            )
+
+        return mock_api.get("/api/document-types").mock(side_effect=handler)
+
+    def test_exact_match_on_a_later_page(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
+        listing = self._mock_pages(mock_api)
+        mock_api.get("/api/document-types/dt_2").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "data": {
+                        "id": "dt_2",
+                        "name": "Invoice",
+                        "codeType": "acme_invoice",
+                        "jsonSchema": {"type": "object"},
+                    }
+                },
+            )
+        )
+
+        doc_type = client.document_types.get_by_code("acme_invoice")
+
+        assert doc_type.id == "dt_2"
+        assert doc_type.jsonSchema == {"type": "object"}
+        assert listing.calls[0].request.url.params["search"] == "acme_invoice"
+        assert len(listing.calls) == 2
+
+    def test_not_found(self, client: Client, mock_api: respx.MockRouter) -> None:
+        self._mock_pages(mock_api)
+
+        with pytest.raises(NotFoundError, match="acme_receipt") as exc_info:
+            client.document_types.get_by_code("acme_receipt")
+
+        assert exc_info.value.status_code == 404
+
+    def test_substring_is_not_a_match(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
+        self._mock_pages(mock_api)
+
+        with pytest.raises(NotFoundError):
+            client.document_types.get_by_code("acme_invoice_v")
+
+    async def test_async(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter
+    ) -> None:
+        self._mock_pages(mock_api)
+        mock_api.get("/api/document-types/dt_2").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "data": {
+                        "id": "dt_2",
+                        "name": "Invoice",
+                        "codeType": "acme_invoice",
+                    }
+                },
+            )
+        )
+
+        doc_type = await async_client.document_types.get_by_code("acme_invoice")
+
+        assert doc_type.codeType == "acme_invoice"
+
+    async def test_async_not_found(
+        self, async_client: AsyncClient, mock_api: respx.MockRouter
+    ) -> None:
+        self._mock_pages(mock_api)
+
+        with pytest.raises(NotFoundError):
+            await async_client.document_types.get_by_code("missing")
