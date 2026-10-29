@@ -859,7 +859,8 @@ class DocumentTypesWithRawResponse:
 
         Args:
             name: Document type name.
-            code_type: Unique code identifier.
+            code_type: Unique code identifier, prefixed by the API with the
+                organization slug when missing.
             description: Document type description.
             json_schema: JSON Schema for document validation.
             is_draft: Whether the document type is a draft.
@@ -1101,7 +1102,8 @@ class AsyncDocumentTypesWithRawResponse:
 
         Args:
             name: Document type name.
-            code_type: Unique code identifier.
+            code_type: Unique code identifier, prefixed by the API with the
+                organization slug when missing.
             description: Document type description.
             json_schema: JSON Schema for document validation.
             is_draft: Whether the document type is a draft.

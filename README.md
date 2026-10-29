@@ -294,8 +294,10 @@ while method arguments are snake_case (`code_type=`, `json_schema=`, `is_draft=`
 
 `get()`, `update()` and `validate()` take the document type's internal `id` (a cuid
 such as `"cm0example0000000000000id"`), not its `codeType`; passing a code returns 404.
-Resolve a code to its id with `list()` first. Codes of your organization's types are
-prefixed with its slug (e.g. `acme_invoice`), so compare against the full `codeType`.
+Resolve a code to its id with `list()` first. The API prefixes the codes of your
+organization's types with its slug (`code_type="invoice"` is stored as `acme_invoice`),
+so compare against the full `codeType`. Use that full code wherever a code is expected,
+such as `document_type_code=` in `convert`.
 
 ```python
 # List all document types
@@ -323,13 +325,13 @@ print(f"Schema: {doc_type.jsonSchema}")
 
 # Create a custom document type
 doc_type = client.document_types.create(
-    name="Invoice",
-    code_type="invoice",
-    description="Invoice documents with line items",
+    name="Purchase Order",
+    code_type="purchase_order",  # stored as "<org-slug>_purchase_order"
+    description="Purchase orders with line items",
     json_schema={
         "type": "object",
         "properties": {
-            "invoice_number": {"type": "string"},
+            "po_number": {"type": "string"},
             "total": {"type": "number"},
         },
     },

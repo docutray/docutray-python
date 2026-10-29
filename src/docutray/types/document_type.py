@@ -25,7 +25,10 @@ class DocumentType(BaseModel):
     """Document type name."""
 
     codeType: str
-    """Unique document type code."""
+    """Unique document type code.
+
+    Codes of an organization's own types carry its slug as a prefix (``acme_invoice``).
+    """
 
     description: str | None = None
     """Document type description."""

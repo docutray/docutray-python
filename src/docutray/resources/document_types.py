@@ -137,7 +137,7 @@ class DocumentTypes:
         Args:
             page_num: The page number to fetch.
             limit: Number of items per page.
-            search: Search term to filter document types.
+            search: Search term matched against name, ``codeType`` and description.
 
         Returns:
             The requested page of document types.
@@ -278,6 +278,8 @@ class DocumentTypes:
         Args:
             name: Document type name (min 2 characters).
             code_type: Unique code identifier (lowercase alphanumeric and underscores).
+                The API prefixes it with the organization slug when missing
+                (``"invoice"`` is stored as ``"acme_invoice"``).
             description: Document type description (min 1 character).
             json_schema: JSON Schema for document validation.
             is_draft: Whether the document type is a draft. Defaults to True.
@@ -453,7 +455,7 @@ class AsyncDocumentTypes:
         Args:
             page_num: The page number to fetch.
             limit: Number of items per page.
-            search: Search term to filter document types.
+            search: Search term matched against name, ``codeType`` and description.
 
         Returns:
             The requested page of document types.
@@ -557,6 +559,8 @@ class AsyncDocumentTypes:
         Args:
             name: Document type name (min 2 characters).
             code_type: Unique code identifier (lowercase alphanumeric and underscores).
+                The API prefixes it with the organization slug when missing
+                (``"invoice"`` is stored as ``"acme_invoice"``).
             description: Document type description (min 1 character).
             json_schema: JSON Schema for document validation.
             is_draft: Whether the document type is a draft. Defaults to True.
