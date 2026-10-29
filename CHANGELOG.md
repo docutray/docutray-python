@@ -43,7 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Docs: document types are fetched, updated and validated by internal `id`, not `codeType` (#21). The README resolves the id from the full (org-prefixed) `codeType` across all pages with `list().auto_paging_iter()`, and explains the camelCase model fields. The `type_id` docstrings say it is the internal id, examples use cuid-shaped ids, and the `search` docstring now says it matches name, `codeType` and description.
+- Docs: document types are fetched, updated and validated by internal `id`, not `codeType` (#21). The README resolves the id from the full (org-prefixed) `codeType` with the new `get_by_code()`, and explains the camelCase model fields. The `type_id` docstrings say it is the internal id, examples use cuid-shaped ids, and the `search` docstring now says it matches name, `codeType` and description.
 - README: knowledge base documents are fetched, updated and deleted by their `documentId` (given on create), not by `id`; the `document_id` docstrings say so.
 - Docstrings quote API paths with `{id}` placeholders in backticks.
 - API errors whose body is `{"error": "<message>"}` now use that message as `APIError.message` instead of the raw response text.

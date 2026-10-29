@@ -301,10 +301,10 @@ while method arguments are snake_case (`code_type=`, `json_schema=`, `is_draft=`
 
 `get()`, `update()` and `validate()` take the document type's internal `id` (a cuid
 such as `"cm0example0000000000000id"`), not its `codeType`; passing a code returns 404.
-Resolve a code to its id with `list()` first. The API prefixes the codes of your
+Use `get_by_code()` to fetch a type by its code. The API prefixes the codes of your
 organization's types with its slug (`code_type="invoice"` is stored as `acme_invoice`),
-so compare against the full `codeType`. Use that full code wherever a code is expected,
-such as `document_type_code=` in `convert`.
+so pass the full `codeType` there and wherever a code is expected, such as
+`document_type_code=` in `convert`.
 
 ```python
 # List all document types
@@ -315,19 +315,9 @@ for doc_type in page.data:
 # Search document types (matches name, codeType or description)
 page = client.document_types.list(search="invoice")
 
-# Resolve a codeType to its id (across all pages), then get the document type
-code = "acme_invoice"
-type_id = next(
-    (
-        d.id
-        for d in client.document_types.list(search=code).auto_paging_iter()
-        if d.codeType == code
-    ),
-    None,
-)
-if type_id is None:
-    raise LookupError(f"Document type {code!r} not found")
-doc_type = client.document_types.get(type_id)
+# Get a document type by its full codeType (raises NotFoundError if missing)
+doc_type = client.document_types.get_by_code("acme_invoice")
+type_id = doc_type.id
 print(f"Schema: {doc_type.jsonSchema}")
 
 # Create a custom document type
@@ -373,7 +363,7 @@ that run after extraction, in addition to the JSON Schema.
 ```python
 from docutray import DSLValidationError
 
-# type_id: the document type's id, resolved from its codeType as in Document Types above
+type_id = client.document_types.get_by_code("acme_invoice").id
 
 rules = """
 # The total must be the subtotal plus tax
