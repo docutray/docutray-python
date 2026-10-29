@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-29
+
 ### Added
 
 - DSL validation rules on document types ([docutray/docutray#1111](https://github.com/docutray/docutray/issues/1111), #22):
@@ -126,5 +128,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pre-commit hooks for code quality enforcement
 - Full test coverage for all public APIs
 
-[Unreleased]: https://github.com/docutray/docutray-python/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/docutray/docutray-python/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/docutray/docutray-python/compare/v0.2.1...v0.3.0
 [0.1.0]: https://github.com/docutray/docutray-python/releases/tag/v0.1.0
