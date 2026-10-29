@@ -16,6 +16,7 @@ from docutray.types import (
     ConversionResult,
     ConversionStatus,
     IdentificationStatus,
+    KnowledgeBaseDocument,
     StepExecutionStatus,
     StepWebhookPayload,
     ValidationResult,
@@ -451,6 +452,7 @@ class TestValidationHardening:
             (["items", 0, "total"], "items[0].total"),
             (["total"], "total"),
             ([0, "name"], "[0].name"),
+            (["items", None, "total"], "items.total"),
             ("items[0].total", "items[0].total"),
             (None, None),
         ],
@@ -461,6 +463,31 @@ class TestValidationHardening:
         ).errors[0]
 
         assert issue.field == expected
+
+    def test_non_string_scalars_keep_outcome(self) -> None:
+        outcome = ValidationOutcome.model_validate(
+            {
+                "valid": False,
+                "errors": [
+                    {"code": 400, "message": 1, "severity": 2, "source": 3, "rule": 4}
+                ],
+            }
+        )
+
+        issue = outcome.errors[0]
+        assert (
+            issue.code,
+            issue.message,
+            issue.severity,
+            issue.source,
+            issue.rule,
+        ) == (
+            "400",
+            "1",
+            "2",
+            "3",
+            "4",
+        )
 
     def test_empty_summary_parses_but_is_not_valid(self) -> None:
         # An empty summary must not read as "no errors" when valid is unknown.
@@ -576,6 +603,7 @@ class TestGetByCode:
         assert doc_type.id == "dt_2"
         assert doc_type.jsonSchema == {"type": "object"}
         assert listing.calls[0].request.url.params["search"] == "acme_invoice"
+        assert listing.calls[0].request.url.params["limit"] == "100"
         assert len(listing.calls) == 2
 
     def test_not_found(self, client: Client, mock_api: respx.MockRouter) -> None:
@@ -622,3 +650,11 @@ class TestGetByCode:
 
         with pytest.raises(NotFoundError):
             await async_client.document_types.get_by_code("missing")
+
+
+def test_knowledge_base_document_null_document_id() -> None:
+    doc = KnowledgeBaseDocument.model_validate(
+        {"id": "kbd_1", "documentId": None, "content": {"title": "Legacy"}}
+    )
+
+    assert doc.documentId == ""

@@ -16,14 +16,16 @@ ValidationSource = Literal["schema", "rule"]
 def _field_path(value: Any) -> Any:
     """Normalize a field path to the canonical ``items[0].total`` form.
 
-    A list of segments (``["items", 0, "total"]``) is joined; any other
-    non-string value is converted with ``str()``.
+    A list of segments (``["items", 0, "total"]``) is joined, skipping
+    ``null`` segments; any other non-string value is converted with ``str()``.
     """
     if value is None or isinstance(value, str):
         return value
     if isinstance(value, (list, tuple)):
         path = ""
         for segment in value:
+            if segment is None:
+                continue
             if isinstance(segment, int) and not isinstance(segment, bool):
                 path += f"[{segment}]"
             else:
@@ -32,9 +34,18 @@ def _field_path(value: Any) -> Any:
     return str(value)
 
 
-def _none_to_empty(value: Any) -> Any:
-    """Read a ``null`` string field as ``""``."""
-    return "" if value is None else value
+def _to_str(value: Any) -> Any:
+    """Read ``null`` as ``""`` and any other non-string value as ``str(value)``."""
+    if value is None:
+        return ""
+    return value if isinstance(value, str) else str(value)
+
+
+def _to_optional_str(value: Any) -> Any:
+    """Keep ``null``; read any other non-string value as ``str(value)``."""
+    if value is None or isinstance(value, str):
+        return value
+    return str(value)
 
 
 class ValidationIssue(BaseModel):
@@ -45,19 +56,23 @@ class ValidationIssue(BaseModel):
     field: Annotated[str | None, BeforeValidator(_field_path)] = ""
     """Canonical path of the field (e.g. ``"items[0].total"``); empty or ``None`` for the document root."""
 
-    code: Annotated[str, BeforeValidator(_none_to_empty)] = ""
+    code: Annotated[str, BeforeValidator(_to_str)] = ""
     """Machine-readable issue code (e.g. ``"VALIDATION_ERROR"``)."""
 
-    message: Annotated[str, BeforeValidator(_none_to_empty)] = ""
+    message: Annotated[str, BeforeValidator(_to_str)] = ""
     """Human-readable description of the issue."""
 
-    severity: ValidationSeverity | str | None = None
+    severity: Annotated[
+        ValidationSeverity | str | None, BeforeValidator(_to_optional_str)
+    ] = None
     """Issue severity. Unknown values are kept as plain strings."""
 
-    source: ValidationSource | str | None = None
+    source: Annotated[
+        ValidationSource | str | None, BeforeValidator(_to_optional_str)
+    ] = None
     """Validation layer that produced the issue. Unknown values are kept as plain strings."""
 
-    rule: str | None = None
+    rule: Annotated[str | None, BeforeValidator(_to_optional_str)] = None
     """Name of the rule that failed, when the issue comes from a rule."""
 
     value: Any = None

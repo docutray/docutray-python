@@ -220,8 +220,8 @@ class DocumentTypes:
     def get_by_code(self, code: str) -> DocumentType:
         """Get a document type by its ``codeType``.
 
-        Looks the code up with ``list(search=code)`` across all pages and fetches
-        the match with ``get()``. Codes of your organization's own types carry its
+        Looks the code up with ``list(search=code)`` across all pages (100 per
+        request) and fetches the match with ``get()``, which includes the schema. Codes of your organization's own types carry its
         slug as a prefix, so pass the full code (e.g. ``"acme_invoice"``).
 
         Args:
@@ -237,7 +237,7 @@ class DocumentTypes:
             >>> doc_type = client.document_types.get_by_code("acme_invoice")
             >>> print(doc_type.id)
         """
-        page = self.list(search=code)
+        page = self.list(search=code, limit=100)
         for doc_type in page.auto_paging_iter():
             if doc_type.codeType == code:
                 return self.get(doc_type.id)
@@ -543,8 +543,8 @@ class AsyncDocumentTypes:
     async def get_by_code(self, code: str) -> DocumentType:
         """Get a document type by its ``codeType``.
 
-        Looks the code up with ``list(search=code)`` across all pages and fetches
-        the match with ``get()``. Codes of your organization's own types carry its
+        Looks the code up with ``list(search=code)`` across all pages (100 per
+        request) and fetches the match with ``get()``, which includes the schema. Codes of your organization's own types carry its
         slug as a prefix, so pass the full code (e.g. ``"acme_invoice"``).
 
         Args:
@@ -560,7 +560,7 @@ class AsyncDocumentTypes:
             >>> doc_type = await client.document_types.get_by_code("acme_invoice")
             >>> print(doc_type.id)
         """
-        page = await self.list(search=code)
+        page = await self.list(search=code, limit=100)
         async for doc_type in page.auto_paging_iter_async():
             if doc_type.codeType == code:
                 return await self.get(doc_type.id)
