@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- README: document types are fetched, updated and validated by internal `id`, not `codeType`; examples now resolve the id via `list()` and explain the camelCase model fields (#21).
 - API errors whose body is `{"error": "<message>"}` now use that message as `APIError.message` instead of the raw response text.
 
 ## [0.2.1] - 2026-05-07

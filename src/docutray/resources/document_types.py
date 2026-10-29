@@ -200,7 +200,7 @@ class DocumentTypes:
         """Get a specific document type by ID.
 
         Args:
-            type_id: The document type ID.
+            type_id: The document type's internal ID (not its ``codeType``).
 
         Returns:
             The document type details including schema.
@@ -229,7 +229,7 @@ class DocumentTypes:
         document type's expected structure and requirements.
 
         Args:
-            type_id: The document type ID to validate against.
+            type_id: The document type's internal ID (not its ``codeType``) to validate against.
             data: The JSON data to validate.
             dsl_rules: Temporary DSL rules for a dry run. They replace the stored
                 rules for this call only (JSON Schema still runs); ``None`` or
@@ -240,7 +240,7 @@ class DocumentTypes:
 
         Example:
             >>> result = client.document_types.validate(
-            ...     "dt_invoice",
+            ...     "dt_123",
             ...     {"invoice_number": "INV-001", "total": 100}
             ... )
             >>> if result.is_valid():
@@ -353,7 +353,7 @@ class DocumentTypes:
         All fields are optional; only provided fields will be updated.
 
         Args:
-            type_id: The document type ID to update.
+            type_id: The document type's internal ID (not its ``codeType``) to update.
             name: New document type name.
             description: New description.
             json_schema: New JSON Schema for document validation.
@@ -501,7 +501,7 @@ class AsyncDocumentTypes:
         """Get a specific document type by ID.
 
         Args:
-            type_id: The document type ID.
+            type_id: The document type's internal ID (not its ``codeType``).
 
         Returns:
             The document type details including schema.
@@ -519,7 +519,7 @@ class AsyncDocumentTypes:
         """Validate JSON data against a document type's schema.
 
         Args:
-            type_id: The document type ID to validate against.
+            type_id: The document type's internal ID (not its ``codeType``) to validate against.
             data: The JSON data to validate.
             dsl_rules: Temporary DSL rules for a dry run. They replace the stored
                 rules for this call only (JSON Schema still runs); ``None`` or
@@ -614,7 +614,7 @@ class AsyncDocumentTypes:
         All fields are optional; only provided fields will be updated.
 
         Args:
-            type_id: The document type ID to update.
+            type_id: The document type's internal ID (not its ``codeType``) to update.
             name: New document type name.
             description: New description.
             json_schema: New JSON Schema for document validation.

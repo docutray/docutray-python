@@ -791,7 +791,7 @@ class DocumentTypesWithRawResponse:
         """Get a document type and return the raw HTTP response.
 
         Args:
-            type_id: The document type ID.
+            type_id: The document type's internal ID (not its ``codeType``).
 
         Returns:
             RawResponse wrapping the HTTP response.
@@ -816,7 +816,7 @@ class DocumentTypesWithRawResponse:
         """Validate data against a document type and return the raw HTTP response.
 
         Args:
-            type_id: The document type ID.
+            type_id: The document type's internal ID (not its ``codeType``).
             data: The JSON data to validate.
             dsl_rules: Temporary DSL rules for a dry run. They replace the stored
                 rules for this call only (JSON Schema still runs); ``None`` or
@@ -923,7 +923,7 @@ class DocumentTypesWithRawResponse:
         """Update a document type and return the raw HTTP response.
 
         Args:
-            type_id: The document type ID.
+            type_id: The document type's internal ID (not its ``codeType``).
             name: New document type name.
             description: New description.
             json_schema: New JSON Schema.
@@ -1033,7 +1033,7 @@ class AsyncDocumentTypesWithRawResponse:
         """Get a document type and return the raw HTTP response.
 
         Args:
-            type_id: The document type ID.
+            type_id: The document type's internal ID (not its ``codeType``).
 
         Returns:
             RawResponse wrapping the HTTP response.
@@ -1058,7 +1058,7 @@ class AsyncDocumentTypesWithRawResponse:
         """Validate data against a document type and return the raw HTTP response.
 
         Args:
-            type_id: The document type ID.
+            type_id: The document type's internal ID (not its ``codeType``).
             data: The JSON data to validate.
             dsl_rules: Temporary DSL rules for a dry run. They replace the stored
                 rules for this call only (JSON Schema still runs); ``None`` or
@@ -1165,7 +1165,7 @@ class AsyncDocumentTypesWithRawResponse:
         """Update a document type and return the raw HTTP response.
 
         Args:
-            type_id: The document type ID.
+            type_id: The document type's internal ID (not its ``codeType``).
             name: New document type name.
             description: New description.
             json_schema: New JSON Schema.

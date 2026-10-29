@@ -289,6 +289,13 @@ for alt in result.alternatives:
 
 List, create, update, and manage document type definitions.
 
+Model fields keep the API's camelCase names (`codeType`, `jsonSchema`, `isDraft`),
+while method arguments are snake_case (`code_type=`, `json_schema=`, `is_draft=`).
+
+`get()`, `update()` and `validate()` take the document type's internal `id` (a cuid
+such as `"cmditbp6h000zrq01jl0whzcr"`), not its `codeType`; passing a code returns 404.
+Resolve a code to its id with `list()` first.
+
 ```python
 # List all document types
 page = client.document_types.list()
@@ -298,8 +305,11 @@ for doc_type in page.data:
 # Search document types
 page = client.document_types.list(search="invoice")
 
-# Get a specific document type
-doc_type = client.document_types.get("dt_invoice")
+# Resolve a codeType to its id, then get the document type
+type_id = next(
+    d.id for d in client.document_types.list(search="invoice").data if d.codeType == "invoice"
+)
+doc_type = client.document_types.get(type_id)
 print(f"Schema: {doc_type.jsonSchema}")
 
 # Create a custom document type
@@ -320,14 +330,14 @@ print(f"Created: {doc_type.id}")
 
 # Update a document type
 doc_type = client.document_types.update(
-    "dt_invoice",
+    type_id,
     name="Updated Invoice",
     is_draft=False,
 )
 
 # Validate data against a document type (JSON Schema + saved DSL rules)
 validation = client.document_types.validate(
-    "dt_invoice",
+    type_id,
     {"invoice_number": "INV-001", "total": 100.00}
 )
 if validation.is_valid():
@@ -345,6 +355,8 @@ that run after extraction, in addition to the JSON Schema.
 ```python
 from docutray import DSLValidationError
 
+type_id = "cmditbp6h000zrq01jl0whzcr"  # document type id (see Document Types above)
+
 rules = """
 # The total must be the subtotal plus tax
 define expected sum field.subtotal field.tax
@@ -354,7 +366,7 @@ field.currency in("CLP", "USD")
 
 # Try rules without saving them (dry run): they replace the saved rules for this call only
 result = client.document_types.validate(
-    "dt_invoice",
+    type_id,
     {"subtotal": 1000, "tax": 190, "total": 1290, "currency": "CLP"},
     dsl_rules=rules,
 )
@@ -362,14 +374,14 @@ print(result.valid, [issue.message for issue in result.issues])
 
 # Save rules on the document type (also accepted by create())
 try:
-    doc_type = client.document_types.update("dt_invoice", dsl_rules=rules)
+    doc_type = client.document_types.update(type_id, dsl_rules=rules)
     print(doc_type.dslRules)
 except DSLValidationError as e:
     for d in e.diagnostics:
         print(f"line {d.line}, column {d.column}: {d.message}")
 
 # Omitting dsl_rules keeps the saved rules; None or "" clears them
-client.document_types.update("dt_invoice", dsl_rules=None)
+client.document_types.update(type_id, dsl_rules=None)
 ```
 
 ### Steps
