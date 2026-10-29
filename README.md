@@ -137,6 +137,7 @@ DocuTrayError (base)
 │   └── APITimeoutError (request timeout)
 └── APIError (HTTP errors)
     ├── BadRequestError (400)
+    │   └── DSLValidationError (invalid DSL rules, with line/column diagnostics)
     ├── AuthenticationError (401)
     ├── PermissionDeniedError (403)
     ├── NotFoundError (404)
@@ -242,6 +243,33 @@ if final_status.is_success():
     print(final_status.data)
 ```
 
+#### Validation results
+
+Successful conversions include `validation`: the result of checking `data` against the
+document type's JSON Schema and [DSL validation rules](https://docs.docutray.com/docs/guides/validation).
+It is informational and never changes the conversion status.
+
+```python
+from docutray import ValidationOutcome, ValidationSystemFailure
+
+result = client.convert.run(file=Path("invoice.pdf"), document_type_code="invoice")
+
+if isinstance(result.validation, ValidationOutcome):
+    print("Valid:", result.validation.valid)
+    for issue in result.validation.errors + result.validation.warnings:
+        print(f"[{issue.severity}] {issue.field or '<root>'}: {issue.message} ({issue.source})")
+elif isinstance(result.validation, ValidationSystemFailure):
+    print("Validation could not be completed")
+elif result.validation is None:
+    print("Validation skipped (no schema and no rules)")
+else:
+    print("Unrecognized validation shape:", result.validation)  # plain dict
+```
+
+The same `validation` field is available on `ConversionStatus` (async conversions).
+When the document type has bounding boxes enabled, `result.field_locations` contains
+the page and box of each extracted field.
+
 ### Identify
 
 Automatically identify document types.
@@ -265,7 +293,7 @@ List, create, update, and manage document type definitions.
 # List all document types
 page = client.document_types.list()
 for doc_type in page.data:
-    print(f"{doc_type.code}: {doc_type.name}")
+    print(f"{doc_type.codeType}: {doc_type.name}")
 
 # Search document types
 page = client.document_types.list(search="invoice")
@@ -297,7 +325,7 @@ doc_type = client.document_types.update(
     is_draft=False,
 )
 
-# Validate data against a document type schema
+# Validate data against a document type (JSON Schema + saved DSL rules)
 validation = client.document_types.validate(
     "dt_invoice",
     {"invoice_number": "INV-001", "total": 100.00}
@@ -305,8 +333,43 @@ validation = client.document_types.validate(
 if validation.is_valid():
     print("Data is valid!")
 else:
-    for error in validation.errors.messages:
-        print(f"Validation error: {error}")
+    for issue in validation.issues:
+        print(f"[{issue.severity}] {issue.field}: {issue.message}")
+```
+
+#### DSL validation rules
+
+Document types can carry [DSL validation rules](https://docs.docutray.com/docs/guides/validation)
+that run after extraction, in addition to the JSON Schema.
+
+```python
+from docutray import DSLValidationError
+
+rules = """
+# The total must be the subtotal plus tax
+define expected sum field.subtotal field.tax
+field.total equalsWithPrecision(calculated.expected, 2)
+field.currency in("CLP", "USD")
+"""
+
+# Try rules without saving them (dry run): they replace the saved rules for this call only
+result = client.document_types.validate(
+    "dt_invoice",
+    {"subtotal": 1000, "tax": 190, "total": 1290, "currency": "CLP"},
+    dsl_rules=rules,
+)
+print(result.valid, [issue.message for issue in result.issues])
+
+# Save rules on the document type (also accepted by create())
+try:
+    doc_type = client.document_types.update("dt_invoice", dsl_rules=rules)
+    print(doc_type.dslRules)
+except DSLValidationError as e:
+    for d in e.diagnostics:
+        print(f"line {d.line}, column {d.column}: {d.message}")
+
+# Omitting dsl_rules keeps the saved rules; None or "" clears them
+client.document_types.update("dt_invoice", dsl_rules=None)
 ```
 
 ### Steps
@@ -382,6 +445,23 @@ client.knowledge_bases.documents(kb.id).delete(doc.id)
 # Delete knowledge base
 client.knowledge_bases.delete(kb.id)
 ```
+
+### Webhooks
+
+Parse webhook deliveries with the payload models. The event type is in the
+`X-Docutray-Event` header.
+
+```python
+from docutray import ConversionWebhookPayload, ValidationOutcome
+from docutray.types import IdentificationWebhookPayload, StepWebhookPayload
+
+payload = ConversionWebhookPayload.model_validate_json(request_body)
+if payload.status == "SUCCESS" and isinstance(payload.validation, ValidationOutcome):
+    print(payload.validation.valid)
+```
+
+`StepWebhookPayload.validation` (and `StepExecutionStatus.validation`) keep the summarized
+`{errors: {count, messages}, warnings: {count, messages}}` format.
 
 ## Pagination
 

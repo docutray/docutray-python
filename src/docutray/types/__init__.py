@@ -35,7 +35,15 @@ from .._types import (
     StepsRunParams,
     UrlUploadParams,
 )
-from .convert import ConversionResult, ConversionStatus, ConversionStatusType
+from .convert import (
+    BoundingBox,
+    ConversionResult,
+    ConversionStatus,
+    ConversionStatusType,
+    FieldLocation,
+    FieldLocations,
+    PageDimensions,
+)
 
 # Document type types
 from .document_type import (
@@ -67,7 +75,26 @@ from .knowledge_base import (
 from .shared import APIResponse, ErrorDetail, PaginatedResponse, Pagination
 
 # Step types
-from .step import StepExecutionStatus, StepExecutionStatusType
+from .step import StepExecutionStatus, StepExecutionStatusType, StepValidationSummary
+
+# Validation types
+from .validation import (
+    ConversionValidation,
+    DSLDiagnostic,
+    ValidationIssue,
+    ValidationOutcome,
+    ValidationSeverity,
+    ValidationSource,
+    ValidationSystemFailure,
+)
+
+# Webhook payload types
+from .webhook import (
+    ConversionWebhookPayload,
+    IdentificationWebhookPayload,
+    StepWebhookPayload,
+    WebhookEventType,
+)
 
 __all__ = [
     # ==========================================================================
@@ -81,6 +108,20 @@ __all__ = [
     # Convert
     "ConversionResult",
     "ConversionStatus",
+    "BoundingBox",
+    "FieldLocation",
+    "FieldLocations",
+    "PageDimensions",
+    # Validation
+    "ConversionValidation",
+    "DSLDiagnostic",
+    "ValidationIssue",
+    "ValidationOutcome",
+    "ValidationSystemFailure",
+    # Webhooks
+    "ConversionWebhookPayload",
+    "IdentificationWebhookPayload",
+    "StepWebhookPayload",
     # Identify
     "DocumentTypeMatch",
     "IdentificationResult",
@@ -93,6 +134,7 @@ __all__ = [
     "ValidationWarningInfo",
     # Steps
     "StepExecutionStatus",
+    "StepValidationSummary",
     # Knowledge Bases
     "KnowledgeBase",
     "KnowledgeBaseDocument",
@@ -105,6 +147,9 @@ __all__ = [
     "ConversionStatusType",
     "IdentificationStatusType",
     "StepExecutionStatusType",
+    "ValidationSeverity",
+    "ValidationSource",
+    "WebhookEventType",
     "ImageContentType",
     "RateLimitType",
     # ==========================================================================

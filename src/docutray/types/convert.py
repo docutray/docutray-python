@@ -8,12 +8,76 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import BaseModel, ConfigDict
 
+from .validation import ConversionValidation
+
 if TYPE_CHECKING:
     from collections.abc import Awaitable
 
     from ..resources.convert import AsyncConvert, Convert
 
 ConversionStatusType = Literal["ENQUEUED", "PROCESSING", "SUCCESS", "ERROR"]
+
+
+class BoundingBox(BaseModel):
+    """Bounding box of a value, as floats in 0..1 relative to its page (origin top-left)."""
+
+    model_config = ConfigDict(extra="allow")
+
+    x0: float
+    y0: float
+    x1: float
+    y1: float
+
+
+class PageDimensions(BaseModel):
+    """Real dimensions of a source document page."""
+
+    model_config = ConfigDict(extra="allow")
+
+    page: int
+    """1-based page number."""
+
+    width: float
+    height: float
+
+    unit: str = "pt"
+    """Unit of ``width`` and ``height``."""
+
+
+class FieldLocation(BaseModel):
+    """Location of one extracted leaf field in the source document."""
+
+    model_config = ConfigDict(extra="allow")
+
+    path: str
+    """Restricted JSONPath of the field inside ``data`` (e.g. ``"$.items[0].total"``)."""
+
+    page: int
+    """1-based page the value appears on."""
+
+    box: BoundingBox
+    """Bounding box of the printed value."""
+
+    confidence: float | None = None
+    """Reserved; currently always ``None``."""
+
+
+class FieldLocations(BaseModel):
+    """Per-field locations, present when the document type has ``boundingBoxesEnabled``.
+
+    Best-effort: fields the model could not locate are absent.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    coordinate_space: str = "page-relative"
+    """Coordinate space of the boxes."""
+
+    pages: list[PageDimensions] = []
+    """Real page dimensions. Empty for non-PDF documents."""
+
+    fields: list[FieldLocation] = []
+    """Located fields."""
 
 
 class ConversionResult(BaseModel):
@@ -23,6 +87,15 @@ class ConversionResult(BaseModel):
 
     data: dict[str, Any]
     """Extracted data according to the document type JSON schema."""
+
+    validation: ConversionValidation = None
+    """Validation of ``data`` against the JSON Schema and DSL rules.
+
+    Informational only. ``None`` when validation was skipped.
+    """
+
+    field_locations: FieldLocations | None = None
+    """Per-field locations (only when the document type has bounding boxes enabled)."""
 
 
 class ConversionStatus(BaseModel):
@@ -56,6 +129,15 @@ class ConversionStatus(BaseModel):
 
     error: str | None = None
     """Error message (only present when status is ERROR)."""
+
+    validation: ConversionValidation = None
+    """Validation of ``data`` (only meaningful when status is SUCCESS).
+
+    Informational only. ``None`` when validation was skipped or not yet available.
+    """
+
+    field_locations: FieldLocations | None = None
+    """Per-field locations (only when the document type has bounding boxes enabled)."""
 
     # Internal reference to the resource for polling
     _resource: Convert | AsyncConvert | None = None

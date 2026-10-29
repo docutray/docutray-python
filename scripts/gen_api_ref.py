@@ -232,6 +232,8 @@ Response and model types:
 - [Document Type Types](types/document_type.md)
 - [Step Types](types/step.md)
 - [Knowledge Base Types](types/knowledge_base.md)
+- [Validation Types](types/validation.md)
+- [Webhook Types](types/webhook.md)
 - [Shared Types](types/shared.md)
 """
     return content
@@ -416,6 +418,8 @@ def main() -> None:
         "document_type": "Document Type",
         "step": "Step",
         "knowledge_base": "Knowledge Base",
+        "validation": "Validation",
+        "webhook": "Webhook",
         "shared": "Shared",
     }
 

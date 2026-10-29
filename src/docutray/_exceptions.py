@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import httpx
+
+if TYPE_CHECKING:
+    from .types.validation import DSLDiagnostic
 
 
 class DocuTrayError(Exception):
@@ -98,6 +101,54 @@ class BadRequestError(APIError):
 
     This typically indicates invalid parameters or malformed request data.
     """
+
+
+class DSLValidationError(BadRequestError):
+    """Raised when DSL validation rules have invalid syntax (HTTP 400).
+
+    Returned by ``document_types.create()``, ``update()`` and ``validate()``
+    when ``dsl_rules`` cannot be parsed.
+
+    Example:
+        >>> try:
+        ...     client.document_types.update("dt_123", dsl_rules="field.total >")
+        ... except DSLValidationError as e:
+        ...     for d in e.diagnostics:
+        ...         print(f"{d.line}:{d.column} {d.message}")
+    """
+
+    @property
+    def diagnostics(self) -> list[DSLDiagnostic]:
+        """Syntax diagnostics with 1-based line and column."""
+        from .types.validation import DSLDiagnostic
+
+        if not isinstance(self.body, dict):
+            return []
+        return [
+            DSLDiagnostic.model_validate(item)
+            for item in self.body.get("errors") or []
+            if _is_dsl_diagnostic(item)
+        ]
+
+
+def _is_dsl_diagnostic(item: Any) -> bool:
+    return (
+        isinstance(item, dict)
+        and isinstance(item.get("line"), int)
+        and isinstance(item.get("column"), int)
+        and isinstance(item.get("message"), str)
+    )
+
+
+def _is_dsl_error_body(body: Any) -> bool:
+    if not isinstance(body, dict):
+        return False
+    errors = body.get("errors")
+    return (
+        isinstance(errors, list)
+        and len(errors) > 0
+        and all(_is_dsl_diagnostic(e) for e in errors)
+    )
 
 
 class AuthenticationError(APIError):
@@ -305,12 +356,15 @@ def raise_for_status(response: httpx.Response) -> None:
                 )
                 or body.get("message")
                 or body.get("detail")
+                or (body.get("error") if isinstance(body.get("error"), str) else None)
             )
             if extracted_message:
                 message = str(extracted_message)
 
     # Get the appropriate exception class
     exc_class = STATUS_CODE_TO_EXCEPTION.get(status_code)
+    if status_code == 400 and _is_dsl_error_body(body):
+        exc_class = DSLValidationError
     if exc_class is None:
         exc_class = InternalServerError if status_code >= 500 else APIError
 
