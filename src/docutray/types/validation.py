@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 ValidationSeverity = Literal["error", "warning"]
 """Severity of a validation issue. Warnings never make a document invalid."""
@@ -18,20 +18,20 @@ class ValidationIssue(BaseModel):
 
     model_config = ConfigDict(extra="allow")
 
-    field: str = ""
-    """Canonical path of the field (e.g. ``"items[0].total"``); empty for the document root."""
+    field: str | None = ""
+    """Canonical path of the field (e.g. ``"items[0].total"``); empty or ``None`` for the document root."""
 
-    code: str
+    code: str = ""
     """Machine-readable issue code (e.g. ``"VALIDATION_ERROR"``)."""
 
-    message: str
+    message: str = ""
     """Human-readable description of the issue."""
 
-    severity: ValidationSeverity
-    """Issue severity."""
+    severity: ValidationSeverity | str | None = None
+    """Issue severity. Unknown values are kept as plain strings."""
 
-    source: ValidationSource
-    """Validation layer that produced the issue."""
+    source: ValidationSource | str | None = None
+    """Validation layer that produced the issue. Unknown values are kept as plain strings."""
 
     rule: str | None = None
     """Name of the rule that failed, when the issue comes from a rule."""
@@ -51,10 +51,10 @@ class ValidationOutcome(BaseModel):
     valid: bool
     """Whether the data conforms (warnings do not make it invalid)."""
 
-    errors: list[ValidationIssue]
+    errors: list[ValidationIssue] = Field(default_factory=list)
     """Blocking issues."""
 
-    warnings: list[ValidationIssue]
+    warnings: list[ValidationIssue] = Field(default_factory=list)
     """Non-blocking issues."""
 
 
@@ -67,7 +67,10 @@ class ValidationSystemFailure(BaseModel):
     """Always ``"error"``."""
 
 
-ConversionValidation = ValidationOutcome | ValidationSystemFailure | None
+ConversionValidation = Annotated[
+    ValidationOutcome | ValidationSystemFailure | dict[str, Any] | None,
+    Field(union_mode="left_to_right"),
+]
 """Validation of a conversion's extracted data.
 
 Informational only: it never changes the conversion status.
@@ -75,6 +78,8 @@ Informational only: it never changes the conversion status.
 - ``ValidationOutcome`` when validation ran.
 - ``ValidationSystemFailure`` when validation could not be completed.
 - ``None`` when validation was skipped (no JSON Schema and no rules).
+- A plain ``dict`` for any shape this SDK version does not recognize, so new
+  API variants never break parsing of the conversion itself.
 """
 
 

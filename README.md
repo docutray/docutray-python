@@ -260,8 +260,10 @@ if isinstance(result.validation, ValidationOutcome):
         print(f"[{issue.severity}] {issue.field or '<root>'}: {issue.message} ({issue.source})")
 elif isinstance(result.validation, ValidationSystemFailure):
     print("Validation could not be completed")
-else:
+elif result.validation is None:
     print("Validation skipped (no schema and no rules)")
+else:
+    print("Unrecognized validation shape:", result.validation)  # plain dict
 ```
 
 The same `validation` field is available on `ConversionStatus` (async conversions).

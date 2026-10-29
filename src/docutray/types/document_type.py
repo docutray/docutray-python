@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from .validation import ValidationIssue
 
@@ -54,8 +54,8 @@ class DocumentType(BaseModel):
     identifyPromptHints: str | None = None
     """Hints for the document identification prompt."""
 
-    conversionMode: ConversionMode | None = None
-    """Conversion mode used by the OCR pipeline."""
+    conversionMode: ConversionMode | str | None = None
+    """Conversion mode used by the OCR pipeline. Unknown modes are kept as plain strings."""
 
     keepPropertyOrdering: bool | None = None
     """Whether property ordering in the schema is preserved."""
@@ -75,10 +75,10 @@ class ValidationErrorInfo(BaseModel):
 
     model_config = ConfigDict(extra="allow")
 
-    count: int
+    count: int = 0
     """Total number of errors found."""
 
-    messages: list[str]
+    messages: list[str] = Field(default_factory=list)
     """List of descriptive error messages."""
 
 
@@ -87,10 +87,10 @@ class ValidationWarningInfo(BaseModel):
 
     model_config = ConfigDict(extra="allow")
 
-    count: int
+    count: int = 0
     """Total number of warnings found."""
 
-    messages: list[str]
+    messages: list[str] = Field(default_factory=list)
     """List of descriptive warning messages."""
 
 

@@ -26,10 +26,10 @@ class StepValidationSummary(BaseModel):
 
     model_config = ConfigDict(extra="allow")
 
-    errors: ValidationErrorInfo
+    errors: ValidationErrorInfo = Field(default_factory=ValidationErrorInfo)
     """Validation errors summary."""
 
-    warnings: ValidationWarningInfo
+    warnings: ValidationWarningInfo = Field(default_factory=ValidationWarningInfo)
     """Validation warnings summary."""
 
 

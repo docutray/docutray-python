@@ -18,7 +18,11 @@ from docutray import (
     ValidationSystemFailure,
 )
 from docutray.types import (
+    ConversionResult,
+    ConversionStatus,
+    DocumentType,
     IdentificationWebhookPayload,
+    StepExecutionStatus,
     StepValidationSummary,
     StepWebhookPayload,
 )
@@ -620,3 +624,78 @@ class TestWebhookPayloads:
 
         assert payload.validation is not None
         assert payload.validation.warnings.messages == ["check"]
+
+
+class TestLenientParsing:
+    """Off-spec payloads must not break parsing of informational fields."""
+
+    def test_issue_accepts_null_field_and_unknown_enums(self) -> None:
+        outcome = ValidationOutcome.model_validate(
+            {
+                "valid": False,
+                "errors": [{"field": None, "severity": "fatal", "source": "llm"}],
+            }
+        )
+
+        issue = outcome.errors[0]
+        assert issue.field is None
+        assert issue.severity == "fatal"
+        assert issue.source == "llm"
+        assert issue.code == ""
+        assert outcome.warnings == []
+
+    @pytest.mark.parametrize(
+        "validation",
+        [{"status": "skipped"}, {"status": "timeout", "retry": True}, {}],
+    )
+    def test_unknown_conversion_validation_falls_back_to_dict(
+        self, validation: dict[str, object]
+    ) -> None:
+        result = ConversionResult.model_validate({"data": {}, "validation": validation})
+        status = ConversionStatus.model_validate(
+            {"conversion_id": "c_1", "status": "SUCCESS", "validation": validation}
+        )
+        payload = ConversionWebhookPayload.model_validate(
+            {"conversion_id": "c_1", "status": "SUCCESS", "validation": validation}
+        )
+
+        for value in (result.validation, status.validation, payload.validation):
+            assert value == validation
+            assert not isinstance(value, ValidationOutcome | ValidationSystemFailure)
+
+    def test_known_shapes_still_parse_to_models(self) -> None:
+        outcome = ConversionResult.model_validate(
+            {"data": {}, "validation": {"valid": True, "errors": [], "warnings": []}}
+        )
+        failure = ConversionResult.model_validate(
+            {"data": {}, "validation": {"status": "error"}}
+        )
+
+        assert isinstance(outcome.validation, ValidationOutcome)
+        assert isinstance(failure.validation, ValidationSystemFailure)
+
+    @pytest.mark.parametrize("validation", [{}, {"errors": {"count": 1}}])
+    def test_partial_step_summary(self, validation: dict[str, object]) -> None:
+        status = StepExecutionStatus.model_validate(
+            {"id": "se_1", "status": "SUCCESS", "validation": validation}
+        )
+        payload = StepWebhookPayload.model_validate(
+            {
+                "step_execution_id": "se_1",
+                "step_id": "st_1",
+                "status": "completed",
+                "validation": validation,
+            }
+        )
+
+        for summary in (status.validation, payload.validation):
+            assert summary is not None
+            assert summary.warnings.count == 0
+            assert summary.warnings.messages == []
+
+    def test_unknown_conversion_mode(self) -> None:
+        doc_type = DocumentType.model_validate(
+            {**DOCUMENT_TYPE, "conversionMode": "vision"}
+        )
+
+        assert doc_type.conversionMode == "vision"

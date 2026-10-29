@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `DSLValidationError` (subclass of `BadRequestError`) with typed `diagnostics` (`DSLDiagnostic`: `line`, `column`, `message`) for invalid DSL.
 - Structured validation results:
   - `ValidationResult.valid` and `ValidationResult.issues` (`list[ValidationIssue]`).
-  - `ConversionResult.validation` and `ConversionStatus.validation`, typed as `ConversionValidation` (`ValidationOutcome | ValidationSystemFailure | None`).
+  - `ConversionResult.validation` and `ConversionStatus.validation`, typed as `ConversionValidation` (`ValidationOutcome | ValidationSystemFailure | dict | None`). Shapes this SDK version does not recognize stay a plain `dict` instead of failing to parse.
   - `StepExecutionStatus.validation` typed as `StepValidationSummary`. The API wire format is unchanged, but the Python attribute is now a model instead of a dict (see **Changed**).
 - Webhook payload models: `ConversionWebhookPayload` (with `validation`), `IdentificationWebhookPayload`, `StepWebhookPayload` and the `WebhookEventType` literal.
 - `field_locations` (`FieldLocations`) on `ConversionResult` / `ConversionStatus` for document types with bounding boxes enabled.
@@ -24,7 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Breaking:** `ConversionResult.validation`, `ConversionResult.field_locations`, `ConversionStatus.validation`, `ConversionStatus.field_locations` and `StepExecutionStatus.validation` used to be plain dicts (passed through by `extra="allow"`). They are now Pydantic models, so dict access such as `result.validation["valid"]` raises `TypeError`. To migrate, use attribute access (`result.validation.valid`, `result.field_locations.fields`, `status.validation.errors.count`) or call `.model_dump()` to get the previous dict. `result.validation` can be a `ValidationOutcome`, a `ValidationSystemFailure` (`status == "error"`) or `None`, so check its type before reading `.valid`.
+- **Breaking:** `ConversionResult.validation`, `ConversionResult.field_locations`, `ConversionStatus.validation`, `ConversionStatus.field_locations` and `StepExecutionStatus.validation` used to be plain dicts (passed through by `extra="allow"`). They are now Pydantic models, so dict access such as `result.validation["valid"]` raises `TypeError`. To migrate, use attribute access (`result.validation.valid`, `result.field_locations.fields`, `status.validation.errors.count`) or call `.model_dump()` to get the previous dict. `result.validation` can be a `ValidationOutcome`, a `ValidationSystemFailure` (`status == "error"`), a `dict` (unrecognized shape) or `None`, so check its type before reading `.valid`.
+- Validation models are lenient so off-spec values never break parsing of a conversion, status, document type or webhook: `ValidationIssue.field` accepts `None`; `code` and `message` default to `""`; `severity` and `source` keep unknown values as plain strings; `ValidationOutcome.errors`/`warnings` and `StepValidationSummary.errors`/`warnings` (including `count`/`messages`) default to empty; `DocumentType.conversionMode` keeps unknown modes as plain strings.
 - `DSLValidationError` is raised only when every entry of the 400 response's `errors` has an integer `line` and `column` and a string `message`. Any other 400 stays a plain `BadRequestError`.
 
 ### Fixed
