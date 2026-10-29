@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Breaking:** `document_type_code_options` is now required on `client.identify.run()` / `run_async()` (sync, async and raw), as in the API and docutray-node 0.2.0 (#29). Omitting it raises `TypeError`; passing `None` or an empty list raises `ValueError` before any request is sent. The API always rejected requests without it (`400 Validation error`), so such calls already failed at runtime.
 - **Breaking:** `client.knowledge_bases.documents(kb_id).create()` now requires `document_id`. The API always rejected documents without it (400), so code that omitted it already failed at runtime; it now fails with `TypeError` before the request.
 - **Breaking:** `StepExecutionStatus.identification` used to be a plain dict (passed through by `extra="allow"`) and is now a `StepIdentification` model, so `status.identification["documentTypeCode"]` raises `TypeError`. Use `status.identification.documentTypeCode` or `.model_dump()`. (`StepWebhookPayload` is new in this release.)
 - `ValidationResult.is_valid()` without a `valid` flag only returns `True` when the API sent an error `count` of zero; an empty `errors` summary no longer reads as valid.

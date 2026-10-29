@@ -120,7 +120,9 @@ class IdentificationStatus(BaseModel):
             ValueError: If this status wasn't created by run_async().
 
         Example:
-            >>> status = client.identify.run_async(file=path)
+            >>> status = client.identify.run_async(
+            ...     file=path, document_type_code_options=["invoice", "receipt"]
+            ... )
             >>> final = status.wait(timeout=60, on_status=lambda s: print(s.status))
             >>> if final.is_success():
             ...     print(final.document_type.name)

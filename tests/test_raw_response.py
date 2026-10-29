@@ -319,6 +319,7 @@ class TestIdentifyWithRawResponse:
         )
 
         response = client.identify.with_raw_response.run(
+            document_type_code_options=["invoice"],
             url="https://example.com/doc.pdf",
         )
 
@@ -346,6 +347,7 @@ class TestIdentifyWithRawResponse:
         )
 
         response = client.identify.with_raw_response.run(
+            document_type_code_options=["invoice"],
             file=b"fake pdf content",
             content_type="application/pdf",
         )
@@ -372,6 +374,7 @@ class TestIdentifyWithRawResponse:
 
         file_base64 = base64.b64encode(b"fake pdf content").decode()
         response = client.identify.with_raw_response.run(
+            document_type_code_options=["invoice"],
             file_base64=file_base64,
             content_type="application/pdf",
         )
@@ -381,7 +384,9 @@ class TestIdentifyWithRawResponse:
     def test_run_requires_input(self, client: Client) -> None:
         """with_raw_response.run raises error when no input provided."""
         with pytest.raises(ValueError, match="Must provide one of"):
-            client.identify.with_raw_response.run()
+            client.identify.with_raw_response.run(
+                document_type_code_options=["invoice"],
+            )
 
     def test_run_async_returns_raw_response(
         self, client: Client, mock_api: respx.MockRouter
@@ -396,6 +401,7 @@ class TestIdentifyWithRawResponse:
         )
 
         response = client.identify.with_raw_response.run_async(
+            document_type_code_options=["invoice"],
             url="https://example.com/doc.pdf",
         )
 
@@ -415,6 +421,7 @@ class TestIdentifyWithRawResponse:
         )
 
         response = client.identify.with_raw_response.run_async(
+            document_type_code_options=["invoice"],
             file=b"fake pdf content",
             content_type="application/pdf",
         )
@@ -434,6 +441,7 @@ class TestIdentifyWithRawResponse:
 
         file_base64 = base64.b64encode(b"fake pdf content").decode()
         response = client.identify.with_raw_response.run_async(
+            document_type_code_options=["invoice"],
             file_base64=file_base64,
             content_type="application/pdf",
         )
@@ -443,7 +451,9 @@ class TestIdentifyWithRawResponse:
     def test_run_async_requires_input(self, client: Client) -> None:
         """with_raw_response.run_async raises error when no input provided."""
         with pytest.raises(ValueError, match="Must provide one of"):
-            client.identify.with_raw_response.run_async()
+            client.identify.with_raw_response.run_async(
+                document_type_code_options=["invoice"],
+            )
 
     def test_get_status_returns_raw_response(
         self, client: Client, mock_api: respx.MockRouter
@@ -815,6 +825,7 @@ class TestAsyncIdentifyWithRawResponse:
         )
 
         response = await async_client.identify.with_raw_response.run(
+            document_type_code_options=["invoice"],
             url="https://example.com/doc.pdf",
         )
 
@@ -834,6 +845,7 @@ class TestAsyncIdentifyWithRawResponse:
         )
 
         response = await async_client.identify.with_raw_response.run_async(
+            document_type_code_options=["invoice"],
             url="https://example.com/doc.pdf",
         )
 

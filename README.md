@@ -275,7 +275,11 @@ the page and box of each extracted field.
 Automatically identify document types.
 
 ```python
-result = client.identify.run(file=Path("unknown_document.pdf"))
+# document_type_code_options is required: the candidate types (at least one)
+result = client.identify.run(
+    file=Path("unknown_document.pdf"),
+    document_type_code_options=["acme_invoice", "acme_receipt"],
+)
 
 print(f"Identified as: {result.document_type.name}")
 print(f"Confidence: {result.document_type.confidence:.2%}")
@@ -284,7 +288,7 @@ print(f"Confidence: {result.document_type.confidence:.2%}")
 for alt in result.alternatives:
     print(f"  Alternative: {alt.name} ({alt.confidence:.2%})")
 
-# Limit the candidate types and attach your own metadata
+# Attach your own metadata
 result = client.identify.run(
     file=Path("unknown_document.pdf"),
     document_type_code_options=["acme_invoice", "acme_receipt"],

@@ -19,7 +19,9 @@ class Identify:
 
     Example:
         >>> client = Client(api_key="...")
-        >>> result = client.identify.run(file=Path("document.pdf"))
+        >>> result = client.identify.run(
+        ...     file=Path("document.pdf"), document_type_code_options=["invoice", "receipt"]
+        ... )
         >>> print(f"Type: {result.document_type.code}")
         >>> print(f"Confidence: {result.document_type.confidence}")
     """
@@ -39,7 +41,7 @@ class Identify:
         url: str | None = None,
         file_base64: str | None = None,
         content_type: str | None = None,
-        document_type_code_options: list[str] | None = None,
+        document_type_code_options: list[str],
         document_metadata: dict[str, Any] | None = None,
     ) -> IdentificationResult:
         """Identify the type of a document synchronously.
@@ -52,9 +54,8 @@ class Identify:
             url: URL of the document to identify (alternative to file).
             file_base64: Base64-encoded document (alternative to file).
             content_type: Content type of the file. Auto-detected if not provided.
-            document_type_code_options: List of document type codes to limit
-                identification to. If provided, the API will only consider
-                these document types when identifying.
+            document_type_code_options: Document type codes to choose from. Required
+                by the API; must contain at least one code.
             document_metadata: Additional metadata to attach to the identification.
 
         Returns:
@@ -66,24 +67,23 @@ class Identify:
             AuthenticationError: If the API key is invalid.
 
         Example:
-            >>> result = client.identify.run(file=Path("unknown.pdf"))
+            >>> result = client.identify.run(
+            ...     file=Path("unknown.pdf"),
+            ...     document_type_code_options=["invoice", "receipt"],
+            ... )
             >>> print(f"Identified as: {result.document_type.name}")
             >>> for alt in result.alternatives:
             ...     print(f"  Alternative: {alt.name} ({alt.confidence:.2%})")
-
-            >>> # Limit to specific document types
-            >>> result = client.identify.run(
-            ...     file=Path("statement.pdf"),
-            ...     document_type_code_options=["cartola_cc", "cartola_tc"]
-            ... )
         """
+        if not document_type_code_options:
+            raise ValueError(
+                "Must provide document_type_code_options with at least one "
+                "document type code"
+            )
         if file is not None:
             upload = prepare_file_upload(file, content_type=content_type)
             data: dict[str, Any] = {"image_content_type": upload.content_type}
-            if document_type_code_options:
-                data["document_type_code_options"] = json.dumps(
-                    document_type_code_options
-                )
+            data["document_type_code_options"] = json.dumps(document_type_code_options)
             if document_metadata:
                 data["document_metadata"] = json.dumps(document_metadata)
             response = self._client._request(
@@ -91,15 +91,13 @@ class Identify:
             )
         elif url is not None:
             body = prepare_url_upload(url, content_type=content_type)
-            if document_type_code_options:
-                body["document_type_code_options"] = document_type_code_options
+            body["document_type_code_options"] = document_type_code_options
             if document_metadata:
                 body["document_metadata"] = document_metadata
             response = self._client._request("POST", "/api/identify", json=body)
         elif file_base64 is not None:
             body = prepare_base64_upload(file_base64, content_type=content_type)
-            if document_type_code_options:
-                body["document_type_code_options"] = document_type_code_options
+            body["document_type_code_options"] = document_type_code_options
             if document_metadata:
                 body["document_metadata"] = document_metadata
             response = self._client._request("POST", "/api/identify", json=body)
@@ -115,7 +113,7 @@ class Identify:
         url: str | None = None,
         file_base64: str | None = None,
         content_type: str | None = None,
-        document_type_code_options: list[str] | None = None,
+        document_type_code_options: list[str],
         document_metadata: dict[str, Any] | None = None,
     ) -> IdentificationStatus:
         """Start an asynchronous document identification.
@@ -128,25 +126,29 @@ class Identify:
             url: URL of the document to identify (alternative to file).
             file_base64: Base64-encoded document (alternative to file).
             content_type: Content type of the file. Auto-detected if not provided.
-            document_type_code_options: List of document type codes to limit
-                identification to.
+            document_type_code_options: Document type codes to choose from. Required
+                by the API; must contain at least one code.
             document_metadata: Additional metadata to attach to the identification.
 
         Returns:
             The initial identification status with identification_id.
 
         Example:
-            >>> status = client.identify.run_async(file=Path("document.pdf"))
+            >>> status = client.identify.run_async(
+            ...     file=Path("document.pdf"), document_type_code_options=["invoice", "receipt"]
+            ... )
             >>> final = status.wait()
             >>> print(f"Type: {final.document_type.code}")
         """
+        if not document_type_code_options:
+            raise ValueError(
+                "Must provide document_type_code_options with at least one "
+                "document type code"
+            )
         if file is not None:
             upload = prepare_file_upload(file, content_type=content_type)
             data: dict[str, Any] = {"image_content_type": upload.content_type}
-            if document_type_code_options:
-                data["document_type_code_options"] = json.dumps(
-                    document_type_code_options
-                )
+            data["document_type_code_options"] = json.dumps(document_type_code_options)
             if document_metadata:
                 data["document_metadata"] = json.dumps(document_metadata)
             response = self._client._request(
@@ -157,15 +159,13 @@ class Identify:
             )
         elif url is not None:
             body = prepare_url_upload(url, content_type=content_type)
-            if document_type_code_options:
-                body["document_type_code_options"] = document_type_code_options
+            body["document_type_code_options"] = document_type_code_options
             if document_metadata:
                 body["document_metadata"] = document_metadata
             response = self._client._request("POST", "/api/identify-async", json=body)
         elif file_base64 is not None:
             body = prepare_base64_upload(file_base64, content_type=content_type)
-            if document_type_code_options:
-                body["document_type_code_options"] = document_type_code_options
+            body["document_type_code_options"] = document_type_code_options
             if document_metadata:
                 body["document_metadata"] = document_metadata
             response = self._client._request("POST", "/api/identify-async", json=body)
@@ -217,7 +217,9 @@ class AsyncIdentify:
 
     Example:
         >>> async with AsyncClient(api_key="...") as client:
-        ...     result = await client.identify.run(file=Path("document.pdf"))
+        ...     result = await client.identify.run(
+        ...         file=Path("document.pdf"), document_type_code_options=["invoice", "receipt"]
+        ...     )
         ...     print(f"Type: {result.document_type.code}")
     """
 
@@ -236,7 +238,7 @@ class AsyncIdentify:
         url: str | None = None,
         file_base64: str | None = None,
         content_type: str | None = None,
-        document_type_code_options: list[str] | None = None,
+        document_type_code_options: list[str],
         document_metadata: dict[str, Any] | None = None,
     ) -> IdentificationResult:
         """Identify the type of a document asynchronously.
@@ -246,20 +248,22 @@ class AsyncIdentify:
             url: URL of the document to identify (alternative to file).
             file_base64: Base64-encoded document (alternative to file).
             content_type: Content type of the file. Auto-detected if not provided.
-            document_type_code_options: List of document type codes to limit
-                identification to.
+            document_type_code_options: Document type codes to choose from. Required
+                by the API; must contain at least one code.
             document_metadata: Additional metadata to attach to the identification.
 
         Returns:
             The identification result with document type and alternatives.
         """
+        if not document_type_code_options:
+            raise ValueError(
+                "Must provide document_type_code_options with at least one "
+                "document type code"
+            )
         if file is not None:
             upload = prepare_file_upload(file, content_type=content_type)
             data: dict[str, Any] = {"image_content_type": upload.content_type}
-            if document_type_code_options:
-                data["document_type_code_options"] = json.dumps(
-                    document_type_code_options
-                )
+            data["document_type_code_options"] = json.dumps(document_type_code_options)
             if document_metadata:
                 data["document_metadata"] = json.dumps(document_metadata)
             response = await self._client._request(
@@ -267,15 +271,13 @@ class AsyncIdentify:
             )
         elif url is not None:
             body = prepare_url_upload(url, content_type=content_type)
-            if document_type_code_options:
-                body["document_type_code_options"] = document_type_code_options
+            body["document_type_code_options"] = document_type_code_options
             if document_metadata:
                 body["document_metadata"] = document_metadata
             response = await self._client._request("POST", "/api/identify", json=body)
         elif file_base64 is not None:
             body = prepare_base64_upload(file_base64, content_type=content_type)
-            if document_type_code_options:
-                body["document_type_code_options"] = document_type_code_options
+            body["document_type_code_options"] = document_type_code_options
             if document_metadata:
                 body["document_metadata"] = document_metadata
             response = await self._client._request("POST", "/api/identify", json=body)
@@ -291,7 +293,7 @@ class AsyncIdentify:
         url: str | None = None,
         file_base64: str | None = None,
         content_type: str | None = None,
-        document_type_code_options: list[str] | None = None,
+        document_type_code_options: list[str],
         document_metadata: dict[str, Any] | None = None,
     ) -> IdentificationStatus:
         """Start an asynchronous document identification.
@@ -301,20 +303,22 @@ class AsyncIdentify:
             url: URL of the document to identify (alternative to file).
             file_base64: Base64-encoded document (alternative to file).
             content_type: Content type of the file. Auto-detected if not provided.
-            document_type_code_options: List of document type codes to limit
-                identification to.
+            document_type_code_options: Document type codes to choose from. Required
+                by the API; must contain at least one code.
             document_metadata: Additional metadata to attach to the identification.
 
         Returns:
             The initial identification status with identification_id.
         """
+        if not document_type_code_options:
+            raise ValueError(
+                "Must provide document_type_code_options with at least one "
+                "document type code"
+            )
         if file is not None:
             upload = prepare_file_upload(file, content_type=content_type)
             data: dict[str, Any] = {"image_content_type": upload.content_type}
-            if document_type_code_options:
-                data["document_type_code_options"] = json.dumps(
-                    document_type_code_options
-                )
+            data["document_type_code_options"] = json.dumps(document_type_code_options)
             if document_metadata:
                 data["document_metadata"] = json.dumps(document_metadata)
             response = await self._client._request(
@@ -325,8 +329,7 @@ class AsyncIdentify:
             )
         elif url is not None:
             body = prepare_url_upload(url, content_type=content_type)
-            if document_type_code_options:
-                body["document_type_code_options"] = document_type_code_options
+            body["document_type_code_options"] = document_type_code_options
             if document_metadata:
                 body["document_metadata"] = document_metadata
             response = await self._client._request(
@@ -334,8 +337,7 @@ class AsyncIdentify:
             )
         elif file_base64 is not None:
             body = prepare_base64_upload(file_base64, content_type=content_type)
-            if document_type_code_options:
-                body["document_type_code_options"] = document_type_code_options
+            body["document_type_code_options"] = document_type_code_options
             if document_metadata:
                 body["document_metadata"] = document_metadata
             response = await self._client._request(

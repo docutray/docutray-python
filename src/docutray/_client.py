@@ -30,7 +30,9 @@ class Client(BaseClient):
 
         Or using a context manager:
         >>> with Client(api_key="sk_test_123") as client:
-        ...     result = client.identify.run(file=Path("document.pdf"))
+        ...     result = client.identify.run(
+        ...         file=Path("document.pdf"), document_type_code_options=["invoice", "receipt"]
+        ...     )
         ...     print(f"Type: {result.document_type.name}")
 
     Args:
@@ -79,7 +81,9 @@ class Client(BaseClient):
         """Document identification operations.
 
         Example:
-            >>> result = client.identify.run(file=Path("document.pdf"))
+            >>> result = client.identify.run(
+            ...     file=Path("document.pdf"), document_type_code_options=["invoice", "receipt"]
+            ... )
             >>> print(f"Type: {result.document_type.name}")
         """
         return Identify(self)
@@ -196,7 +200,9 @@ class AsyncClient(BaseAsyncClient):
         """Document identification operations (async).
 
         Example:
-            >>> result = await client.identify.run(file=Path("document.pdf"))
+            >>> result = await client.identify.run(
+            ...     file=Path("document.pdf"), document_type_code_options=["invoice", "receipt"]
+            ... )
             >>> print(f"Type: {result.document_type.name}")
         """
         return AsyncIdentify(self)

@@ -57,7 +57,9 @@ class TestIdentifyDocumentMetadata:
             return_value=httpx.Response(200, json=IDENTIFY_RESULT)
         )
 
-        client.identify.run(**kwargs, document_metadata=METADATA)
+        client.identify.run(
+            document_type_code_options=["invoice"], **kwargs, document_metadata=METADATA
+        )
 
         assert json.loads(route.calls[0].request.content)["document_metadata"] == (
             METADATA
@@ -69,7 +71,10 @@ class TestIdentifyDocumentMetadata:
         )
 
         client.identify.run(
-            file=b"%PDF-1.4", content_type="application/pdf", document_metadata=METADATA
+            document_type_code_options=["invoice"],
+            file=b"%PDF-1.4",
+            content_type="application/pdf",
+            document_metadata=METADATA,
         )
 
         sent = _form_field(route.calls[0].request, "document_metadata")
@@ -82,7 +87,9 @@ class TestIdentifyDocumentMetadata:
             return_value=httpx.Response(200, json=IDENTIFY_RESULT)
         )
 
-        client.identify.run(url="https://example.com/a.pdf")
+        client.identify.run(
+            document_type_code_options=["invoice"], url="https://example.com/a.pdf"
+        )
 
         assert "document_metadata" not in json.loads(route.calls[0].request.content)
 
@@ -92,7 +99,9 @@ class TestIdentifyDocumentMetadata:
         )
 
         client.identify.run_async(
-            url="https://example.com/a.pdf", document_metadata=METADATA
+            document_type_code_options=["invoice"],
+            url="https://example.com/a.pdf",
+            document_metadata=METADATA,
         )
 
         assert json.loads(route.calls[0].request.content)["document_metadata"] == (
@@ -107,7 +116,10 @@ class TestIdentifyDocumentMetadata:
         )
 
         await async_client.identify.run_async(
-            file=b"%PDF-1.4", content_type="application/pdf", document_metadata=METADATA
+            document_type_code_options=["invoice"],
+            file=b"%PDF-1.4",
+            content_type="application/pdf",
+            document_metadata=METADATA,
         )
 
         sent = _form_field(route.calls[0].request, "document_metadata")
@@ -119,7 +131,9 @@ class TestIdentifyDocumentMetadata:
         )
 
         raw = client.identify.with_raw_response.run(
-            url="https://example.com/a.pdf", document_metadata=METADATA
+            document_type_code_options=["invoice"],
+            url="https://example.com/a.pdf",
+            document_metadata=METADATA,
         )
 
         assert raw.parse().document_type.code == "invoice"
@@ -135,7 +149,9 @@ class TestIdentifyDocumentMetadata:
         )
 
         await async_client.identify.with_raw_response.run(
-            url="https://example.com/a.pdf", document_metadata=METADATA
+            document_type_code_options=["invoice"],
+            url="https://example.com/a.pdf",
+            document_metadata=METADATA,
         )
 
         assert json.loads(route.calls[0].request.content)["document_metadata"] == (
@@ -658,3 +674,75 @@ def test_knowledge_base_document_null_document_id() -> None:
     )
 
     assert doc.documentId == ""
+
+
+class TestIdentifyRequiresCodeOptions:
+    """document_type_code_options is required, as in the API and Node SDK."""
+
+    MESSAGE = "document_type_code_options"
+
+    @pytest.mark.parametrize("options", [None, []])
+    @pytest.mark.parametrize("method", ["run", "run_async"])
+    @pytest.mark.parametrize("raw", [False, True])
+    def test_sync_rejects_missing_or_empty(
+        self,
+        client: Client,
+        mock_api: respx.MockRouter,
+        options: list[str] | None,
+        method: str,
+        raw: bool,
+    ) -> None:
+        route = mock_api.post(url__regex=r"/api/identify.*")
+        resource = client.identify.with_raw_response if raw else client.identify
+
+        with pytest.raises(ValueError, match=self.MESSAGE):
+            getattr(resource, method)(
+                url="https://example.com/a.pdf", document_type_code_options=options
+            )
+
+        assert not route.called
+
+    @pytest.mark.parametrize("options", [None, []])
+    @pytest.mark.parametrize("method", ["run", "run_async"])
+    @pytest.mark.parametrize("raw", [False, True])
+    async def test_async_rejects_missing_or_empty(
+        self,
+        async_client: AsyncClient,
+        mock_api: respx.MockRouter,
+        options: list[str] | None,
+        method: str,
+        raw: bool,
+    ) -> None:
+        route = mock_api.post(url__regex=r"/api/identify.*")
+        resource = (
+            async_client.identify.with_raw_response if raw else async_client.identify
+        )
+
+        with pytest.raises(ValueError, match=self.MESSAGE):
+            await getattr(resource, method)(
+                file=b"%PDF-1.4",
+                content_type="application/pdf",
+                document_type_code_options=options,
+            )
+
+        assert not route.called
+
+    def test_omitted_is_a_type_error(self, client: Client) -> None:
+        with pytest.raises(TypeError, match=self.MESSAGE):
+            client.identify.run(url="https://example.com/a.pdf")  # type: ignore[call-arg]
+
+    def test_options_always_sent_in_multipart(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
+        route = mock_api.post("/api/identify").mock(
+            return_value=httpx.Response(200, json=IDENTIFY_RESULT)
+        )
+
+        client.identify.run(
+            file=b"%PDF-1.4",
+            content_type="application/pdf",
+            document_type_code_options=["acme_invoice"],
+        )
+
+        sent = _form_field(route.calls[0].request, "document_type_code_options")
+        assert json.loads(sent) == ["acme_invoice"]

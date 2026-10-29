@@ -434,7 +434,7 @@ class IdentifyWithRawResponse:
         url: str | None = None,
         file_base64: str | None = None,
         content_type: str | None = None,
-        document_type_code_options: list[str] | None = None,
+        document_type_code_options: list[str],
         document_metadata: dict[str, Any] | None = None,
     ) -> RawResponse[IdentificationResult]:
         """Identify a document and return the raw HTTP response.
@@ -444,8 +444,8 @@ class IdentifyWithRawResponse:
             url: URL of the document to identify.
             file_base64: Base64-encoded document.
             content_type: Content type of the file.
-            document_type_code_options: List of document type codes to limit
-                identification to.
+            document_type_code_options: Document type codes to choose from. Required
+                by the API; must contain at least one code.
             document_metadata: Additional metadata to attach to the identification.
 
         Returns:
@@ -458,13 +458,15 @@ class IdentifyWithRawResponse:
         )
         from .types.identify import IdentificationResult
 
+        if not document_type_code_options:
+            raise ValueError(
+                "Must provide document_type_code_options with at least one "
+                "document type code"
+            )
         if file is not None:
             upload = prepare_file_upload(file, content_type=content_type)
             data: dict[str, Any] = {"image_content_type": upload.content_type}
-            if document_type_code_options:
-                data["document_type_code_options"] = json.dumps(
-                    document_type_code_options
-                )
+            data["document_type_code_options"] = json.dumps(document_type_code_options)
             if document_metadata:
                 data["document_metadata"] = json.dumps(document_metadata)
             response = self._identify._client._request(
@@ -472,8 +474,7 @@ class IdentifyWithRawResponse:
             )
         elif url is not None:
             body = prepare_url_upload(url, content_type=content_type)
-            if document_type_code_options:
-                body["document_type_code_options"] = document_type_code_options
+            body["document_type_code_options"] = document_type_code_options
             if document_metadata:
                 body["document_metadata"] = document_metadata
             response = self._identify._client._request(
@@ -481,8 +482,7 @@ class IdentifyWithRawResponse:
             )
         elif file_base64 is not None:
             body = prepare_base64_upload(file_base64, content_type=content_type)
-            if document_type_code_options:
-                body["document_type_code_options"] = document_type_code_options
+            body["document_type_code_options"] = document_type_code_options
             if document_metadata:
                 body["document_metadata"] = document_metadata
             response = self._identify._client._request(
@@ -503,7 +503,7 @@ class IdentifyWithRawResponse:
         url: str | None = None,
         file_base64: str | None = None,
         content_type: str | None = None,
-        document_type_code_options: list[str] | None = None,
+        document_type_code_options: list[str],
         document_metadata: dict[str, Any] | None = None,
     ) -> RawResponse[IdentificationStatus]:
         """Start async identification and return the raw HTTP response.
@@ -513,8 +513,8 @@ class IdentifyWithRawResponse:
             url: URL of the document to identify.
             file_base64: Base64-encoded document.
             content_type: Content type of the file.
-            document_type_code_options: List of document type codes to limit
-                identification to.
+            document_type_code_options: Document type codes to choose from. Required
+                by the API; must contain at least one code.
             document_metadata: Additional metadata to attach to the identification.
 
         Returns:
@@ -527,13 +527,15 @@ class IdentifyWithRawResponse:
         )
         from .types.identify import IdentificationStatus
 
+        if not document_type_code_options:
+            raise ValueError(
+                "Must provide document_type_code_options with at least one "
+                "document type code"
+            )
         if file is not None:
             upload = prepare_file_upload(file, content_type=content_type)
             data: dict[str, Any] = {"image_content_type": upload.content_type}
-            if document_type_code_options:
-                data["document_type_code_options"] = json.dumps(
-                    document_type_code_options
-                )
+            data["document_type_code_options"] = json.dumps(document_type_code_options)
             if document_metadata:
                 data["document_metadata"] = json.dumps(document_metadata)
             response = self._identify._client._request(
@@ -541,8 +543,7 @@ class IdentifyWithRawResponse:
             )
         elif url is not None:
             body = prepare_url_upload(url, content_type=content_type)
-            if document_type_code_options:
-                body["document_type_code_options"] = document_type_code_options
+            body["document_type_code_options"] = document_type_code_options
             if document_metadata:
                 body["document_metadata"] = document_metadata
             response = self._identify._client._request(
@@ -550,8 +551,7 @@ class IdentifyWithRawResponse:
             )
         elif file_base64 is not None:
             body = prepare_base64_upload(file_base64, content_type=content_type)
-            if document_type_code_options:
-                body["document_type_code_options"] = document_type_code_options
+            body["document_type_code_options"] = document_type_code_options
             if document_metadata:
                 body["document_metadata"] = document_metadata
             response = self._identify._client._request(
@@ -603,7 +603,7 @@ class AsyncIdentifyWithRawResponse:
         url: str | None = None,
         file_base64: str | None = None,
         content_type: str | None = None,
-        document_type_code_options: list[str] | None = None,
+        document_type_code_options: list[str],
         document_metadata: dict[str, Any] | None = None,
     ) -> RawResponse[IdentificationResult]:
         """Identify a document and return the raw HTTP response.
@@ -613,8 +613,8 @@ class AsyncIdentifyWithRawResponse:
             url: URL of the document to identify.
             file_base64: Base64-encoded document.
             content_type: Content type of the file.
-            document_type_code_options: List of document type codes to limit
-                identification to.
+            document_type_code_options: Document type codes to choose from. Required
+                by the API; must contain at least one code.
             document_metadata: Additional metadata to attach to the identification.
 
         Returns:
@@ -627,13 +627,15 @@ class AsyncIdentifyWithRawResponse:
         )
         from .types.identify import IdentificationResult
 
+        if not document_type_code_options:
+            raise ValueError(
+                "Must provide document_type_code_options with at least one "
+                "document type code"
+            )
         if file is not None:
             upload = prepare_file_upload(file, content_type=content_type)
             data: dict[str, Any] = {"image_content_type": upload.content_type}
-            if document_type_code_options:
-                data["document_type_code_options"] = json.dumps(
-                    document_type_code_options
-                )
+            data["document_type_code_options"] = json.dumps(document_type_code_options)
             if document_metadata:
                 data["document_metadata"] = json.dumps(document_metadata)
             response = await self._identify._client._request(
@@ -641,8 +643,7 @@ class AsyncIdentifyWithRawResponse:
             )
         elif url is not None:
             body = prepare_url_upload(url, content_type=content_type)
-            if document_type_code_options:
-                body["document_type_code_options"] = document_type_code_options
+            body["document_type_code_options"] = document_type_code_options
             if document_metadata:
                 body["document_metadata"] = document_metadata
             response = await self._identify._client._request(
@@ -650,8 +651,7 @@ class AsyncIdentifyWithRawResponse:
             )
         elif file_base64 is not None:
             body = prepare_base64_upload(file_base64, content_type=content_type)
-            if document_type_code_options:
-                body["document_type_code_options"] = document_type_code_options
+            body["document_type_code_options"] = document_type_code_options
             if document_metadata:
                 body["document_metadata"] = document_metadata
             response = await self._identify._client._request(
@@ -672,7 +672,7 @@ class AsyncIdentifyWithRawResponse:
         url: str | None = None,
         file_base64: str | None = None,
         content_type: str | None = None,
-        document_type_code_options: list[str] | None = None,
+        document_type_code_options: list[str],
         document_metadata: dict[str, Any] | None = None,
     ) -> RawResponse[IdentificationStatus]:
         """Start async identification and return the raw HTTP response.
@@ -682,8 +682,8 @@ class AsyncIdentifyWithRawResponse:
             url: URL of the document to identify.
             file_base64: Base64-encoded document.
             content_type: Content type of the file.
-            document_type_code_options: List of document type codes to limit
-                identification to.
+            document_type_code_options: Document type codes to choose from. Required
+                by the API; must contain at least one code.
             document_metadata: Additional metadata to attach to the identification.
 
         Returns:
@@ -696,13 +696,15 @@ class AsyncIdentifyWithRawResponse:
         )
         from .types.identify import IdentificationStatus
 
+        if not document_type_code_options:
+            raise ValueError(
+                "Must provide document_type_code_options with at least one "
+                "document type code"
+            )
         if file is not None:
             upload = prepare_file_upload(file, content_type=content_type)
             data: dict[str, Any] = {"image_content_type": upload.content_type}
-            if document_type_code_options:
-                data["document_type_code_options"] = json.dumps(
-                    document_type_code_options
-                )
+            data["document_type_code_options"] = json.dumps(document_type_code_options)
             if document_metadata:
                 data["document_metadata"] = json.dumps(document_metadata)
             response = await self._identify._client._request(
@@ -710,8 +712,7 @@ class AsyncIdentifyWithRawResponse:
             )
         elif url is not None:
             body = prepare_url_upload(url, content_type=content_type)
-            if document_type_code_options:
-                body["document_type_code_options"] = document_type_code_options
+            body["document_type_code_options"] = document_type_code_options
             if document_metadata:
                 body["document_metadata"] = document_metadata
             response = await self._identify._client._request(
@@ -719,8 +720,7 @@ class AsyncIdentifyWithRawResponse:
             )
         elif file_base64 is not None:
             body = prepare_base64_upload(file_base64, content_type=content_type)
-            if document_type_code_options:
-                body["document_type_code_options"] = document_type_code_options
+            body["document_type_code_options"] = document_type_code_options
             if document_metadata:
                 body["document_metadata"] = document_metadata
             response = await self._identify._client._request(
