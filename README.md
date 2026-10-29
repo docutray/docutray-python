@@ -472,8 +472,9 @@ page = client.knowledge_bases.documents(kb.id).list(document_id="getting")
 # Delete a document
 client.knowledge_bases.documents(kb.id).delete(doc.documentId)
 
-# Re-sync: force regenerating every embedding, skipping external sources
-client.knowledge_bases.sync(kb.id, force=True, sync_external_sources=False)
+# Re-sync, forcing every embedding to be regenerated. sync() is not retried by
+# default (each attempt is billed); pass max_retries= to opt in
+client.knowledge_bases.sync(kb.id, force=True)
 
 # Delete knowledge base
 client.knowledge_bases.delete(kb.id)

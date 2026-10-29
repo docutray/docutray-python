@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - API parameters and fields the SDK did not expose (#27):
   - `document_metadata` on `client.identify.run()` / `run_async()` (sync, async and raw).
   - `schema` and `indexing_preferences` on `client.knowledge_bases.update()`.
-  - `force` and `sync_external_sources` on `client.knowledge_bases.sync()`.
+  - `force` on `client.knowledge_bases.sync()`.
   - `document_id` filter on `client.knowledge_bases.documents(kb_id).list()` (case-insensitive substring match, as the API applies it).
   - Typed `ConversionStatus.document_metadata`, `IdentificationStatus.document_type_code_options`, and `StepExecutionStatus.step_name`, `identification` (`StepIdentification`) and `document_metadata`. `StepWebhookPayload.identification` uses the same `StepIdentification` model.
   - `KnowledgeBaseDocument.documentId` typed as `str`: it is the ID that `documents(kb_id).get()` / `update()` / `delete()` take.
@@ -45,6 +45,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `client.knowledge_bases.sync()` (sync, async and raw) is no longer retried by default (`max_retries=0`), matching docutray-node 0.2.0. A timeout used to resend the request while the first sync could still be running on the server, and every attempt is billed. Pass `max_retries=` to opt in per call; for large knowledge bases use a client with a larger `timeout`.
+- Ids are percent-encoded as a single path segment (`urllib.parse.quote(id, safe="")`) in every resource path (document types, knowledge bases and their documents, steps and async status endpoints), matching docutray-node. An id containing `/`, `?` or `#` can no longer change the requested route.
 - Docs: document types are fetched, updated and validated by internal `id`, not `codeType` (#21). The README resolves the id from the full (org-prefixed) `codeType` with the new `get_by_code()`, and explains the camelCase model fields. The `type_id` docstrings say it is the internal id, examples use cuid-shaped ids, and the `search` docstring now says it matches name, `codeType` and description.
 - README: knowledge base documents are fetched, updated and deleted by their `documentId` (given on create), not by `id`; the `document_id` docstrings say so.
 - Docstrings quote API paths with `{id}` placeholders in backticks.
