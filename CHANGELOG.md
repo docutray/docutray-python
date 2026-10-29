@@ -21,16 +21,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `field_locations` (`FieldLocations`) on `ConversionResult` / `ConversionStatus` for document types with bounding boxes enabled.
 - Typed `DocumentType` fields `promptHints`, `identifyPromptHints`, `conversionMode`, `keepPropertyOrdering`, `boundingBoxesEnabled` and `conversionSpec`; `bounding_boxes_enabled` and `conversion_spec` arguments on `create()` / `update()` (`conversion_spec=None` clears the spec in `update()`).
 - `NOT_GIVEN` / `NotGiven` sentinel for arguments where `None` has a meaning.
+- API parameters and fields the SDK did not expose (#27):
+  - `document_metadata` on `client.identify.run()` / `run_async()` (sync, async and raw).
+  - `schema` and `indexing_preferences` on `client.knowledge_bases.update()`.
+  - `force` and `sync_external_sources` on `client.knowledge_bases.sync()`.
+  - `document_id` filter on `client.knowledge_bases.documents(kb_id).list()` (case-insensitive substring match, as the API applies it).
+  - Typed `ConversionStatus.document_metadata`, `IdentificationStatus.document_type_code_options`, and `StepExecutionStatus.step_name`, `identification` (`StepIdentification`) and `document_metadata`.
+- CI workflow running ruff, mypy and pytest (Python 3.10 to 3.13) on pull requests and pushes to `main` (#25).
 
 ### Changed
 
+- **Breaking:** `client.knowledge_bases.documents(kb_id).create()` now requires `document_id`. The API always rejected documents without it (400), so code that omitted it already failed at runtime; it now fails with `TypeError` before the request.
+- **Breaking:** `StepValidationSummary.errors` / `warnings` are now `StepValidationCounts` (lenient: `count` defaults to `0`, `messages` to `[]`) instead of the shared `ValidationErrorInfo` / `ValidationWarningInfo`, which require `count` and `messages` again. A `validate()` response with an empty summary therefore fails to parse instead of reading as "no errors".
+- `StepExecutionStatus.execution_id` is read from `execution_id` first, then `id` and the deprecated `conversion_id`, so it keeps working when the API drops `conversion_id`.
+- `wait()` / `wait_async()` docstrings state that a failed operation is returned with `status == "ERROR"`, not raised.
 - **Breaking:** `ConversionResult.validation`, `ConversionResult.field_locations`, `ConversionStatus.validation`, `ConversionStatus.field_locations` and `StepExecutionStatus.validation` used to be plain dicts (passed through by `extra="allow"`). They are now Pydantic models, so dict access such as `result.validation["valid"]` raises `TypeError`. To migrate, use attribute access (`result.validation.valid`, `result.field_locations.fields`, `status.validation.errors.count`) or call `.model_dump()` to get the previous dict. `result.validation` can be a `ValidationOutcome`, a `ValidationSystemFailure` (`status == "error"`), a `dict` (unrecognized shape) or `None`, so check its type before reading `.valid`.
-- Validation models are lenient so off-spec values never break parsing of a conversion, status, document type or webhook: `ValidationIssue.field` accepts `None`; `code` and `message` default to `""`; `severity` and `source` keep unknown values as plain strings; `ValidationOutcome.errors`/`warnings` and `StepValidationSummary.errors`/`warnings` (including `count`/`messages`) default to empty; `DocumentType.conversionMode` keeps unknown modes as plain strings.
+- Validation models are lenient so off-spec values never break parsing of a conversion, status, document type or webhook: `ValidationIssue.field` accepts `None` and keeps non-string paths as strings; `code` and `message` default to `""` and accept `None`; `details` accepts any JSON value; `severity` and `source` keep unknown values as plain strings; `ValidationOutcome.errors`/`warnings` and `StepValidationSummary.errors`/`warnings` (including `count`/`messages`) default to empty; `DocumentType.conversionMode` keeps unknown modes as plain strings. One malformed issue no longer turns the whole `ValidationOutcome` into a `dict`.
 - `DSLValidationError` is raised only when every entry of the 400 response's `errors` has an integer `line` and `column` and a string `message`. Any other 400 stays a plain `BadRequestError`.
 
 ### Fixed
 
 - Docs: document types are fetched, updated and validated by internal `id`, not `codeType` (#21). The README resolves the id from the full (org-prefixed) `codeType` across all pages with `list().auto_paging_iter()`, and explains the camelCase model fields. The `type_id` docstrings say it is the internal id, examples use cuid-shaped ids, and the `search` docstring now says it matches name, `codeType` and description.
+- README: knowledge base documents are fetched, updated and deleted by their `documentId` (given on create), not by `id`; the `document_id` docstrings say so.
+- Docstrings quote API paths with `{id}` placeholders in backticks.
 - API errors whose body is `{"error": "<message>"}` now use that message as `APIError.message` instead of the raw response text.
 
 ## [0.2.1] - 2026-05-07

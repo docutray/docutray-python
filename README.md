@@ -283,6 +283,13 @@ print(f"Confidence: {result.document_type.confidence:.2%}")
 # View alternatives
 for alt in result.alternatives:
     print(f"  Alternative: {alt.name} ({alt.confidence:.2%})")
+
+# Limit the candidate types and attach your own metadata
+result = client.identify.run(
+    file=Path("unknown_document.pdf"),
+    document_type_code_options=["acme_invoice", "acme_receipt"],
+    document_metadata={"customer_id": "12345"},
+)
 ```
 
 ### Document Types
@@ -439,6 +446,7 @@ kb = client.knowledge_bases.create(
 
 # Add documents
 doc = client.knowledge_bases.documents(kb.id).create(
+    document_id="getting-started",  # your own unique ID, required
     content={
         "title": "Getting Started",
         "content": "Welcome to our product...",
@@ -457,13 +465,21 @@ for item in results.data:
     print(f"{item.similarity:.2%}: {item.document.content['title']}")
 
 # Update a document
+# get(), update() and delete() take the documentId given on create, not doc.id
 client.knowledge_bases.documents(kb.id).update(
-    doc.id,
+    doc.documentId,
     content={"title": "Updated Title", "content": "..."}
 )
 
+# Filter documents whose documentId contains a value (case-insensitive);
+# use get(document_id) for an exact match
+page = client.knowledge_bases.documents(kb.id).list(document_id="getting")
+
 # Delete a document
-client.knowledge_bases.documents(kb.id).delete(doc.id)
+client.knowledge_bases.documents(kb.id).delete(doc.documentId)
+
+# Re-sync: force regenerating every embedding, skipping external sources
+client.knowledge_bases.sync(kb.id, force=True, sync_external_sources=False)
 
 # Delete knowledge base
 client.knowledge_bases.delete(kb.id)
