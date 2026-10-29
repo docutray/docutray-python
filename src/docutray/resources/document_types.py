@@ -172,7 +172,7 @@ class DocumentTypes:
         Args:
             page: Page number (1-indexed). Defaults to 1.
             limit: Number of items per page. Defaults to server default.
-            search: Search term to filter document types by name.
+            search: Search term matched against name, ``codeType`` and description.
 
         Returns:
             A Page of document types with pagination support.
@@ -209,7 +209,7 @@ class DocumentTypes:
             NotFoundError: If the document type doesn't exist.
 
         Example:
-            >>> doc_type = client.document_types.get("dt_abc123")
+            >>> doc_type = client.document_types.get("cm0example0000000000000id")
             >>> print(f"Name: {doc_type.name}")
             >>> print(f"Schema: {doc_type.jsonSchema}")
         """
@@ -240,7 +240,7 @@ class DocumentTypes:
 
         Example:
             >>> result = client.document_types.validate(
-            ...     "dt_123",
+            ...     "cm0example0000000000000id",
             ...     {"invoice_number": "INV-001", "total": 100}
             ... )
             >>> if result.is_valid():
@@ -378,7 +378,7 @@ class DocumentTypes:
 
         Example:
             >>> doc_type = client.document_types.update(
-            ...     "dt_123",
+            ...     "cm0example0000000000000id",
             ...     name="Updated Invoice",
             ...     is_draft=False,
             ... )
@@ -490,7 +490,7 @@ class AsyncDocumentTypes:
         Args:
             page: Page number (1-indexed). Defaults to 1.
             limit: Number of items per page. Defaults to server default.
-            search: Search term to filter document types by name.
+            search: Search term matched against name, ``codeType`` and description.
 
         Returns:
             An AsyncPage of document types with pagination support.

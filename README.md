@@ -293,8 +293,9 @@ Model fields keep the API's camelCase names (`codeType`, `jsonSchema`, `isDraft`
 while method arguments are snake_case (`code_type=`, `json_schema=`, `is_draft=`).
 
 `get()`, `update()` and `validate()` take the document type's internal `id` (a cuid
-such as `"cmditbp6h000zrq01jl0whzcr"`), not its `codeType`; passing a code returns 404.
-Resolve a code to its id with `list()` first.
+such as `"cm0example0000000000000id"`), not its `codeType`; passing a code returns 404.
+Resolve a code to its id with `list()` first. Codes of your organization's types are
+prefixed with its slug (e.g. `acme_invoice`), so compare against the full `codeType`.
 
 ```python
 # List all document types
@@ -302,13 +303,21 @@ page = client.document_types.list()
 for doc_type in page.data:
     print(f"{doc_type.codeType}: {doc_type.name}")
 
-# Search document types
+# Search document types (matches name, codeType or description)
 page = client.document_types.list(search="invoice")
 
-# Resolve a codeType to its id, then get the document type
+# Resolve a codeType to its id (across all pages), then get the document type
+code = "acme_invoice"
 type_id = next(
-    d.id for d in client.document_types.list(search="invoice").data if d.codeType == "invoice"
+    (
+        d.id
+        for d in client.document_types.list(search=code).auto_paging_iter()
+        if d.codeType == code
+    ),
+    None,
 )
+if type_id is None:
+    raise LookupError(f"Document type {code!r} not found")
 doc_type = client.document_types.get(type_id)
 print(f"Schema: {doc_type.jsonSchema}")
 
@@ -355,7 +364,7 @@ that run after extraction, in addition to the JSON Schema.
 ```python
 from docutray import DSLValidationError
 
-type_id = "cmditbp6h000zrq01jl0whzcr"  # document type id (see Document Types above)
+# type_id: the document type's id, resolved from its codeType as in Document Types above
 
 rules = """
 # The total must be the subtotal plus tax

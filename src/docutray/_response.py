@@ -752,7 +752,7 @@ class DocumentTypesWithRawResponse:
         Args:
             page: Page number (1-indexed).
             limit: Number of items per page.
-            search: Search term to filter document types.
+            search: Search term matched against name, ``codeType`` and description.
 
         Returns:
             RawResponse wrapping the HTTP response.
@@ -994,7 +994,7 @@ class AsyncDocumentTypesWithRawResponse:
         Args:
             page: Page number (1-indexed).
             limit: Number of items per page.
-            search: Search term to filter document types.
+            search: Search term matched against name, ``codeType`` and description.
 
         Returns:
             RawResponse wrapping the HTTP response.
