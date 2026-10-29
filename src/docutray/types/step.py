@@ -8,14 +8,42 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
-from .document_type import ValidationErrorInfo, ValidationWarningInfo
-
 if TYPE_CHECKING:
     from collections.abc import Awaitable
 
     from ..resources.steps import AsyncSteps, Steps
 
 StepExecutionStatusType = Literal["ENQUEUED", "PROCESSING", "SUCCESS", "ERROR"]
+
+
+class StepValidationCounts(BaseModel):
+    """Count and messages of one half (errors or warnings) of a step validation summary.
+
+    Both fields default to empty so a partial or skipped summary still parses.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    count: int = 0
+    """Number of issues."""
+
+    messages: list[str] = Field(default_factory=list)
+    """Descriptive issue messages."""
+
+
+class StepIdentification(BaseModel):
+    """Identification result of a step execution."""
+
+    model_config = ConfigDict(extra="allow")
+
+    success: bool | None = None
+    """Whether identification succeeded (``True`` even for ``"other"`` documents)."""
+
+    documentTypeCode: str | None = None
+    """Identified document type code; ``"other"`` when no configured type matched."""
+
+    confidence: float | None = None
+    """Confidence score for automatic identification (omitted for fixed types)."""
 
 
 class StepValidationSummary(BaseModel):
@@ -26,10 +54,10 @@ class StepValidationSummary(BaseModel):
 
     model_config = ConfigDict(extra="allow")
 
-    errors: ValidationErrorInfo = Field(default_factory=ValidationErrorInfo)
+    errors: StepValidationCounts = Field(default_factory=StepValidationCounts)
     """Validation errors summary."""
 
-    warnings: ValidationWarningInfo = Field(default_factory=ValidationWarningInfo)
+    warnings: StepValidationCounts = Field(default_factory=StepValidationCounts)
     """Validation warnings summary."""
 
 
@@ -38,8 +66,14 @@ class StepExecutionStatus(BaseModel):
 
     model_config = ConfigDict(extra="allow", populate_by_name=True)
 
-    execution_id: str = Field(validation_alias=AliasChoices("id", "conversion_id"))
-    """Unique execution ID."""
+    execution_id: str = Field(
+        validation_alias=AliasChoices("execution_id", "id", "conversion_id")
+    )
+    """Unique execution ID.
+
+    Read from ``execution_id`` (status endpoint), ``id`` (run response) or the
+    deprecated ``conversion_id`` alias.
+    """
 
     status: StepExecutionStatusType
     """Current execution status."""
@@ -53,6 +87,9 @@ class StepExecutionStatus(BaseModel):
     step_id: str | None = None
     """Step ID that was executed."""
 
+    step_name: str | None = None
+    """Name of the step (returned when the execution is started)."""
+
     original_filename: str | None = None
     """Original filename of the processed file."""
 
@@ -62,8 +99,14 @@ class StepExecutionStatus(BaseModel):
     error: str | dict[str, Any] | None = None
     """Error message or details (only present when status is ERROR)."""
 
+    identification: StepIdentification | None = None
+    """Identification result (only present when status is SUCCESS)."""
+
     validation: StepValidationSummary | None = None
     """Validation summary (only present when status is SUCCESS)."""
+
+    document_metadata: dict[str, Any] | None = None
+    """Metadata sent with the original request (only for SUCCESS/ERROR)."""
 
     # Internal reference to the resource for polling
     _resource: Steps | AsyncSteps | None = None
@@ -96,7 +139,9 @@ class StepExecutionStatus(BaseModel):
                 Called with the current status after each poll for progress tracking.
 
         Returns:
-            The final execution status with data or error.
+            The final execution status with data or error. A failed
+            execution is returned with ``status == "ERROR"`` (check
+            ``is_error()``); it is not raised as an exception.
 
         Raises:
             APITimeoutError: If the execution doesn't complete within timeout.
@@ -136,7 +181,9 @@ class StepExecutionStatus(BaseModel):
                 Can be sync or async. Called with the current status after each poll.
 
         Returns:
-            The final execution status with data or error.
+            The final execution status with data or error. A failed
+            execution is returned with ``status == "ERROR"`` (check
+            ``is_error()``); it is not raised as an exception.
 
         Raises:
             APITimeoutError: If the execution doesn't complete within timeout.

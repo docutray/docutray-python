@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field
 
 ValidationSeverity = Literal["error", "warning"]
 """Severity of a validation issue. Warnings never make a document invalid."""
@@ -13,18 +13,25 @@ ValidationSource = Literal["schema", "rule"]
 """Layer that produced the issue: the JSON Schema or a custom (DSL) rule."""
 
 
+def _field_path(value: Any) -> Any:
+    """Keep non-string field paths (e.g. a numeric index) as strings."""
+    if value is None or isinstance(value, str):
+        return value
+    return str(value)
+
+
 class ValidationIssue(BaseModel):
     """A single structured validation error or warning."""
 
     model_config = ConfigDict(extra="allow")
 
-    field: str | None = ""
+    field: Annotated[str | None, BeforeValidator(_field_path)] = ""
     """Canonical path of the field (e.g. ``"items[0].total"``); empty or ``None`` for the document root."""
 
-    code: str = ""
+    code: str | None = ""
     """Machine-readable issue code (e.g. ``"VALIDATION_ERROR"``)."""
 
-    message: str = ""
+    message: str | None = ""
     """Human-readable description of the issue."""
 
     severity: ValidationSeverity | str | None = None
@@ -39,8 +46,8 @@ class ValidationIssue(BaseModel):
     value: Any = None
     """The value that caused the issue, when available."""
 
-    details: dict[str, Any] | None = None
-    """Additional rule-specific details."""
+    details: Any = None
+    """Additional rule-specific details (usually a dict)."""
 
 
 class ValidationOutcome(BaseModel):

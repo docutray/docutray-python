@@ -67,7 +67,7 @@ def _update_body(
     dsl_rules: str | None | NotGiven,
     is_public: bool | None,
 ) -> dict[str, Any]:
-    """Build the JSON body for PUT /api/document-types/{id}.
+    """Build the JSON body for ``PUT /api/document-types/{id}``.
 
     ``None`` omits most fields; ``conversion_spec`` and ``dsl_rules`` are
     omitted only when ``NOT_GIVEN`` so that ``None`` can clear them.
@@ -93,7 +93,7 @@ def _update_body(
 
 
 def _validate_body(data: Any, dsl_rules: str | None | NotGiven) -> Any:
-    """Build the JSON body for POST /api/document-types/{id}/validate.
+    """Build the JSON body for ``POST /api/document-types/{id}/validate``.
 
     With ``dsl_rules`` the dry-run envelope ``{data, dslRules}`` is sent;
     otherwise the data itself is the body and the stored rules run.

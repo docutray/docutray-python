@@ -435,6 +435,7 @@ class IdentifyWithRawResponse:
         file_base64: str | None = None,
         content_type: str | None = None,
         document_type_code_options: list[str] | None = None,
+        document_metadata: dict[str, Any] | None = None,
     ) -> RawResponse[IdentificationResult]:
         """Identify a document and return the raw HTTP response.
 
@@ -445,6 +446,7 @@ class IdentifyWithRawResponse:
             content_type: Content type of the file.
             document_type_code_options: List of document type codes to limit
                 identification to.
+            document_metadata: Additional metadata to attach to the identification.
 
         Returns:
             RawResponse wrapping the HTTP response.
@@ -463,6 +465,8 @@ class IdentifyWithRawResponse:
                 data["document_type_code_options"] = json.dumps(
                     document_type_code_options
                 )
+            if document_metadata:
+                data["document_metadata"] = json.dumps(document_metadata)
             response = self._identify._client._request(
                 "POST", "/api/identify", files=upload.files, data=data
             )
@@ -470,6 +474,8 @@ class IdentifyWithRawResponse:
             body = prepare_url_upload(url, content_type=content_type)
             if document_type_code_options:
                 body["document_type_code_options"] = document_type_code_options
+            if document_metadata:
+                body["document_metadata"] = document_metadata
             response = self._identify._client._request(
                 "POST", "/api/identify", json=body
             )
@@ -477,6 +483,8 @@ class IdentifyWithRawResponse:
             body = prepare_base64_upload(file_base64, content_type=content_type)
             if document_type_code_options:
                 body["document_type_code_options"] = document_type_code_options
+            if document_metadata:
+                body["document_metadata"] = document_metadata
             response = self._identify._client._request(
                 "POST", "/api/identify", json=body
             )
@@ -496,6 +504,7 @@ class IdentifyWithRawResponse:
         file_base64: str | None = None,
         content_type: str | None = None,
         document_type_code_options: list[str] | None = None,
+        document_metadata: dict[str, Any] | None = None,
     ) -> RawResponse[IdentificationStatus]:
         """Start async identification and return the raw HTTP response.
 
@@ -506,6 +515,7 @@ class IdentifyWithRawResponse:
             content_type: Content type of the file.
             document_type_code_options: List of document type codes to limit
                 identification to.
+            document_metadata: Additional metadata to attach to the identification.
 
         Returns:
             RawResponse wrapping the HTTP response.
@@ -524,6 +534,8 @@ class IdentifyWithRawResponse:
                 data["document_type_code_options"] = json.dumps(
                     document_type_code_options
                 )
+            if document_metadata:
+                data["document_metadata"] = json.dumps(document_metadata)
             response = self._identify._client._request(
                 "POST", "/api/identify-async", files=upload.files, data=data
             )
@@ -531,6 +543,8 @@ class IdentifyWithRawResponse:
             body = prepare_url_upload(url, content_type=content_type)
             if document_type_code_options:
                 body["document_type_code_options"] = document_type_code_options
+            if document_metadata:
+                body["document_metadata"] = document_metadata
             response = self._identify._client._request(
                 "POST", "/api/identify-async", json=body
             )
@@ -538,6 +552,8 @@ class IdentifyWithRawResponse:
             body = prepare_base64_upload(file_base64, content_type=content_type)
             if document_type_code_options:
                 body["document_type_code_options"] = document_type_code_options
+            if document_metadata:
+                body["document_metadata"] = document_metadata
             response = self._identify._client._request(
                 "POST", "/api/identify-async", json=body
             )
@@ -588,6 +604,7 @@ class AsyncIdentifyWithRawResponse:
         file_base64: str | None = None,
         content_type: str | None = None,
         document_type_code_options: list[str] | None = None,
+        document_metadata: dict[str, Any] | None = None,
     ) -> RawResponse[IdentificationResult]:
         """Identify a document and return the raw HTTP response.
 
@@ -598,6 +615,7 @@ class AsyncIdentifyWithRawResponse:
             content_type: Content type of the file.
             document_type_code_options: List of document type codes to limit
                 identification to.
+            document_metadata: Additional metadata to attach to the identification.
 
         Returns:
             RawResponse wrapping the HTTP response.
@@ -616,6 +634,8 @@ class AsyncIdentifyWithRawResponse:
                 data["document_type_code_options"] = json.dumps(
                     document_type_code_options
                 )
+            if document_metadata:
+                data["document_metadata"] = json.dumps(document_metadata)
             response = await self._identify._client._request(
                 "POST", "/api/identify", files=upload.files, data=data
             )
@@ -623,6 +643,8 @@ class AsyncIdentifyWithRawResponse:
             body = prepare_url_upload(url, content_type=content_type)
             if document_type_code_options:
                 body["document_type_code_options"] = document_type_code_options
+            if document_metadata:
+                body["document_metadata"] = document_metadata
             response = await self._identify._client._request(
                 "POST", "/api/identify", json=body
             )
@@ -630,6 +652,8 @@ class AsyncIdentifyWithRawResponse:
             body = prepare_base64_upload(file_base64, content_type=content_type)
             if document_type_code_options:
                 body["document_type_code_options"] = document_type_code_options
+            if document_metadata:
+                body["document_metadata"] = document_metadata
             response = await self._identify._client._request(
                 "POST", "/api/identify", json=body
             )
@@ -649,6 +673,7 @@ class AsyncIdentifyWithRawResponse:
         file_base64: str | None = None,
         content_type: str | None = None,
         document_type_code_options: list[str] | None = None,
+        document_metadata: dict[str, Any] | None = None,
     ) -> RawResponse[IdentificationStatus]:
         """Start async identification and return the raw HTTP response.
 
@@ -659,6 +684,7 @@ class AsyncIdentifyWithRawResponse:
             content_type: Content type of the file.
             document_type_code_options: List of document type codes to limit
                 identification to.
+            document_metadata: Additional metadata to attach to the identification.
 
         Returns:
             RawResponse wrapping the HTTP response.
@@ -677,6 +703,8 @@ class AsyncIdentifyWithRawResponse:
                 data["document_type_code_options"] = json.dumps(
                     document_type_code_options
                 )
+            if document_metadata:
+                data["document_metadata"] = json.dumps(document_metadata)
             response = await self._identify._client._request(
                 "POST", "/api/identify-async", files=upload.files, data=data
             )
@@ -684,6 +712,8 @@ class AsyncIdentifyWithRawResponse:
             body = prepare_url_upload(url, content_type=content_type)
             if document_type_code_options:
                 body["document_type_code_options"] = document_type_code_options
+            if document_metadata:
+                body["document_metadata"] = document_metadata
             response = await self._identify._client._request(
                 "POST", "/api/identify-async", json=body
             )
@@ -691,6 +721,8 @@ class AsyncIdentifyWithRawResponse:
             body = prepare_base64_upload(file_base64, content_type=content_type)
             if document_type_code_options:
                 body["document_type_code_options"] = document_type_code_options
+            if document_metadata:
+                body["document_metadata"] = document_metadata
             response = await self._identify._client._request(
                 "POST", "/api/identify-async", json=body
             )
@@ -1564,12 +1596,17 @@ class KnowledgeBasesWithRawResponse:
         knowledge_base_id: str,
         *,
         regenerate_embeddings: bool | None = None,
+        force: bool | None = None,
+        sync_external_sources: bool | None = None,
     ) -> RawResponse[SyncResult]:
         """Sync a knowledge base and return the raw HTTP response.
 
         Args:
             knowledge_base_id: The knowledge base ID.
-            regenerate_embeddings: Whether to regenerate all embeddings.
+            regenerate_embeddings: Whether to regenerate existing embeddings.
+            force: Force regeneration of all embeddings. The server defaults to ``False``.
+            sync_external_sources: Sync with configured external sources. The server
+                defaults to ``True``; pass ``False`` to skip them.
 
         Returns:
             RawResponse wrapping the HTTP response.
@@ -1579,6 +1616,10 @@ class KnowledgeBasesWithRawResponse:
         body: dict[str, Any] = {}
         if regenerate_embeddings is not None:
             body["regenerateEmbeddings"] = regenerate_embeddings
+        if force is not None:
+            body["force"] = force
+        if sync_external_sources is not None:
+            body["syncExternalSources"] = sync_external_sources
 
         response = self._knowledge_bases._client._request(
             "POST",
@@ -1740,12 +1781,17 @@ class AsyncKnowledgeBasesWithRawResponse:
         knowledge_base_id: str,
         *,
         regenerate_embeddings: bool | None = None,
+        force: bool | None = None,
+        sync_external_sources: bool | None = None,
     ) -> RawResponse[SyncResult]:
         """Sync a knowledge base and return the raw HTTP response.
 
         Args:
             knowledge_base_id: The knowledge base ID.
-            regenerate_embeddings: Whether to regenerate all embeddings.
+            regenerate_embeddings: Whether to regenerate existing embeddings.
+            force: Force regeneration of all embeddings. The server defaults to ``False``.
+            sync_external_sources: Sync with configured external sources. The server
+                defaults to ``True``; pass ``False`` to skip them.
 
         Returns:
             RawResponse wrapping the HTTP response.
@@ -1755,6 +1801,10 @@ class AsyncKnowledgeBasesWithRawResponse:
         body: dict[str, Any] = {}
         if regenerate_embeddings is not None:
             body["regenerateEmbeddings"] = regenerate_embeddings
+        if force is not None:
+            body["force"] = force
+        if sync_external_sources is not None:
+            body["syncExternalSources"] = sync_external_sources
 
         response = await self._knowledge_bases._client._request(
             "POST",

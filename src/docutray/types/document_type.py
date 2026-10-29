@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
 from .validation import ValidationIssue
 
@@ -49,7 +49,7 @@ class DocumentType(BaseModel):
     """Last update timestamp."""
 
     jsonSchema: dict[str, Any] | None = None
-    """JSON Schema for the document type (returned by GET /api/document-types/{id})."""
+    """JSON Schema for the document type (returned by ``GET /api/document-types/{id}``)."""
 
     promptHints: str | None = None
     """Hints for the OCR extraction prompt."""
@@ -78,10 +78,10 @@ class ValidationErrorInfo(BaseModel):
 
     model_config = ConfigDict(extra="allow")
 
-    count: int = 0
+    count: int
     """Total number of errors found."""
 
-    messages: list[str] = Field(default_factory=list)
+    messages: list[str]
     """List of descriptive error messages."""
 
 
@@ -90,10 +90,10 @@ class ValidationWarningInfo(BaseModel):
 
     model_config = ConfigDict(extra="allow")
 
-    count: int = 0
+    count: int
     """Total number of warnings found."""
 
-    messages: list[str] = Field(default_factory=list)
+    messages: list[str]
     """List of descriptive warning messages."""
 
 

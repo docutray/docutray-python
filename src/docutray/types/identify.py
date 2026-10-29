@@ -68,6 +68,9 @@ class IdentificationStatus(BaseModel):
     original_filename: str | None = None
     """Original filename of the processed file."""
 
+    document_type_code_options: list[str] | None = None
+    """Document type codes the identification chose from."""
+
     document_type: DocumentTypeMatch | None = None
     """Primary identified document type (only present when status is SUCCESS)."""
 
@@ -108,7 +111,9 @@ class IdentificationStatus(BaseModel):
                 Called with the current status after each poll for progress tracking.
 
         Returns:
-            The final identification status with results or error.
+            The final identification status with results or error. A failed
+            identification is returned with ``status == "ERROR"`` (check
+            ``is_error()``); it is not raised as an exception.
 
         Raises:
             APITimeoutError: If the identification doesn't complete within timeout.
@@ -148,7 +153,9 @@ class IdentificationStatus(BaseModel):
                 Can be sync or async. Called with the current status after each poll.
 
         Returns:
-            The final identification status with results or error.
+            The final identification status with results or error. A failed
+            identification is returned with ``status == "ERROR"`` (check
+            ``is_error()``); it is not raised as an exception.
 
         Raises:
             APITimeoutError: If the identification doesn't complete within timeout.
