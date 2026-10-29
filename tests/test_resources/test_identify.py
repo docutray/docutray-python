@@ -18,7 +18,9 @@ from docutray import (
 class TestIdentifyRun:
     """Tests for Identify.run() synchronous identification."""
 
-    def test_identify_with_url(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_identify_with_url(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """Identify document from URL."""
         mock_api.post("/api/identify").mock(
             return_value=httpx.Response(
@@ -44,7 +46,9 @@ class TestIdentifyRun:
         assert len(result.alternatives) == 1
         assert result.alternatives[0].code == "receipt"
 
-    def test_identify_with_bytes(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_identify_with_bytes(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """Identify document from bytes."""
         mock_api.post("/api/identify").mock(
             return_value=httpx.Response(
@@ -173,7 +177,9 @@ class TestIdentifyRun:
 class TestIdentifyRunAsync:
     """Tests for Identify.run_async() asynchronous identification."""
 
-    def test_run_async_returns_status(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_run_async_returns_status(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """run_async returns IdentificationStatus with identification_id."""
         mock_api.post("/api/identify-async").mock(
             return_value=httpx.Response(
@@ -239,7 +245,9 @@ class TestIdentifyRunAsync:
 class TestIdentifyGetStatus:
     """Tests for Identify.get_status() polling."""
 
-    def test_get_status_success(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_get_status_success(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """Get status returns SUCCESS state with results."""
         mock_api.get("/api/identify-async/status/id_123").mock(
             return_value=httpx.Response(

@@ -150,7 +150,10 @@ class TestConvertWithRawResponse:
             return_value=httpx.Response(
                 200,
                 json={"data": {"invoice_number": "INV-001"}},
-                headers={"x-request-id": "req_abc123", "content-type": "application/json"},
+                headers={
+                    "x-request-id": "req_abc123",
+                    "content-type": "application/json",
+                },
             )
         )
 
@@ -223,9 +226,7 @@ class TestConvertWithRawResponse:
         result = response.parse()
         assert result.status == "SUCCESS"
 
-    def test_content_property(
-        self, client: Client, mock_api: respx.MockRouter
-    ) -> None:
+    def test_content_property(self, client: Client, mock_api: respx.MockRouter) -> None:
         """with_raw_response provides content property."""
         mock_api.post("/api/convert").mock(
             return_value=httpx.Response(
@@ -242,9 +243,7 @@ class TestConvertWithRawResponse:
         assert isinstance(response.content, bytes)
         assert b"data" in response.content
 
-    def test_text_property(
-        self, client: Client, mock_api: respx.MockRouter
-    ) -> None:
+    def test_text_property(self, client: Client, mock_api: respx.MockRouter) -> None:
         """with_raw_response provides text property."""
         mock_api.post("/api/convert").mock(
             return_value=httpx.Response(
@@ -261,9 +260,7 @@ class TestConvertWithRawResponse:
         assert isinstance(response.text, str)
         assert "data" in response.text
 
-    def test_json_method(
-        self, client: Client, mock_api: respx.MockRouter
-    ) -> None:
+    def test_json_method(self, client: Client, mock_api: respx.MockRouter) -> None:
         """with_raw_response provides json() method."""
         mock_api.post("/api/convert").mock(
             return_value=httpx.Response(
@@ -310,7 +307,11 @@ class TestIdentifyWithRawResponse:
             return_value=httpx.Response(
                 200,
                 json={
-                    "document_type": {"code": "invoice", "name": "Invoice", "confidence": 0.95},
+                    "document_type": {
+                        "code": "invoice",
+                        "name": "Invoice",
+                        "confidence": 0.95,
+                    },
                     "alternatives": [],
                 },
                 headers={"x-request-id": "req_identify"},
@@ -334,7 +335,11 @@ class TestIdentifyWithRawResponse:
             return_value=httpx.Response(
                 200,
                 json={
-                    "document_type": {"code": "contract", "name": "Contract", "confidence": 0.9},
+                    "document_type": {
+                        "code": "contract",
+                        "name": "Contract",
+                        "confidence": 0.9,
+                    },
                     "alternatives": [],
                 },
             )
@@ -355,7 +360,11 @@ class TestIdentifyWithRawResponse:
             return_value=httpx.Response(
                 200,
                 json={
-                    "document_type": {"code": "receipt", "name": "Receipt", "confidence": 0.85},
+                    "document_type": {
+                        "code": "receipt",
+                        "name": "Receipt",
+                        "confidence": 0.85,
+                    },
                     "alternatives": [],
                 },
             )
@@ -446,7 +455,11 @@ class TestIdentifyWithRawResponse:
                 json={
                     "identification_id": "id_123",
                     "status": "SUCCESS",
-                    "document_type": {"code": "receipt", "name": "Receipt", "confidence": 0.88},
+                    "document_type": {
+                        "code": "receipt",
+                        "name": "Receipt",
+                        "confidence": 0.88,
+                    },
                     "alternatives": [],
                 },
             )
@@ -791,7 +804,11 @@ class TestAsyncIdentifyWithRawResponse:
             return_value=httpx.Response(
                 200,
                 json={
-                    "document_type": {"code": "invoice", "name": "Invoice", "confidence": 0.95},
+                    "document_type": {
+                        "code": "invoice",
+                        "name": "Invoice",
+                        "confidence": 0.95,
+                    },
                     "alternatives": [],
                 },
             )
@@ -834,7 +851,11 @@ class TestAsyncIdentifyWithRawResponse:
                 json={
                     "identification_id": "id_123",
                     "status": "SUCCESS",
-                    "document_type": {"code": "invoice", "name": "Invoice", "confidence": 0.9},
+                    "document_type": {
+                        "code": "invoice",
+                        "name": "Invoice",
+                        "confidence": 0.9,
+                    },
                     "alternatives": [],
                 },
             )

@@ -145,6 +145,7 @@ class TestPage:
 
     def test_iter_pages_multi_page(self) -> None:
         """iter_pages yields all pages sequentially."""
+
         def mock_fetch(page_num: int) -> Page[str]:
             if page_num == 1:
                 return Page(
@@ -188,6 +189,7 @@ class TestPage:
 
     def test_auto_paging_iter_multi_page(self) -> None:
         """auto_paging_iter yields all items across pages."""
+
         def mock_fetch(page_num: int) -> Page[str]:
             if page_num == 1:
                 return Page(
@@ -324,6 +326,7 @@ class TestAsyncPage:
     @pytest.mark.asyncio
     async def test_async_iter_pages(self) -> None:
         """AsyncPage iter_pages_async yields all pages."""
+
         async def mock_fetch(page_num: int) -> AsyncPage[str]:
             if page_num == 1:
                 return AsyncPage(
@@ -355,6 +358,7 @@ class TestAsyncPage:
     @pytest.mark.asyncio
     async def test_async_auto_paging_iter(self) -> None:
         """AsyncPage auto_paging_iter_async yields all items."""
+
         async def mock_fetch(page_num: int) -> AsyncPage[str]:
             if page_num == 1:
                 return AsyncPage(

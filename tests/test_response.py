@@ -24,7 +24,9 @@ class TestRawResponse:
     def test_headers(self) -> None:
         """RawResponse exposes headers from underlying response."""
         mock_response = MagicMock(spec=httpx.Response)
-        mock_response.headers = httpx.Headers({"x-request-id": "req_123", "content-type": "application/json"})
+        mock_response.headers = httpx.Headers(
+            {"x-request-id": "req_123", "content-type": "application/json"}
+        )
 
         raw = RawResponse(mock_response, lambda r: None)
 

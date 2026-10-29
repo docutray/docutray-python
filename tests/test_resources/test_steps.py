@@ -12,7 +12,9 @@ from docutray import AsyncClient, Client, StepExecutionStatus
 class TestStepsRunAsync:
     """Tests for Steps.run_async()."""
 
-    def test_run_async_with_url(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_run_async_with_url(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """Execute step with URL input."""
         mock_api.post("/api/steps-async/step_123").mock(
             return_value=httpx.Response(
@@ -35,7 +37,9 @@ class TestStepsRunAsync:
         assert status.status == "ENQUEUED"
         assert not status.is_complete()
 
-    def test_run_async_with_bytes(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_run_async_with_bytes(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """Execute step with bytes input."""
         mock_api.post("/api/steps-async/step_456").mock(
             return_value=httpx.Response(
@@ -57,7 +61,9 @@ class TestStepsRunAsync:
         assert status.execution_id == "exec_abc123"
         assert status.status == "ENQUEUED"
 
-    def test_run_async_with_metadata(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_run_async_with_metadata(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """Execute step with document metadata."""
         mock_api.post("/api/steps-async/step_789").mock(
             return_value=httpx.Response(
@@ -86,7 +92,9 @@ class TestStepsRunAsync:
 class TestStepsGetStatus:
     """Tests for Steps.get_status()."""
 
-    def test_get_status_processing(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_get_status_processing(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """Get status returns PROCESSING state."""
         mock_api.get("/api/steps-async/status/exec_123").mock(
             return_value=httpx.Response(
@@ -106,7 +114,9 @@ class TestStepsGetStatus:
         assert not status.is_complete()
         assert not status.is_success()
 
-    def test_get_status_success(self, client: Client, mock_api: respx.MockRouter) -> None:
+    def test_get_status_success(
+        self, client: Client, mock_api: respx.MockRouter
+    ) -> None:
         """Get status returns SUCCESS state with data."""
         mock_api.get("/api/steps-async/status/exec_123").mock(
             return_value=httpx.Response(
